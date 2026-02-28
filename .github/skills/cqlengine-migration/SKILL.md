@@ -17,9 +17,8 @@ using phased, verifiable steps.
 
 ## Essential Principles
 
-<essential_principles>
+### Models first, queries last
 
-<principle name="models-first-queries-last">
 **Migrate model definitions before touching any query or CRUD code.**
 
 Models are the foundation — every query, save, and batch operation depends on
@@ -27,18 +26,18 @@ the model class compiling correctly with Pydantic v2. Converting queries while
 models still use `columns.*` produces cascading errors that are hard to debug.
 Always get models green (importable, no validation errors) before changing any
 runtime code.
-</principle>
 
-<principle name="one-model-at-a-time">
+### One model at a time
+
 **Convert and test one model at a time; never batch-convert an entire module.**
 
 cqlengine models often have subtle interactions (shared keyspace, cross-model
 queries, batch operations spanning models). Converting one model, running the
 existing test suite, and verifying parity before moving to the next prevents
 compound errors and makes `git bisect` useful.
-</principle>
 
-<principle name="pydantic-defaults-differ">
+### Pydantic defaults differ
+
 **Fields without a default are required in coodie (Pydantic v2), unlike cqlengine.**
 
 In cqlengine, `columns.Text()` without `required=True` is optional — it
@@ -46,27 +45,24 @@ defaults to `None` and Cassandra stores a null. In coodie, a bare `name: str`
 is **required** and Pydantic raises `ValidationError` if omitted. Always audit
 every field: if it was optional in cqlengine, add `= None` or
 `Optional[T] = None`.
-</principle>
 
-<principle name="settings-not-dunders">
+### Settings, not dunders
+
 **Table metadata moves from class-level dunders to an inner `Settings` class.**
 
 cqlengine uses `__table_name__`, `__keyspace__`, `__default_ttl__`,
 `__options__`, etc. as class attributes. coodie moves them all into a nested
 `Settings` class. Forgetting this causes table-not-found or wrong-keyspace
 errors at runtime.
-</principle>
 
-<principle name="async-is-same-model">
+### Async is the same model
+
 **The model definition is identical for sync and async — only the import changes.**
 
 `from coodie.sync import Document` vs `from coodie.aio import Document`.
 All terminal methods (`save()`, `get()`, `find().all()`, etc.) become
 `await`-able in async mode. Do not create separate model classes for
 sync/async.
-</principle>
-
-</essential_principles>
 
 ## When to Use
 
