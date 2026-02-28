@@ -28,7 +28,7 @@ test suite (or at least a way to run the application).
 6. **Check for unsupported features** — review each model for:
    - Static columns (`static=True`)
    - Token-range queries (`__token`)
-   - `__like` filters
+   - Custom management scripts
    - Per-model `__connection__`
    - Counter columns
 7. **Create a migration tracking document** — list every model/UDT with status

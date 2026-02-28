@@ -268,7 +268,8 @@ Product.find(price__gt=10.0).all()
 ```
 
 Supported operators: `__gt`, `__gte`, `__lt`, `__lte`, `__in`, `__contains`,
-`__like`, `__token__gt`, `__token__gte`, `__token__lt`, `__token__lte`.
+`__like` (requires SASI/SAI index), `__token__gt`, `__token__gte`,
+`__token__lt`, `__token__lte`.
 
 ---
 

@@ -146,7 +146,7 @@ What are you migrating?
 | `M.objects.filter().limit(n)` | `M.find().limit(n).all()` | `await M.find().limit(n).all()` |
 | `M.objects.order_by("-col")` | `M.find().order_by("-col").all()` | `await M.find().order_by("-col").all()` |
 | `M.objects.allow_filtering()` | `M.find().allow_filtering().all()` | `await M.find().allow_filtering().all()` |
-| `obj.save()` | `obj.update(field=val)` | `await obj.update(field=val)` |
+| `obj.field = val; obj.save()` | `obj.update(field=val)` | `await obj.update(field=val)` |
 | `obj.delete()` | `obj.delete()` | `await obj.delete()` |
 | `M.objects.filter().update(f=v)` | `M.find().update(f=v)` | `await M.find().update(f=v)` |
 | `M.objects.filter().delete()` | `M.find().delete()` | `await M.find().delete()` |
