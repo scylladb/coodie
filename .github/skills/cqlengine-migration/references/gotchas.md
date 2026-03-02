@@ -171,7 +171,7 @@ except DocumentNotFound:
 | cqlengine Exception | coodie Exception |
 |---------------------|------------------|
 | `Model.DoesNotExist` | `coodie.exceptions.DocumentNotFound` |
-| `Model.MultipleObjectsReturned` | `coodie.exceptions.MultipleDocumentsReturned` |
+| `Model.MultipleObjectsReturned` | `coodie.exceptions.MultipleDocumentsFound` |
 
 ---
 

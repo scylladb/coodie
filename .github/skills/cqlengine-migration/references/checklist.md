@@ -67,7 +67,7 @@ through items in order — models first, then queries, then infrastructure.
   - `M.ttl(N).create()` → `M(...).save(ttl=N)`
 - [ ] **Replace exception handling:**
   - `except M.DoesNotExist` → `except DocumentNotFound`
-  - `except M.MultipleObjectsReturned` → `except MultipleDocumentsReturned`
+  - `except M.MultipleObjectsReturned` → `except MultipleDocumentsFound`
 
 ## Phase 4: Batch & Connection Conversion
 
@@ -94,3 +94,16 @@ through items in order — models first, then queries, then infrastructure.
 - [ ] **Search for leftover dunders:** `grep -r "__table_name__\|__keyspace__" src/ --include="*.py"` (should only be in `Settings`)
 - [ ] **Smoke test CRUD:** Create, read, update, delete with a test database
 - [ ] **Check schema:** `M.sync_table()` creates the expected table
+
+## Phase 6: Adopt coodie-Only Features (optional)
+
+These features have no cqlengine equivalent. Adopt them after the core migration is done.
+
+- [ ] **Materialized Views:** Convert read-heavy secondary access patterns to `MaterializedView` subclasses with `sync_view()` / `drop_view()`
+- [ ] **Polymorphic Models:** Use `Discriminator()` for single-table inheritance (multiple document types in one table, auto-routed on query)
+- [ ] **Lazy Documents:** Use `M.find().all(lazy=True)` for large result sets — defers Pydantic parsing until field access
+- [ ] **Pagination:** Use `M.find().fetch_size(N).paged_all()` returning `PagedResult(data, paging_state)` for token-based pagination
+- [ ] **LWT Results:** Switch conditional writes to `obj.insert()` returning `LWTResult(applied, existing)` for typed IF NOT EXISTS outcomes
+- [ ] **Raw CQL:** Use `execute_raw("SELECT ...")` for queries outside the ORM
+- [ ] **Keyspace Management:** Use `create_keyspace()` / `drop_keyspace()` for programmatic keyspace setup
+- [ ] **Advanced QuerySet:** Use `per_partition_limit(N)`, `only(*cols)`, `defer(*cols)`, `values_list(*cols)`, `consistency(level)`, `timeout(sec)`, `timestamp(ts)`

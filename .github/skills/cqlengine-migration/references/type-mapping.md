@@ -46,6 +46,7 @@ Complete mapping of every cqlengine column type to its coodie equivalent.
 | `clustering_order="DESC"` | `Annotated[T, ClusteringKey(order="DESC")]` | `created_at: Annotated[datetime, ClusteringKey(order="DESC")]` |
 | `index=True` | `Annotated[T, Indexed()]` | `brand: Annotated[str, Indexed()]` |
 | `static=True` | `Annotated[T, Static()]` | `group_name: Annotated[str, Static()]` |
+| _(no equivalent)_ | `Annotated[T, Discriminator()]` | `doc_type: Annotated[str, Discriminator()] = ""` — polymorphic models |
 
 ## Column Options
 
@@ -91,12 +92,21 @@ user_id: Annotated[Optional[UUID], Indexed()] = None
 from coodie.sync import Document, init_coodie, BatchQuery       # sync
 from coodie.aio import Document, init_coodie, AsyncBatchQuery   # async
 
+# Additional document bases
+from coodie.sync import CounterDocument, MaterializedView       # sync
+from coodie.aio import CounterDocument, MaterializedView        # async
+
+# Raw CQL & keyspace management
+from coodie.sync import execute_raw, create_keyspace, drop_keyspace  # sync
+from coodie.aio import execute_raw, create_keyspace, drop_keyspace   # async
+
 # Field markers (import only what you need)
 from coodie.fields import (
     Ascii,
     BigInt,
     ClusteringKey,
     Counter,
+    Discriminator,
     Double,
     Frozen,
     Indexed,
@@ -112,8 +122,12 @@ from coodie.fields import (
 # UDT
 from coodie.usertype import UserType
 
+# Results
+from coodie.results import LWTResult, PagedResult
+from coodie.lazy import LazyDocument
+
 # Exceptions
-from coodie.exceptions import DocumentNotFound, MultipleDocumentsReturned
+from coodie.exceptions import DocumentNotFound, MultipleDocumentsFound
 
 # Standard library (commonly needed)
 from datetime import date, datetime, timezone

@@ -173,3 +173,81 @@ tests pass.
 
 **Exit criteria:** Zero `cassandra.cqlengine` imports remain. Full test suite
 passes. CRUD smoke test succeeds on a real database.
+
+---
+
+## Phase 6: Adopt coodie-Only Features (optional)
+
+**Entry criteria:** Migration complete from Phase 5. Application works on coodie.
+
+coodie offers features that have no cqlengine equivalent. These are optional
+enhancements to adopt after the core migration.
+
+1. **Materialized Views** — Convert read-heavy secondary access patterns to
+   `MaterializedView` subclasses:
+   ```python
+   from coodie.sync import MaterializedView
+   from coodie.fields import PrimaryKey, ClusteringKey
+
+   class ProductsByCategory(MaterializedView):
+       category: Annotated[str, PrimaryKey()]
+       id: Annotated[UUID, ClusteringKey()]
+       name: str
+       price: float
+
+       class Settings:
+           name = "products_by_category"
+           __base_table__ = "products"
+
+   ProductsByCategory.sync_view()  # CREATE MATERIALIZED VIEW
+   ```
+
+2. **Polymorphic Models (Single-Table Inheritance)** — Store multiple document
+   types in one table using a discriminator column:
+   ```python
+   from coodie.fields import Discriminator
+
+   class Pet(Document):
+       id: Annotated[UUID, PrimaryKey()] = Field(default_factory=uuid4)
+       name: str
+       pet_type: Annotated[str, Discriminator()] = ""
+
+   class Cat(Pet):
+       indoor: bool = True
+       class Settings:
+           __discriminator_value__ = "cat"
+
+   # Pet.find().all() returns Cat/Dog instances automatically
+   ```
+
+3. **Lazy Documents** — For large result sets, defer Pydantic parsing:
+   ```python
+   docs = Product.find().all(lazy=True)  # returns list[LazyDocument]
+   # Pydantic parsing happens only when you access a field
+   ```
+
+4. **Pagination** — Token-based pagination for large result sets:
+   ```python
+   page = Product.find().fetch_size(25).paged_all()
+   products = page.data           # list of up to 25 documents
+   next_page = Product.find().fetch_size(25).page(page.paging_state).paged_all()
+   ```
+
+5. **Advanced QuerySet Methods:**
+   - `per_partition_limit(N)` — Limit rows per partition
+   - `only("col1", "col2")` — Select specific columns
+   - `defer("col1")` — Exclude columns from SELECT
+   - `values_list("col1", "col2")` — Return tuples instead of documents
+   - `consistency("QUORUM")` — Set per-query consistency level
+   - `timeout(5.0)` — Set per-query timeout
+   - `timestamp(ts)` — Set write timestamp
+
+6. **Raw CQL & Keyspace Management:**
+   ```python
+   from coodie.sync import execute_raw, create_keyspace, drop_keyspace
+
+   execute_raw("SELECT * FROM system.local")
+   create_keyspace("my_ks", strategy={"class": "SimpleStrategy", "replication_factor": 1})
+   ```
+
+**Exit criteria:** Application leverages coodie-specific features where beneficial.

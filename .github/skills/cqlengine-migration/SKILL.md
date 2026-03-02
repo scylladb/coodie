@@ -152,7 +152,22 @@ What are you migrating?
 | cqlengine | coodie |
 |-----------|--------|
 | `Model.DoesNotExist` | `coodie.exceptions.DocumentNotFound` |
-| `Model.MultipleObjectsReturned` | `coodie.exceptions.MultipleDocumentsReturned` |
+| `Model.MultipleObjectsReturned` | `coodie.exceptions.MultipleDocumentsFound` |
+
+## coodie-Only Features (No cqlengine Equivalent)
+
+These features are new in coodie — adopt them after the core migration is complete.
+
+| Feature | Import | Summary |
+|---------|--------|---------|
+| **Materialized Views** | `from coodie.sync import MaterializedView` | Read-only view class with `sync_view()` / `drop_view()`. Settings: `__base_table__`, `__view_columns__`, `__where_clause__`, `__clustering_order__` |
+| **Polymorphic Models** | `from coodie.fields import Discriminator` | Single-table inheritance via `Annotated[str, Discriminator()]` column + `Settings.__discriminator_value__` per subclass |
+| **Lazy Documents** | `M.find().all(lazy=True)` | Returns `LazyDocument` instances — defers Pydantic parsing until field access for better throughput on large result sets |
+| **Pagination** | `M.find().fetch_size(N).paged_all()` | Token-based pagination returning `PagedResult(data, paging_state)` |
+| **LWT Results** | `result = obj.insert()` | `LWTResult(applied, existing)` — typed result for IF NOT EXISTS / IF EXISTS / IF conditions |
+| **Raw CQL** | `from coodie.sync import execute_raw` | Execute arbitrary CQL: `execute_raw("SELECT ...")` |
+| **Keyspace Mgmt** | `from coodie.sync import create_keyspace, drop_keyspace` | `create_keyspace("ks", strategy=...)` / `drop_keyspace("ks")` |
+| **QuerySet Extras** | chained on `.find()` | `per_partition_limit(N)`, `only(*cols)`, `defer(*cols)`, `values_list(*cols)`, `consistency(level)`, `timeout(sec)`, `timestamp(ts)` |
 
 ## Gotchas Quick Reference
 
@@ -186,7 +201,7 @@ The most common migration pitfalls. Full details in [gotchas.md](references/gotc
 
 | Workflow | Purpose |
 |----------|---------|
-| [migrate-cqlengine-app.md](workflows/migrate-cqlengine-app.md) | 5-phase process for migrating a full cqlengine application |
+| [migrate-cqlengine-app.md](workflows/migrate-cqlengine-app.md) | 6-phase process for migrating a full cqlengine application (Phase 6: adopt coodie-only features) |
 
 ## Success Criteria
 
