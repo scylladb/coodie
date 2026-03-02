@@ -197,7 +197,7 @@ enhancements to adopt after the core migration.
 
        class Settings:
            name = "products_by_category"
-           __base_table__ = "products"
+           __base_table__ = "products"  # CQL table name the view reads from
 
    ProductsByCategory.sync_view()  # CREATE MATERIALIZED VIEW
    ```
