@@ -208,6 +208,9 @@ async def _seed(count: int) -> None:
     await init_coodie(hosts=hosts, keyspace=keyspace)
     console.print("[dim]🔧 Synchronizing content table (single-table for all types)...[/]")
     await Content.sync_table()
+    await Article.sync_table()
+    await Video.sync_table()
+    await Podcast.sync_table()
     console.print("[dim green]✓ Database ready.[/]")
     console.print()
 

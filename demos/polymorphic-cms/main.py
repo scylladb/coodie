@@ -35,8 +35,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     hosts = os.getenv("SCYLLA_HOSTS", "127.0.0.1").split(",")
     keyspace = os.getenv("SCYLLA_KEYSPACE", "cms")
     await init_coodie(hosts=hosts, keyspace=keyspace)
-    # Sync via the base class — one table for all subtypes
+    # Sync the base table, then each subclass so subclass-specific columns
+    # (e.g. body, video_url, audio_url) are added via ALTER TABLE ADD.
     await Content.sync_table()
+    await Article.sync_table()
+    await Video.sync_table()
+    await Podcast.sync_table()
     yield
 
 
