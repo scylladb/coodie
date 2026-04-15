@@ -137,7 +137,8 @@ What are you migrating?
 | `M.objects.all()` | `M.find().all()` | `await M.find().all()` |
 | `M.objects.filter(k=v)` | `M.find(k=v).all()` | `await M.find(k=v).all()` |
 | `M.objects.get(pk=v)` | `M.get(pk=v)` | `await M.get(pk=v)` |
-| `M.objects.filter(pk=v).first()` | `M.find_one(pk=v)` | `await M.find_one(pk=v)` |
+| `M.objects.filter(pk=v).first()` | `M.find(pk=v).first()` | `await M.find(pk=v).first()` |
+| `M.objects.filter(k=v).first()` | `M.find_one(k=v)` | `await M.find_one(k=v)` |
 | `M.objects.count()` | `M.find().count()` | `await M.find().count()` |
 | `M.objects.filter().limit(n)` | `M.find().limit(n).all()` | `await M.find().limit(n).all()` |
 | `M.objects.order_by("-col")` | `M.find().order_by("-col").all()` | `await M.find().order_by("-col").all()` |
@@ -164,32 +165,32 @@ These features are new in coodie — adopt them after the core migration is comp
 | **Polymorphic Models** | `from coodie.fields import Discriminator` | Single-table inheritance via `Annotated[str, Discriminator()]` column + `Settings.__discriminator_value__` per subclass |
 | **Lazy Documents** | `M.find().all(lazy=True)` | Returns `LazyDocument` instances — defers Pydantic parsing until field access for better throughput on large result sets |
 | **Pagination** | `M.find().fetch_size(N).paged_all()` | Token-based pagination returning `PagedResult(data, paging_state)` |
-| **LWT Results** | `result = obj.insert()` | `LWTResult(applied, existing)` — typed result for IF NOT EXISTS / IF EXISTS / IF conditions |
+| **LWT Results** | `M.find().if_not_exists().create(**kw)` | Returns `LWTResult(applied, existing)` for conditional inserts |
 | **Raw CQL** | `from coodie.sync import execute_raw` | Execute arbitrary CQL: `execute_raw("SELECT ...")` |
-| **Keyspace Mgmt** | `from coodie.sync import create_keyspace, drop_keyspace` | `create_keyspace("ks", strategy=...)` / `drop_keyspace("ks")` |
+| **Keyspace Mgmt** | `from coodie.sync import create_keyspace, drop_keyspace` | `create_keyspace("ks", replication_factor=3)` or `create_keyspace("ks", strategy="NetworkTopologyStrategy", dc_replication_map={"dc1": 3})` |
 | **QuerySet Extras** | chained on `.find()` | `per_partition_limit(N)`, `only(*cols)`, `defer(*cols)`, `values_list(*cols)`, `consistency(level)`, `timeout(sec)`, `timestamp(ts)` |
 
 ## Gotchas Quick Reference
 
 The most common migration pitfalls. Full details in [gotchas.md](references/gotchas.md).
 
-| # | Gotcha | Impact | Fix |
-|---|--------|--------|-----|
-| 1 | No `Model.objects` attribute | `AttributeError` at runtime | Replace `.objects.filter()` → `.find()` |
-| 2 | Fields without defaults are **required** | `ValidationError` on instantiation | Add `= None` / `Optional[T] = None` for optional fields |
-| 3 | `__table_name__` as class attribute ignored | Table created with wrong name | Move to `class Settings: name = "..."` |
-| 4 | `columns.Text()` → `str` (not `Optional[str]`) | Required vs optional mismatch | Audit every field's optionality |
-| 5 | `Model.create()` vs `Model().save()` | API difference | coodie supports both — `create()` is a classmethod |
-| 6 | `sync_table(M)` function call | `NameError` — no management module | Use `M.sync_table()` class method |
-| 7 | `connection.setup()` signature differs | Connection fails | Use `init_coodie(hosts=[...], keyspace="...")` |
-| 8 | Batch API difference | Wrong batch context usage | Use `obj.save(batch=batch)`, not `Model.batch(b).create()` |
-| 9 | `DoesNotExist` exception class moved | Uncaught exceptions | Import `DocumentNotFound` from `coodie.exceptions` |
-| 10 | `default=callable` → `Field(default_factory=callable)` | Pydantic shares mutable default | Use `Field(default_factory=...)` for callables |
-| 11 | Collections need `Field(default_factory=...)` | Pydantic validation error | `list[str] = Field(default_factory=list)` |
-| 12 | `columns.UserDefinedType(Addr)` wrapper removed | Unnecessary wrapper | Use the UDT class directly as type annotation |
-| 13 | Counter columns require `CounterDocument` | Cannot mix counter/non-counter | Inherit from `CounterDocument`, use `increment()`/`decrement()` |
-| 14 | `clustering_order` on column → `ClusteringKey(order=)` | Wrong CQL generated | Use `Annotated[T, ClusteringKey(order="DESC")]` |
-| 15 | `partition_key=True` → `PrimaryKey(partition_key_index=N)` | Composite partition key wrong | Use index parameter for multi-column partition keys |
+| Topic | Impact | Fix |
+|-------|--------|-----|
+| No `Model.objects` attribute | `AttributeError` at runtime | Replace `.objects.filter()` → `.find()` |
+| Fields without defaults are **required** | `ValidationError` on instantiation | Add `= None` / `Optional[T] = None` for optional fields |
+| `__table_name__` as class attribute ignored | Table created with wrong name | Move to `class Settings: name = "..."` |
+| `columns.Text()` → `str` (not `Optional[str]`) | Required vs optional mismatch | Audit every field's optionality |
+| `Model.create()` vs `Model().save()` | API difference | coodie supports both — `create()` is a classmethod |
+| `sync_table(M)` function call | `NameError` — no management module | Use `M.sync_table()` class method |
+| `connection.setup()` signature differs | Connection fails | Use `init_coodie(hosts=[...], keyspace="...")` |
+| Batch API difference | Wrong batch context usage | Use `obj.save(batch=batch)`, not `Model.batch(b).create()` |
+| `DoesNotExist` exception class moved | Uncaught exceptions | Import `DocumentNotFound` from `coodie.exceptions` |
+| `default=callable` → `Field(default_factory=callable)` | Pydantic shares mutable default | Use `Field(default_factory=...)` for callables |
+| Collections need `Field(default_factory=...)` | Pydantic validation error | `list[str] = Field(default_factory=list)` |
+| `columns.UserDefinedType(Addr)` wrapper removed | Unnecessary wrapper | Use the UDT class directly as type annotation |
+| Counter columns require `CounterDocument` | Cannot mix counter/non-counter | Inherit from `CounterDocument`, use `increment()`/`decrement()` |
+| `clustering_order` on column → `ClusteringKey(order=)` | Wrong CQL generated | Use `Annotated[T, ClusteringKey(order="DESC")]` |
+| `partition_key=True` → `PrimaryKey(partition_key_index=N)` | Composite partition key wrong | Use index parameter for multi-column partition keys |
 
 ## Reference Index
 

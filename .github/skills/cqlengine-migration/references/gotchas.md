@@ -273,18 +273,21 @@ Supported operators: `__gt`, `__gte`, `__lt`, `__lte`, `__in`, `__contains`,
 
 ---
 
-## G14: `if_not_exists()` / `if_exists()` Moved to Method Parameters
+## G14: Conditional Insert Return Type Differs by API Path
 
-**Impact:** No `.if_not_exists()` chain method available.
+**Impact:** Expecting `obj.insert()` to return an LWT result.
 
 ```python
 # cqlengine
 Product.if_not_exists().create(id=pid, name="Widget")
 
-# coodie — use insert() for IF NOT EXISTS
-product = Product(id=pid, name="Widget")
-result = product.insert()      # INSERT ... IF NOT EXISTS
-# result is an LWTResult with .applied property
+# coodie — QuerySet conditional create returns LWTResult
+result = Product.find().if_not_exists().create(id=pid, name="Widget")
+if result and result.applied:
+    ...
+
+# coodie instance insert still does IF NOT EXISTS, but returns None
+Product(id=pid, name="Widget").insert()
 ```
 
 ---

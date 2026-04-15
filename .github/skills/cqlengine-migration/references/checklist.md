@@ -88,7 +88,7 @@ through items in order — models first, then queries, then infrastructure.
 ## Post-Migration Verification
 
 - [ ] **Run test suite** — all existing tests pass
-- [ ] **Search for leftover cqlengine imports:** `grep -r "cassandra.cqlengine" src/`
+- [ ] **Search for leftover cqlengine imports:** `grep -r "cassandra\.cqlengine" src/`
 - [ ] **Search for leftover `.objects`:** `grep -r "\.objects\." src/`
 - [ ] **Search for leftover `columns.`:** `grep -r "columns\." src/ --include="*.py"`
 - [ ] **Search for leftover dunders:** `grep -r "__table_name__\|__keyspace__" src/ --include="*.py"` (should only be in `Settings`)
@@ -103,7 +103,7 @@ These features have no cqlengine equivalent. Adopt them after the core migration
 - [ ] **Polymorphic Models:** Use `Discriminator()` for single-table inheritance (multiple document types in one table, auto-routed on query)
 - [ ] **Lazy Documents:** Use `M.find().all(lazy=True)` for large result sets — defers Pydantic parsing until field access
 - [ ] **Pagination:** Use `M.find().fetch_size(N).paged_all()` returning `PagedResult(data, paging_state)` for token-based pagination
-- [ ] **LWT Results:** Switch conditional writes to `obj.insert()` returning `LWTResult(applied, existing)` for typed IF NOT EXISTS outcomes
+- [ ] **LWT Results:** Use `M.find().if_not_exists().create(**kw)` when you need typed `LWTResult(applied, existing)` from conditional inserts (`obj.insert()` returns `None`)
 - [ ] **Raw CQL:** Use `execute_raw("SELECT ...")` for queries outside the ORM
 - [ ] **Keyspace Management:** Use `create_keyspace()` / `drop_keyspace()` for programmatic keyspace setup
 - [ ] **Advanced QuerySet:** Use `per_partition_limit(N)`, `only(*cols)`, `defer(*cols)`, `values_list(*cols)`, `consistency(level)`, `timeout(sec)`, `timestamp(ts)`

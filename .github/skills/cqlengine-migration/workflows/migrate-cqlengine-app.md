@@ -233,7 +233,14 @@ enhancements to adopt after the core migration.
    next_page = Product.find().fetch_size(25).page(page.paging_state).paged_all()
    ```
 
-5. **Advanced QuerySet Methods:**
+5. **LWT Result Handling (Typed):**
+   ```python
+   result = Product.find().if_not_exists().create(id=pid, name="Widget")
+   if result and result.applied:
+       ...
+   ```
+
+6. **Advanced QuerySet Methods:**
    - `per_partition_limit(N)` — Limit rows per partition
    - `only("col1", "col2")` — Select specific columns
    - `defer("col1")` — Exclude columns from SELECT
@@ -242,12 +249,13 @@ enhancements to adopt after the core migration.
    - `timeout(5.0)` — Set per-query timeout
    - `timestamp(ts)` — Set write timestamp
 
-6. **Raw CQL & Keyspace Management:**
+7. **Raw CQL & Keyspace Management:**
    ```python
    from coodie.sync import execute_raw, create_keyspace, drop_keyspace
 
    execute_raw("SELECT * FROM system.local")
-   create_keyspace("my_ks", strategy={"class": "SimpleStrategy", "replication_factor": 1})
+   create_keyspace("my_ks", replication_factor=1)
+   create_keyspace("my_ks", strategy="NetworkTopologyStrategy", dc_replication_map={"dc1": 3})
    ```
 
 **Exit criteria:** Application leverages coodie-specific features where beneficial.
