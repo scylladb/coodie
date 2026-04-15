@@ -239,7 +239,7 @@ async def _seed(count: int) -> None:
             progress.update(
                 task,
                 advance=1,
-                description=f"[{style['color']}]{style['icon']} {style['label']}[/] \"{item.title[:40]}\"",
+                description=f'[{style["color"]}]{style["icon"]} {style["label"]}[/] "{item.title[:40]}"',
             )
 
     # --- Summary table ---
@@ -274,10 +274,7 @@ async def _seed(count: int) -> None:
     )
     console.print(table)
     console.print()
-    console.print(
-        "[bold #8b5cf6]🎭 The Shapeshifter's Archive has been sealed. "
-        "All content forms are classified.[/]"
-    )
+    console.print("[bold #8b5cf6]🎭 The Shapeshifter's Archive has been sealed. All content forms are classified.[/]")
     console.print("[dim]   Launch the app with: uv run uvicorn main:app --reload[/]")
     console.print()
 
