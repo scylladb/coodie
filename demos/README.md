@@ -31,6 +31,7 @@ seeds sample data, and launches the app.
 | 🔮 Materialized Views | FastAPI + HTMX | `MaterializedView`, `sync_view()`, read-only queries, auto-updating views | [`materialized-views/`](materialized-views/) |
 | 📊 Realtime Counters | FastAPI + HTMX | `CounterDocument`, `increment()`, `decrement()`, live analytics dashboard | [`realtime-counters/`](realtime-counters/) |
 | 🔧 Schema Migrations | FastAPI | `coodie migrate` CLI, apply/rollback/dry-run, `_coodie_migrations` state tracking, migration file authoring | [`schema-migrations/`](schema-migrations/) |
+| 🎭 Polymorphic CMS | FastAPI + HTMX | Single-table inheritance, `Discriminator` column, Article/Video/Podcast subtypes, type filtering | [`polymorphic-cms/`](polymorphic-cms/) |
 
 ## Shared Infrastructure
 

@@ -1,0 +1,31 @@
+{% if items %}
+{% for item in items %}
+<div class="content-item" data-type="{{ item.content_type }}"
+     hx-get="/ui/content/{{ item.id }}" hx-target="#detail-panel" hx-swap="innerHTML">
+  <div>
+    <div class="content-title">{{ item.title }}</div>
+    <div class="content-meta">
+      <span class="type-badge {{ item.content_type }}">
+        {% if item.content_type == 'article' %}📰 Article{% elif item.content_type == 'video' %}🎬 Video{% elif item.content_type == 'podcast' %}🎙️ Podcast{% else %}🎭 {{ item.content_type }}{% endif %}
+      </span>
+      · {{ item.author }}
+      {% if item.published %}
+        <span class="pub-badge published">Published</span>
+      {% else %}
+        <span class="pub-badge draft">Draft</span>
+      {% endif %}
+    </div>
+    {% if item.summary %}<div style="font-size:0.75rem;color:var(--muted);margin-top:4px;">{{ item.summary[:80] }}{% if item.summary|length > 80 %}…{% endif %}</div>{% endif %}
+  </div>
+  <div style="text-align:right;">
+    <div style="font-size:0.65rem;color:var(--dim);">{{ item.created_at.strftime("%Y-%m-%d") }}</div>
+    <button class="btn btn-danger btn-sm"
+            hx-delete="/ui/content/{{ item.id }}" hx-target="#content-list" hx-swap="innerHTML"
+            hx-confirm="Delete '{{ item.title }}'? This content form will be lost forever."
+            onclick="event.stopPropagation()">✕</button>
+  </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="empty">No content detected — create some above or run seed.py to populate the Archive</div>
+{% endif %}
