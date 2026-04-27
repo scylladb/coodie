@@ -1,0 +1,60 @@
+<div class="card" style="margin-bottom:1.25rem;">
+  <h2>
+    {% if item.content_type == 'article' %}📰{% elif item.content_type == 'video' %}🎬{% elif item.content_type == 'podcast' %}🎙️{% else %}🎭{% endif %}
+    Content Detail
+  </h2>
+  <div style="font-size:1.05rem;font-weight:700;margin-bottom:0.75rem;">
+    <span style="{% if item.content_type == 'article' %}color:var(--coral);{% elif item.content_type == 'video' %}color:var(--violet);{% elif item.content_type == 'podcast' %}color:var(--teal);{% endif %}">{{ item.title }}</span>
+  </div>
+
+  <div class="detail-meta">
+    <div class="detail-meta-item">Content Type
+      <span>
+        <span class="type-badge {{ item.content_type }}">
+          {% if item.content_type == 'article' %}📰 Article{% elif item.content_type == 'video' %}🎬 Video{% elif item.content_type == 'podcast' %}🎙️ Podcast{% else %}🎭 {{ item.content_type }}{% endif %}
+        </span>
+      </span>
+    </div>
+    <div class="detail-meta-item">Author <span>{{ item.author }}</span></div>
+    <div class="detail-meta-item">Status
+      <span>
+        {% if item.published %}
+          <span class="pub-badge published">Published</span>
+        {% else %}
+          <span class="pub-badge draft">Draft</span>
+        {% endif %}
+      </span>
+    </div>
+    <div class="detail-meta-item">Created <span>{{ item.created_at.strftime("%Y-%m-%d %H:%M") }} UTC</span></div>
+  </div>
+
+  {% if item.summary %}<p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.75rem;line-height:1.6;">{{ item.summary }}</p>{% endif %}
+
+  <!-- Type-specific fields -->
+  {% if item.content_type == 'article' %}
+    <div style="border-top:1px solid var(--border);padding-top:0.75rem;margin-top:0.5rem;">
+      <div class="detail-meta">
+        <div class="detail-meta-item">Word Count <span style="color:var(--coral);">{{ item.word_count }} words</span></div>
+      </div>
+      {% if item.body %}<p style="font-size:0.8rem;color:var(--text);line-height:1.7;white-space:pre-wrap;">{{ item.body[:500] }}{% if item.body|length > 500 %}…{% endif %}</p>{% endif %}
+    </div>
+  {% elif item.content_type == 'video' %}
+    <div style="border-top:1px solid var(--border);padding-top:0.75rem;margin-top:0.5rem;">
+      <div class="detail-meta">
+        <div class="detail-meta-item">Duration <span style="color:var(--violet);">{{ (item.duration_seconds // 60) }}m {{ item.duration_seconds % 60 }}s</span></div>
+        <div class="detail-meta-item">Resolution <span>{{ item.resolution }}</span></div>
+      </div>
+      {% if item.video_url %}<div style="font-size:0.75rem;color:var(--muted);">🔗 <a href="{{ item.video_url }}" target="_blank">{{ item.video_url }}</a></div>{% endif %}
+    </div>
+  {% elif item.content_type == 'podcast' %}
+    <div style="border-top:1px solid var(--border);padding-top:0.75rem;margin-top:0.5rem;">
+      <div class="detail-meta">
+        <div class="detail-meta-item">Episode <span style="color:var(--teal);">#{{ item.episode_number }}</span></div>
+        <div class="detail-meta-item">Duration <span style="color:var(--teal);">{{ (item.duration_seconds // 60) }}m {{ item.duration_seconds % 60 }}s</span></div>
+      </div>
+      {% if item.audio_url %}<div style="font-size:0.75rem;color:var(--muted);">🔗 <a href="{{ item.audio_url }}" target="_blank">{{ item.audio_url }}</a></div>{% endif %}
+    </div>
+  {% endif %}
+
+  <div class="content-id">CONTENT-ID: {{ item.id }} · DISCRIMINATOR: {{ item.content_type }}</div>
+</div>
