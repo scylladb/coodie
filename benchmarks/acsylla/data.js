@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779688897407,
+  "lastUpdate": 1780470155220,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -15612,6 +15612,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 9.491133956501485e-7",
             "extra": "mean: 5.580118891442185 usec\nrounds: 7469"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "29139614+renovate[bot]@users.noreply.github.com",
+            "name": "renovate[bot]",
+            "username": "renovate[bot]"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "9d99f2ba199807041190645e80536f5da2bddea0",
+          "message": "chore(deps): update actions/upload-pages-artifact action to v5",
+          "timestamp": "2026-06-03T10:01:49+03:00",
+          "tree_id": "db3b009e69b1273eb2bec9d1f9db7275f7e6c675",
+          "url": "https://github.com/scylladb/coodie/commit/9d99f2ba199807041190645e80536f5da2bddea0"
+        },
+        "date": 1780470154337,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 54040.06304136297,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000034410260931431615",
+            "extra": "mean: 18.504789663820095 usec\nrounds: 7198"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1640383.6070210328,
+            "unit": "iter/sec",
+            "range": "stddev: 8.843980340926316e-7",
+            "extra": "mean: 609.6135048654983 nsec\nrounds: 122519"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 144667.43509361323,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000007958885823302682",
+            "extra": "mean: 6.912405679639702 usec\nrounds: 17642"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 562371.930617579,
+            "unit": "iter/sec",
+            "range": "stddev: 4.4651466172439207e-7",
+            "extra": "mean: 1.7781826324472343 usec\nrounds: 50128"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 593735.1130107961,
+            "unit": "iter/sec",
+            "range": "stddev: 5.440051095344485e-7",
+            "extra": "mean: 1.6842527552885633 usec\nrounds: 29036"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 803542.4004037243,
+            "unit": "iter/sec",
+            "range": "stddev: 3.707268450853547e-7",
+            "extra": "mean: 1.2444894003074005 usec\nrounds: 116796"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 866847.3307535641,
+            "unit": "iter/sec",
+            "range": "stddev: 3.4053889648736203e-7",
+            "extra": "mean: 1.1536056748662815 usec\nrounds: 68583"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 686257.7576162331,
+            "unit": "iter/sec",
+            "range": "stddev: 3.767963272256178e-7",
+            "extra": "mean: 1.4571784273500583 usec\nrounds: 78071"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 175751.71531330026,
+            "unit": "iter/sec",
+            "range": "stddev: 7.554036525781474e-7",
+            "extra": "mean: 5.689844894073268 usec\nrounds: 7266"
           }
         ]
       }
