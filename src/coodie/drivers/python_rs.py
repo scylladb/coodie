@@ -45,7 +45,7 @@ class PythonRsDriver(AbstractDriver):
         from coodie.drivers import register_driver
         from coodie.drivers.python_rs import PythonRsDriver
 
-        builder = SessionBuilder(contact_points=["127.0.0.1"])
+        builder = SessionBuilder().contact_points((("127.0.0.1", 9042),))
         session = await builder.connect()
 
         driver = PythonRsDriver(session=session, default_keyspace="catalog")
@@ -120,7 +120,7 @@ class PythonRsDriver(AbstractDriver):
             from coodie.drivers.python_rs import PythonRsDriver
 
             async def make_session():
-                builder = SessionBuilder(contact_points=["127.0.0.1"])
+                builder = SessionBuilder().contact_points((("127.0.0.1", 9042),))
                 return await builder.connect()
 
             driver = PythonRsDriver.connect(make_session, default_keyspace="catalog")

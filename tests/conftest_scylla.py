@@ -245,7 +245,7 @@ async def create_python_rs_session(scylla_container: Any, keyspace: str) -> Any:
     networks = container_info.attrs["NetworkSettings"]["Networks"]
     container_ip = next(iter(networks.values()))["IPAddress"]
 
-    builder = SessionBuilder(contact_points=[container_ip], port=9042)
+    builder = SessionBuilder().contact_points(((container_ip, 9042),))
     session = await builder.connect()
 
     # Create keyspace via raw CQL (USE keyspace is not supported)

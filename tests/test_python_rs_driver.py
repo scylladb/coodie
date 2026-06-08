@@ -7,6 +7,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from coodie.drivers import (
+    _build_python_rs_session_builder,
+    _python_rs_contact_points,
     _registry,
     get_driver,
     init_coodie,
@@ -32,6 +34,37 @@ def _mock_scylla_modules() -> dict[str, MagicMock]:
         "scylla": scylla_mod,
         "scylla.session_builder": scylla_mod.session_builder,
     }
+
+
+def test_python_rs_contact_points_without_port():
+    assert _python_rs_contact_points(["127.0.0.1", "127.0.0.2"], None) == ("127.0.0.1", "127.0.0.2")
+
+
+def test_python_rs_contact_points_with_port():
+    assert _python_rs_contact_points(["127.0.0.1", "127.0.0.2"], "9042") == (
+        ("127.0.0.1", 9042),
+        ("127.0.0.2", 9042),
+    )
+
+
+def test_python_rs_contact_points_with_integer_port():
+    assert _python_rs_contact_points(["127.0.0.1"], 9042) == (("127.0.0.1", 9042),)
+
+
+def test_build_python_rs_session_builder_sets_contact_points_and_forwards_kwargs():
+    builder = MagicMock()
+    builder.contact_points.return_value = builder
+    session_builder_cls = MagicMock(return_value=builder)
+
+    result = _build_python_rs_session_builder(
+        session_builder_cls,
+        ["127.0.0.1"],
+        {"port": "9042", "compression": "lz4"},
+    )
+
+    assert result is builder
+    session_builder_cls.assert_called_once_with(compression="lz4")
+    builder.contact_points.assert_called_once_with((("127.0.0.1", 9042),))
 
 
 # ------------------------------------------------------------------
@@ -360,6 +393,7 @@ async def test_init_coodie_async_python_rs_with_hosts():
     mock_builder = MagicMock()
     mock_session = MagicMock()
     mock_scylla.session_builder.SessionBuilder = MagicMock(return_value=mock_builder)
+    mock_builder.contact_points.return_value = mock_builder
     mock_builder.connect = AsyncMock(return_value=mock_session)
 
     modules = {
@@ -375,6 +409,7 @@ async def test_init_coodie_async_python_rs_with_hosts():
     assert get_driver() is driver
     # connect() creates session on background loop via session_factory
     mock_scylla.session_builder.SessionBuilder.assert_called_once()
+    mock_builder.contact_points.assert_called_once_with(("127.0.0.1",))
     mock_builder.connect.assert_awaited_once()
     assert driver._bridge_to_bg_loop is True
     _registry.clear()
@@ -470,6 +505,7 @@ def test_init_coodie_python_rs_with_hosts():
     mock_builder = MagicMock()
     mock_session = MagicMock()
     mock_scylla.session_builder.SessionBuilder = MagicMock(return_value=mock_builder)
+    mock_builder.contact_points.return_value = mock_builder
     mock_builder.connect = AsyncMock(return_value=mock_session)
 
     modules = {
@@ -481,5 +517,6 @@ def test_init_coodie_python_rs_with_hosts():
     assert get_driver() is driver
     assert driver._bridge_to_bg_loop is True
     mock_scylla.session_builder.SessionBuilder.assert_called_once()
+    mock_builder.contact_points.assert_called_once_with(("127.0.0.1",))
     mock_builder.connect.assert_awaited_once()
     _registry.clear()
