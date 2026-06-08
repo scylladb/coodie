@@ -31,6 +31,7 @@ seeds sample data, and launches the app.
 | 🔮 Materialized Views | FastAPI + HTMX | `MaterializedView`, `sync_view()`, read-only queries, auto-updating views | [`materialized-views/`](materialized-views/) |
 | 📊 Realtime Counters | FastAPI + HTMX | `CounterDocument`, `increment()`, `decrement()`, live analytics dashboard | [`realtime-counters/`](realtime-counters/) |
 | 🔧 Schema Migrations | FastAPI | `coodie migrate` CLI, apply/rollback/dry-run, `_coodie_migrations` state tracking, migration file authoring | [`schema-migrations/`](schema-migrations/) |
+| 🐙 Argus Test Tracker | CLI | Composite PK + clustering, compound partition keys, TimeUUID notifications, batch ingestion, prepared-statement caching, partition-scoped queries | [`argus-tracker/`](argus-tracker/) |
 
 ## Shared Infrastructure
 
