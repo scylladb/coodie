@@ -43,7 +43,6 @@ implementation phases:
 | `udt-support.md` | 7 phases | Mixed (some ✅, some ⏳) |
 | `documentation-plan.md` | 6 phases | Mixed (checkboxes in milestones) |
 | `performance-improvement.md` | 5 phases | Multiple completed |
-| `pr-comment-rebase-squash-action.md` (removed) | 5 phases | All ✅ |
 | `github-actions-testing-plan.md` | 4 phases | Partial |
 | `python-rs-driver-support.md` | Multiple phases | Partial |
 
@@ -225,7 +224,7 @@ analysis of all 15 plan files, the following patterns exist:
 ### Phase Header Formats
 
 ```markdown
-### Phase 1: Core Workflow Scaffold ✅           ← status in header (rebase-squash)
+### Phase 1: Core Workflow Scaffold ✅
 ### Phase N: Title (Priority: High)              ← priority in header (most plans)
 ### Phase 1 — Quick wins                         ← dash separator (performance)
 ```

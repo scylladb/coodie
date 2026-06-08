@@ -99,24 +99,24 @@ def test_gh_cli_has_token(workflow_path: Path):
 
 
 # ---------------------------------------------------------------------------
-# 3.5 — Workflows with git rebase/log use fetch-depth: 0
+# 3.5 — Workflows with git history commands use fetch-depth: 0
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize("workflow_path", WORKFLOW_FILES, ids=[p.name for p in WORKFLOW_FILES])
 def test_fetch_depth_for_git_history(workflow_path: Path):
-    """If any step uses `git rebase`, `git log`, or `git merge`, a checkout with fetch-depth: 0 must exist."""
+    """If any step uses `git log`, `git merge-base`, or `git merge`, a checkout with fetch-depth: 0 must exist."""
     workflow = _load_workflow(workflow_path)
     steps = list(_iter_steps(workflow))
 
-    needs_history = any(re.search(r"\bgit\s+(rebase|log|merge-base|merge)\b", step.get("run", "")) for step in steps)
+    needs_history = any(re.search(r"\bgit\s+(log|merge-base|merge)\b", step.get("run", "")) for step in steps)
     if not needs_history:
         pytest.skip("no git history commands found")
 
     has_full_fetch = any(
         step.get("with", {}).get("fetch-depth") == 0 for step in steps if "actions/checkout" in step.get("uses", "")
     )
-    assert has_full_fetch, f"{workflow_path.name}: uses git rebase/log/merge but no checkout with fetch-depth: 0"
+    assert has_full_fetch, f"{workflow_path.name}: uses git log/merge commands but no checkout with fetch-depth: 0"
 
 
 # ---------------------------------------------------------------------------

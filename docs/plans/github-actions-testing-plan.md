@@ -63,7 +63,6 @@ Legend:
 
 | Workflow | Complexity | Testable Shell Logic | Key Risks |
 |---------|:----------:|:--------------------:|-----------|
-| PR Rebase & Squash (removed) | 🔴 | Yes (9 shell steps) | Permission checks, command parsing, git rebase/squash, Copilot CLI fallback |
 | Self-Healing CI (removed) | 🔴 | Yes (3 shell steps) | Log collection loops, PR comment construction, `workflow_run` trigger |
 | Benchmarks | 🟡 | Minimal | Matrix strategy, artifact management, gh-pages deploy |
 | Integration Tests | 🟡 | Minimal | Matrix with driver exclusions, service containers |
@@ -429,7 +428,7 @@ class BatsTestFailure(Exception):
 | 3.2 | Test: all workflows use `actions/checkout@v4` (not `@v3` or unpinned) |
 | 3.3 | Test: all multi-job workflows define a `concurrency` group |
 | 3.4 | Test: all workflows that use `gh` CLI set `GH_TOKEN` env var |
-| 3.5 | Test: no workflow uses `actions/checkout` with `fetch-depth: 1` when `git rebase` or `git log` is used in a later step |
+| 3.5 | Test: no workflow uses `actions/checkout` with `fetch-depth: 1` when `git log`, `git merge-base`, or `git merge` is used in a later step |
 | 3.6 | Test: all `schedule` triggers have valid cron expressions |
 | 3.7 | Run as part of the existing `pytest` unit test suite (no new CI job needed) |
 | 3.8 | Verify: all convention tests pass |
@@ -458,30 +457,6 @@ class BatsTestFailure(Exception):
 
 ### 5.2 Shell Script Unit Tests (Bats)
 
-#### `tests/workflows/test_parse_command.bats`
-
-| Test Case | Phase |
-|---|---|
-| `/rebase` → `do_rebase=true`, `do_squash=false` | 2 |
-| `/squash` → `do_rebase=false`, `do_squash=true` | 2 |
-| `/rebase squash` → `do_rebase=true`, `do_squash=true` | 2 |
-| `/REBASE` (uppercase) → `do_rebase=true` (case-insensitive) | 2 |
-| `  /rebase  ` (whitespace) → `do_rebase=true` | 2 |
-| `rebase` (workflow_dispatch, no leading `/`) → `do_rebase=true` | 2 |
-| `rebase squash` (workflow_dispatch) → both true | 2 |
-| `hello world` (no command) → both false | 2 |
-| Empty string → both false | 2 |
-
-#### `tests/workflows/test_build_squash_message.bats`
-
-| Test Case | Phase |
-|---|---|
-| Copilot CLI returns valid body → message = title + body | 2 |
-| Copilot CLI returns empty → fallback to PR body | 2 |
-| Copilot CLI returns error text (contains "error:") → rejected, falls back | 2 |
-| PR body is also empty → message = title only | 2 |
-| Single-commit PR → exits with "nothing to squash" | 2 |
-
 #### `tests/workflows/test_collect_failed_logs.bats`
 
 | Test Case | Phase |
@@ -500,16 +475,13 @@ class BatsTestFailure(Exception):
 | All workflows use pinned action versions (`@vN` or `@sha`) | 3 |
 | All multi-job workflows have `concurrency` groups | 3 |
 | All `run:` steps using `gh` CLI have `GH_TOKEN` in `env:` | 3 |
-| All workflows with `git log`/`git rebase` use `fetch-depth: 0` | 3 |
+| All workflows with `git log`, `git merge-base`, or `git merge` use `fetch-depth: 0` | 3 |
 | All `schedule` cron expressions are syntactically valid | 3 |
 
 ### 5.4 Live Smoke Tests (workflow_dispatch)
 
 | Test Case | Phase |
 |---|---|
-| `/rebase` on a PR with no conflicts → branch rebased, comment posted | 4 |
-| `/squash` on a multi-commit PR → single commit with PR title as subject | 4 |
-| `/rebase squash` → rebase then squash in one run | 4 |
 | Trigger on closed PR → workflow exits with "not open" error | 4 |
 
 ---
