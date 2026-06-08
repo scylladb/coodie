@@ -11,6 +11,25 @@ _registry: dict[str, AbstractDriver] = {}
 _default_driver_name: str | None = None
 
 
+def _python_rs_contact_points(hosts: list[str], port: str | int | None) -> tuple[str | tuple[str, int], ...]:
+    if port is None:
+        return tuple(hosts)
+    return tuple((host, int(port)) for host in hosts)
+
+
+def _build_python_rs_session_builder(session_builder_cls: Any, hosts: list[str], kwargs: dict[str, Any]) -> Any:
+    """Build a python-rs SessionBuilder via fluent API.
+
+    Extracts optional ``port`` from ``kwargs``, forwards remaining kwargs to
+    ``SessionBuilder(...)``, then applies normalized contact points.
+    """
+    builder_kwargs = dict(kwargs)
+    port = builder_kwargs.pop("port", None)
+    builder = session_builder_cls(**builder_kwargs)
+    builder = builder.contact_points(_python_rs_contact_points(hosts, port))
+    return builder
+
+
 def register_driver(
     name: str,
     driver: AbstractDriver,
@@ -66,7 +85,7 @@ def init_coodie(
                 ) from exc
 
             async def _make_session() -> Any:
-                builder = SessionBuilder(contact_points=hosts, **kwargs)
+                builder = _build_python_rs_session_builder(SessionBuilder, hosts, kwargs)
                 return await builder.connect()
 
             driver = PythonRsDriver.connect(
@@ -180,7 +199,7 @@ async def init_coodie_async(
         from coodie.drivers.python_rs import PythonRsDriver
 
         async def _make_python_rs_session() -> Any:
-            builder = SessionBuilder(contact_points=hosts, **kwargs)
+            builder = _build_python_rs_session_builder(SessionBuilder, hosts, kwargs)
             return await builder.connect()
 
         driver = PythonRsDriver.connect(
