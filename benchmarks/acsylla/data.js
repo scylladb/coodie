@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780897149307,
+  "lastUpdate": 1780931573227,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -15960,6 +15960,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 8.054079762760881e-7",
             "extra": "mean: 5.351923041052145 usec\nrounds: 6432"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "198982749+Copilot@users.noreply.github.com",
+            "name": "copilot-swe-agent[bot]",
+            "username": "Copilot"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "62e6773d32a32ea5c9d2d9a164704b920ce615da",
+          "message": "fix(python-rs): use contact_points() fluent API and update tests",
+          "timestamp": "2026-06-08T18:11:58+03:00",
+          "tree_id": "68058bd4bb9f1f8becbb2acff61f3940d5fb2b4a",
+          "url": "https://github.com/scylladb/coodie/commit/62e6773d32a32ea5c9d2d9a164704b920ce615da"
+        },
+        "date": 1780931571791,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 62500.440939484186,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000017045715002738986",
+            "extra": "mean: 15.999887120288417 usec\nrounds: 7539"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1385946.2969855936,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003141572727925851",
+            "extra": "mean: 721.5286784018838 nsec\nrounds: 184163"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 145289.70259021732,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000998129226651931",
+            "extra": "mean: 6.882800240980961 usec\nrounds: 19919"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 576049.3103806226,
+            "unit": "iter/sec",
+            "range": "stddev: 4.839385607043409e-7",
+            "extra": "mean: 1.7359624983133015 usec\nrounds: 59624"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 616037.2896307013,
+            "unit": "iter/sec",
+            "range": "stddev: 3.983680869907998e-7",
+            "extra": "mean: 1.6232783580349082 usec\nrounds: 31596"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 839304.0047567423,
+            "unit": "iter/sec",
+            "range": "stddev: 3.490483501246951e-7",
+            "extra": "mean: 1.191463396257513 usec\nrounds: 138046"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 854226.257842663,
+            "unit": "iter/sec",
+            "range": "stddev: 3.990975505433704e-7",
+            "extra": "mean: 1.1706500365904071 usec\nrounds: 76488"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 726397.6385827684,
+            "unit": "iter/sec",
+            "range": "stddev: 3.7494598154090924e-7",
+            "extra": "mean: 1.376656457682105 usec\nrounds: 109087"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 176057.5237570408,
+            "unit": "iter/sec",
+            "range": "stddev: 8.710828355994114e-7",
+            "extra": "mean: 5.6799617457984874 usec\nrounds: 7790"
           }
         ]
       }
