@@ -3,32 +3,57 @@
   "extends": [
     "github>browniebroke/renovate-configs:python",
     "schedule:weekly",
-    ":separateMajorReleases"
+    ":separateMajorReleases",
+    "helpers:pinGitHubActionDigestsToSemver"
   ],
+  "commitBodyTable": true,
   "minimumReleaseAge": "7 days",
   "vulnerabilityAlerts": {
     "enabled": true,
-    "labels": ["security"],
-    "schedule": ["at any time"],
+    "labels": [
+      "security"
+    ],
+    "schedule": [
+      "at any time"
+    ],
     "minimumReleaseAge": "0 days"
   },
   "packageRules": [
     {
       "description": "Group all non-major Python dependency updates",
-      "matchManagers": ["pep621", "uv"],
-      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "matchManagers": [
+        "pep621",
+        "uv"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
       "groupName": "python dependencies (non-major)"
     },
     {
       "description": "Group all GitHub Actions updates",
-      "matchManagers": ["github-actions"],
-      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
       "groupName": "github-actions (non-major)"
     },
     {
       "description": "Group all pre-commit hook updates",
-      "matchManagers": ["pre-commit"],
-      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "matchManagers": [
+        "pre-commit"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
       "groupName": "pre-commit hooks (non-major)"
     }
   ]
