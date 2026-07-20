@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784533308398,
+  "lastUpdate": 1784577945717,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -16830,6 +16830,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 8.598062852769321e-7",
             "extra": "mean: 5.409784548464206 usec\nrounds: 7352"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "29139614+renovate[bot]@users.noreply.github.com",
+            "name": "renovate[bot]",
+            "username": "renovate[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b51824e7a329eec5bccf6f2c4bd6e766defb094b",
+          "message": "chore(deps): update pre-commit hook astral-sh/ruff-pre-commit to v0.15.21 (#260)\n\nCo-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>",
+          "timestamp": "2026-07-20T20:04:51Z",
+          "tree_id": "6eebafed9a80833426807056d8d84be02caa9cab",
+          "url": "https://github.com/scylladb/coodie/commit/b51824e7a329eec5bccf6f2c4bd6e766defb094b"
+        },
+        "date": 1784577943724,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 76662.46810988193,
+            "unit": "iter/sec",
+            "range": "stddev: 8.640430217498679e-7",
+            "extra": "mean: 13.044192610218065 usec\nrounds: 8390"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1805867.7438409484,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3938046191924386e-7",
+            "extra": "mean: 553.750408029922 nsec\nrounds: 143370"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 151699.3611587634,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000029066801374513134",
+            "extra": "mean: 6.591985571735097 usec\nrounds: 21347"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 594923.5641064984,
+            "unit": "iter/sec",
+            "range": "stddev: 3.027015906100896e-7",
+            "extra": "mean: 1.6808882020026832 usec\nrounds: 48525"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 644211.2464681854,
+            "unit": "iter/sec",
+            "range": "stddev: 2.9276947429431567e-7",
+            "extra": "mean: 1.5522858464244234 usec\nrounds: 32444"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 887624.5442290602,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3617811965336937e-7",
+            "extra": "mean: 1.1266024655374336 usec\nrounds: 85985"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 860766.4338149413,
+            "unit": "iter/sec",
+            "range": "stddev: 3.0680926131901087e-7",
+            "extra": "mean: 1.1617553388646575 usec\nrounds: 66868"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 800156.2555789897,
+            "unit": "iter/sec",
+            "range": "stddev: 3.158545159898866e-7",
+            "extra": "mean: 1.249755898335637 usec\nrounds: 82015"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 189538.7591847361,
+            "unit": "iter/sec",
+            "range": "stddev: 9.559872779596023e-7",
+            "extra": "mean: 5.275965740734531 usec\nrounds: 7560"
           }
         ]
       }
