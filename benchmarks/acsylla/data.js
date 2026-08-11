@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786068112274,
+  "lastUpdate": 1786422747681,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -17352,6 +17352,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 9.290305485875377e-7",
             "extra": "mean: 5.552489174664241 usec\nrounds: 7621"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "e2a6e66784810f8a9b5fe3aee47a90e3e598bcd7",
+          "message": "ci(renovate): show semver versions in GitHub Actions digest PRs\n\nAdd helpers:pinGitHubActionDigestsToSemver preset so Renovate extracts\nthe actual semver tag (e.g. v6.0.2 → v6.0.3) when updating SHA-pinned\nGitHub Actions, instead of only showing opaque digest fragments.\n\nEnable commitBodyTable to include a version table in commit messages\nshowing datasource, package, and version change.\n\nThis keeps SHA pinning for security while making digest update PRs\ninformative with proper version context, release notes, and diffs.",
+          "timestamp": "2026-08-11T07:31:39+03:00",
+          "tree_id": "6b17194c57312d237efb47c65ceb6d9c78822c1c",
+          "url": "https://github.com/scylladb/coodie/commit/e2a6e66784810f8a9b5fe3aee47a90e3e598bcd7"
+        },
+        "date": 1786422746463,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 84482.65937903279,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000014720025343174554",
+            "extra": "mean: 11.836748598472548 usec\nrounds: 9276"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1684950.8168735437,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4415475561925e-7",
+            "extra": "mean: 593.4891333240919 nsec\nrounds: 188006"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 147742.1371180815,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008796440225483498",
+            "extra": "mean: 6.768549714430891 usec\nrounds: 17862"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 602426.8595671498,
+            "unit": "iter/sec",
+            "range": "stddev: 5.066842023747823e-7",
+            "extra": "mean: 1.6599525471332917 usec\nrounds: 63052"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 611589.8455033469,
+            "unit": "iter/sec",
+            "range": "stddev: 4.6843838066492815e-7",
+            "extra": "mean: 1.6350827394411467 usec\nrounds: 33394"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 823506.771601613,
+            "unit": "iter/sec",
+            "range": "stddev: 3.683804498027231e-7",
+            "extra": "mean: 1.2143190978929423 usec\nrounds: 138832"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 871350.367431981,
+            "unit": "iter/sec",
+            "range": "stddev: 3.627314148968435e-7",
+            "extra": "mean: 1.147643975806393 usec\nrounds: 77197"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 695890.6322923133,
+            "unit": "iter/sec",
+            "range": "stddev: 4.4951107042517737e-7",
+            "extra": "mean: 1.437007416964256 usec\nrounds: 88176"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 186202.3838814113,
+            "unit": "iter/sec",
+            "range": "stddev: 8.247023216519511e-7",
+            "extra": "mean: 5.3705005228981415 usec\nrounds: 7650"
           }
         ]
       }
