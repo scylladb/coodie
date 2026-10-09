@@ -60,6 +60,56 @@ def init_coodie(
     speculative_execution_policy: Any | None = None,
     **kwargs: Any,
 ) -> AbstractDriver:
+    """Create a driver, register it under *name*, and make it the default.
+
+    This is the synchronous entry point (re-exported as
+    ``coodie.sync.init_coodie``).  It can be called from plain sync code;
+    for ``driver_type="acsylla"`` and ``"python-rs"`` with ``hosts=``, the
+    session is created on a dedicated background event loop, so the returned
+    driver supports both the sync and async APIs (the "sync bridge").
+
+    Args:
+        hosts: Contact points.  For ``"scylla"``/``"cassandra"`` defaults to
+            ``["127.0.0.1"]`` when neither *hosts* nor *session* is given.
+            For ``"acsylla"`` and ``"python-rs"`` either *hosts* or
+            *session* is required.
+        session: Pre-created driver session to wrap (bring your own
+            session).  When given, *hosts* and ``**kwargs`` are ignored.
+            An acsylla session passed here is not on the background loop:
+            ``AcsyllaDriver`` emits a ``UserWarning`` and sync calls may hang.
+        keyspace: Default keyspace.  Also passed to ``Cluster.connect()``
+            (scylla/cassandra) and ``create_session()`` (acsylla).
+        driver_type: ``"scylla"`` (default), ``"cassandra"``, ``"acsylla"``
+            or ``"python-rs"``.  ``"scylla"`` and ``"cassandra"`` both use
+            ``CassandraDriver``; they differ only in which package provides
+            the ``cassandra`` module.
+        name: Registry name, used with ``get_driver(name)`` for multi-cluster
+            setups.  The new driver always becomes the default.
+        ssl_context: ``ssl.SSLContext`` forwarded to ``Cluster()``.
+            scylla/cassandra only.
+        lazy: When ``True`` (and no *session*), return a ``LazyDriver`` that
+            connects on first use.  scylla/cassandra only.  *compression*
+            and *speculative_execution_policy* are not applied in lazy mode;
+            pass them via ``**kwargs`` instead.
+        compression: Forwarded to ``Cluster(compression=...)``.
+            scylla/cassandra only, non-lazy.
+        speculative_execution_policy: Forwarded to
+            ``Cluster(speculative_execution_policy=...)``.  scylla/cassandra
+            only, non-lazy.
+        **kwargs: Extra connection options, used only when coodie creates the
+            session: ``Cluster(hosts, **kwargs)`` for scylla/cassandra,
+            ``acsylla.create_cluster(hosts, **kwargs)`` for acsylla, and
+            ``SessionBuilder(**kwargs)`` for python-rs (where ``port`` is
+            popped and applied to every contact point instead).
+
+    Returns:
+        The registered driver.
+
+    Raises:
+        ConfigurationError: Unknown *driver_type*, or acsylla/python-rs
+            without *hosts* or *session*.
+        ImportError: The selected driver package is not installed.
+    """
     if driver_type == "acsylla":
         from coodie.drivers.acsylla import AcsyllaDriver
 
@@ -147,6 +197,45 @@ async def init_coodie_async(
     ssl_verify_flags: int | None = None,
     **kwargs: Any,
 ) -> AbstractDriver:
+    """Async variant of :func:`init_coodie` (re-exported as ``coodie.aio.init_coodie``).
+
+    Use it from inside a running event loop.  For ``"acsylla"`` and
+    ``"python-rs"`` with ``hosts=``, the session is created on a dedicated
+    background loop (same as :func:`init_coodie`), so the driver works from
+    both sync and async code.  With ``session=``, the driver runs the async
+    API directly on the caller's loop.  Every other case
+    (``"scylla"``/``"cassandra"``) delegates to :func:`init_coodie`, which
+    connects synchronously.
+
+    Args:
+        hosts: Contact points.  See :func:`init_coodie`.
+        session: Pre-created driver session to wrap.  When given, *hosts*
+            and ``**kwargs`` are ignored.
+        keyspace: Default keyspace.
+        driver_type: ``"scylla"`` (default), ``"cassandra"``, ``"acsylla"``
+            or ``"python-rs"``.
+        name: Registry name.  The new driver always becomes the default.
+        ssl_context: ``ssl.SSLContext`` for scylla/cassandra.
+        ssl_enabled: acsylla only (with *hosts*); forwarded to
+            ``acsylla.create_cluster()``.
+        ssl_trusted_cert: acsylla only (with *hosts*); PEM CA certificate.
+        ssl_cert: acsylla only (with *hosts*); PEM client certificate.
+        ssl_private_key: acsylla only (with *hosts*); PEM client key.
+        ssl_verify_flags: acsylla only (with *hosts*); certificate
+            verification flags.
+        **kwargs: Extra connection options, as in :func:`init_coodie`.  For
+            scylla/cassandra they are passed through to :func:`init_coodie`,
+            so ``lazy``, ``compression`` and ``speculative_execution_policy``
+            can be given here too.
+
+    Returns:
+        The registered driver.
+
+    Raises:
+        ConfigurationError: Unknown *driver_type*, or acsylla/python-rs
+            without *hosts* or *session*.
+        ImportError: The selected driver package is not installed.
+    """
     if driver_type == "acsylla" and session is None and hosts is not None:
         try:
             import acsylla  # type: ignore[import-untyped]
@@ -235,8 +324,8 @@ async def init_coodie_async(
 __all__ = [
     "AbstractDriver",
     "LazyDriver",
-    "register_driver",
     "get_driver",
     "init_coodie",
     "init_coodie_async",
+    "register_driver",
 ]

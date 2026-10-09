@@ -35,6 +35,17 @@ pip install "coodie[cassandra]"
 pip install "coodie[acsylla]"
 ```
 
+The experimental Rust-based python-rs-driver is not on PyPI, so the
+`python-rs` extra cannot pull it from there. Build it from Git first
+(needs a Rust toolchain), then install coodie:
+
+```bash
+pip install "scylla @ git+https://github.com/scylladb-zpp-2025-python-rs-driver/python-rs-driver"
+pip install coodie
+```
+
+See {doc}`guide/drivers` for details.
+
 You need **at least one** driver installed to connect to a database.
 
 ## Verify the Installation
