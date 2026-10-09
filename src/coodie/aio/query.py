@@ -567,5 +567,5 @@ def _parse_lwt_result(rows: list[dict[str, Any]]) -> LWTResult:
         return LWTResult(applied=True)
     row = rows[0]
     applied = row.get("[applied]", True)
-    existing = {k: v for k, v in row.items() if k != "[applied]"} or None
+    existing = None if applied else ({k: v for k, v in row.items() if k != "[applied]"} or None)
     return LWTResult(applied=applied, existing=existing)

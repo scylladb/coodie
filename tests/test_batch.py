@@ -9,6 +9,7 @@ from coodie.aio.document import Document as AsyncDocument
 from coodie.batch import AsyncBatchQuery, BatchQuery
 from coodie.cql_builder import build_batch
 from coodie.fields import PrimaryKey
+from coodie.results import LWTResult
 from coodie.sync.document import Document
 
 
@@ -129,6 +130,30 @@ def test_batch_query_reusable(registered_mock_driver):
     assert len(registered_mock_driver.executed) == 2
 
 
+def test_batch_query_non_conditional_returns_none(registered_mock_driver):
+    batch = BatchQuery()
+    batch.add("INSERT INTO ks.t (id) VALUES (?)", ["1"])
+    assert batch.execute() is None
+    assert batch.result is None
+
+
+def test_batch_query_conditional_returns_lwt_result(registered_mock_driver):
+    registered_mock_driver.set_return_rows([{"[applied]": False, "id": "1"}])
+    with BatchQuery() as batch:
+        BatchItem(name="X").insert(batch=batch)
+
+    assert batch.result == LWTResult(applied=False, existing={"id": "1"})
+
+
+def test_batch_query_conditional_execute_applied(registered_mock_driver):
+    registered_mock_driver.set_return_rows([{"[applied]": True, "id": None, "name": None}])
+    batch = BatchQuery()
+    batch.add("INSERT INTO ks.t (id) VALUES (?) IF NOT EXISTS", ["1"])
+    result = batch.execute()
+    assert result == LWTResult(applied=True)
+    assert batch.result is result
+
+
 # ------------------------------------------------------------------
 # Document.save/insert/delete with batch parameter (sync)
 # ------------------------------------------------------------------
@@ -237,6 +262,28 @@ async def test_async_batch_query_exception_no_execute(registered_mock_driver):
         pass
 
     assert len(registered_mock_driver.executed) == 0
+
+
+async def test_async_batch_query_non_conditional_returns_none(registered_mock_driver):
+    batch = AsyncBatchQuery()
+    batch.add("INSERT INTO ks.t (id) VALUES (?)", ["1"])
+    assert await batch.execute() is None
+    assert batch.result is None
+
+
+async def test_async_batch_query_conditional_returns_lwt_result(registered_mock_driver):
+    registered_mock_driver.set_return_rows([{"[applied]": False, "id": "1"}])
+    async with AsyncBatchQuery() as batch:
+        batch.add("UPDATE ks.t SET name = ? WHERE id = ? IF name = ?", ["n", "1", "old"])
+
+    assert batch.result == LWTResult(applied=False, existing={"id": "1"})
+
+
+async def test_async_batch_query_conditional_execute_applied(registered_mock_driver):
+    registered_mock_driver.set_return_rows([{"[applied]": True}])
+    batch = AsyncBatchQuery()
+    batch.add("DELETE FROM ks.t WHERE id = ? IF EXISTS", ["1"])
+    assert await batch.execute() == LWTResult(applied=True)
 
 
 # ------------------------------------------------------------------
