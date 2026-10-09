@@ -76,6 +76,13 @@ class TestUserTypeDefinition:
     def test_type_name_with_override(self):
         assert AddressWithOverride.type_name() == "custom_addr"
 
+    def test_type_name_acronym_matches_column_type(self):
+        class HTTPAddress(UserType):
+            url: str
+
+        assert HTTPAddress.type_name() == "http_address"
+        assert python_type_to_cql_type_str(HTTPAddress) == "frozen<http_address>"
+
     def test_type_name_lowercased(self):
         class MyUDT(UserType):
             value: int
@@ -317,9 +324,11 @@ class TestSyncType:
         stmts = Address.sync_type(keyspace="test_ks")
         assert len(stmts) == 1
         assert "CREATE TYPE IF NOT EXISTS test_ks.address" in stmts[0]
-        # Verify the driver was called
-        assert len(registered_mock_driver.executed) == 1
+        # Introspect system_schema.types, then CREATE TYPE (no row came back)
         cql, params = registered_mock_driver.executed[0]
+        assert "system_schema.types" in cql
+        assert params == ["test_ks", "address"]
+        cql, params = registered_mock_driver.executed[1]
         assert "CREATE TYPE" in cql
         assert params == []
 
@@ -342,6 +351,86 @@ class TestSyncType:
     async def test_sync_type_async_nested(self, registered_mock_driver):
         stmts = await Contact.sync_type_async(keyspace="test_ks")
         assert len(stmts) == 3
+
+    def test_sync_type_adds_new_fields(self, registered_mock_driver):
+        # Type exists: no CREATE, only ALTER for the missing field
+        registered_mock_driver.set_return_rows([{"field_names": ["street", "city"], "field_types": ["text", "text"]}])
+        stmts = Address.sync_type(keyspace="test_ks")
+        assert stmts == ['ALTER TYPE test_ks.address ADD "zipcode" int']
+        assert registered_mock_driver.executed[-1][0] == stmts[-1]
+
+    @pytest.mark.asyncio
+    async def test_sync_type_async_adds_new_fields(self, registered_mock_driver):
+        registered_mock_driver.set_return_rows([{"field_names": ["street", "city"], "field_types": ["text", "text"]}])
+        stmts = await Address.sync_type_async(keyspace="test_ks")
+        assert stmts == ['ALTER TYPE test_ks.address ADD "zipcode" int']
+        assert registered_mock_driver.executed[-1][0] == stmts[-1]
+
+    def test_sync_type_warns_on_removed_and_changed_fields(self, registered_mock_driver, caplog):
+        registered_mock_driver.set_return_rows(
+            [
+                {
+                    "field_names": ["street", "city", "zipcode", "old"],
+                    "field_types": ["text", "int", "int", "text"],
+                }
+            ]
+        )
+        with caplog.at_level("WARNING", logger="coodie"):
+            stmts = Address.sync_type(keyspace="test_ks")
+        assert stmts == []  # never DROP/ALTER existing fields
+        assert len(registered_mock_driver.executed) == 1  # only the introspection
+        assert "'city' has type int" in caplog.text
+        assert "old" in caplog.text
+
+    def test_sync_type_ignores_frozen_wrapping(self, registered_mock_driver, caplog):
+        registered_mock_driver.set_return_rows(
+            [{"field_names": ["street", "tags"], "field_types": ["text", "frozen<list<text>>"]}]
+        )
+        with caplog.at_level("WARNING", logger="coodie"):
+            assert AddressWithCollection.sync_type(keyspace="test_ks") == []
+        assert caplog.text == ""
+
+    def test_sync_type_dry_run(self, registered_mock_driver):
+        stmts = Address.sync_type(keyspace="test_ks", dry_run=True)
+        assert len(stmts) == 1
+        assert "CREATE TYPE" in stmts[0]
+        assert [c for c, _ in registered_mock_driver.executed if "system_schema" not in c] == []
+
+    def test_sync_type_dry_run_existing_type(self, registered_mock_driver):
+        registered_mock_driver.set_return_rows([{"field_names": ["street", "city"], "field_types": ["text", "text"]}])
+        stmts = Address.sync_type(keyspace="test_ks", dry_run=True)
+        assert stmts == ['ALTER TYPE test_ks.address ADD "zipcode" int']
+        assert len(registered_mock_driver.executed) == 1  # only the introspection
+
+
+class TestSyncTableSyncsUDTs:
+    @pytest.mark.parametrize("variant", ["sync", "aio"])
+    @pytest.mark.asyncio
+    async def test_sync_table_creates_udts_first(self, registered_mock_driver, variant):
+        import inspect
+
+        if variant == "sync":
+            from coodie.sync import Document
+        else:
+            from coodie.aio import Document
+
+        class Person(Document):
+            id: Annotated[UUID, PrimaryKey()]
+            contact: Contact | None = None
+            home: Address | None = None
+
+            class Settings:
+                name = "people"
+                keyspace = "test_ks"
+
+        result = Person.sync_table()
+        if inspect.isawaitable(result):
+            result = await result
+        creates = [c for c, _ in registered_mock_driver.executed if c.startswith("CREATE TYPE")]
+        # Topological order, Address synced once despite two references
+        assert [c.split()[5] for c in creates] == ["test_ks.phone_number", "test_ks.address", "test_ks.contact"]
+        assert registered_mock_driver.executed[-1][0] == "SYNC_TABLE test_ks.people"
+        assert result == creates
 
 
 # ---- Serialization round-trip tests ----

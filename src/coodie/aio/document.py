@@ -35,6 +35,7 @@ from coodie.schema import (
     build_schema,
 )
 from coodie.sync.query import _snake_case
+from coodie.usertype import extract_udt_classes
 
 if TYPE_CHECKING:
     from coodie.batch import AsyncBatchQuery
@@ -124,20 +125,30 @@ class Document(BaseModel):
                 exist in the database but are no longer defined in the model.
 
         Returns:
-            List of CQL statements that were (or would be) executed.
+            List of CQL statements that were (or would be) executed,
+            including ``CREATE``/``ALTER TYPE`` for referenced UDTs.
         """
         settings = getattr(cls, "Settings", None)
         if settings and getattr(settings, "__abstract__", False):
             return []
         schema = cls._schema()
-        return await cls._get_driver().sync_table_async(
-            cls._get_table(),
-            cls._get_keyspace(),
-            schema,
-            table_options=cls._get_table_options(),
-            dry_run=dry_run,
-            drop_removed_indexes=drop_removed_indexes,
+        driver = cls._get_driver()
+        keyspace = cls._get_keyspace()
+        # UDTs live in the table's keyspace and must exist before the table.
+        stmts: list[str] = []
+        for udt in extract_udt_classes(cls):
+            stmts.extend(await udt._sync_one_async(driver, keyspace, dry_run))
+        stmts.extend(
+            await driver.sync_table_async(
+                cls._get_table(),
+                keyspace,
+                schema,
+                table_options=cls._get_table_options(),
+                dry_run=dry_run,
+                drop_removed_indexes=drop_removed_indexes,
+            )
         )
+        return stmts
 
     @classmethod
     def table_name(cls) -> str:

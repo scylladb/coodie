@@ -28,6 +28,7 @@ By default, the CQL type name is the **snake_case** of the class name:
 | `Address` | `address` |
 | `ShippingAddress` | `shipping_address` |
 | `PhoneNumber` | `phone_number` |
+| `HTTPAddress` | `http_address` |
 
 Override the name with `Settings.__type_name__`:
 
@@ -45,6 +46,15 @@ Check the resolved name:
 
 ```python
 Address.type_name()  # → "address" or "my_address" if overridden
+```
+
+```{note}
+Older coodie versions derived a second name for column types when the class
+name had an acronym or a digit (`HTTPAddress` → `frozen<httpaddress>`, while
+`sync_type()` created `http_address`), so `sync_table()` failed with an
+unknown type.  Both now use the `sync_type()` name.  If you created the old
+name by hand as a workaround, keep using it with
+`__type_name__ = "httpaddress"`.
 ```
 
 ## Using UDTs in Documents
@@ -176,7 +186,7 @@ class Contact(UserType):
 Create or update a UDT in the database with `sync_type()`:
 
 ```python
-# Sync — creates the type if it doesn't exist
+# Sync — creates the type, or adds fields missing from an existing one
 Address.sync_type()
 
 # Async
@@ -200,15 +210,23 @@ coodie performs depth-first topological sorting and raises `InvalidQueryError`
 if a circular dependency is detected (CQL does not support circular UDT
 references).
 
-### sync_type() Before sync_table()
+### Schema Evolution
 
-UDTs must exist in the database before any table that references them can be
-created.  Sync your UDTs before calling `sync_table()`:
+If the type already exists, `sync_type()` reads its fields from
+`system_schema.types` and issues `ALTER TYPE ... ADD` for each new model
+field.  Fields that were removed from the model, or whose type changed, are
+never dropped or altered; coodie logs a warning instead, the same way
+`sync_table()` handles table columns.  Pass `dry_run=True` to get the planned
+statements without executing them.
+
+### Automatic Sync from sync_table()
+
+`Document.sync_table()` syncs every UDT the document references (directly, in
+collections, or nested) in dependency order before creating the table, in the
+document's keyspace:
 
 ```python
-Address.sync_type()
-Contact.sync_type()    # auto-syncs PhoneNumber and Address dependencies
-User.sync_table()      # table references Contact and Address
+User.sync_table()      # creates/updates PhoneNumber, Address, Contact, then the table
 ```
 
 ## Serialization

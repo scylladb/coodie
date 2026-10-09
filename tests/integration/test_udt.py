@@ -59,9 +59,40 @@ class IContact(UserType):
         keyspace = "test_ks"
 
 
+class AutoPhone(UserType):
+    """Only ever synced implicitly via ``Document.sync_table()``."""
+
+    number: str = ""
+
+    class Settings:
+        __type_name__ = "it_auto_phone"
+
+
+class AutoContact(UserType):
+    name: str = ""
+    phone: AutoPhone | None = None
+
+    class Settings:
+        __type_name__ = "it_auto_contact"
+
+
 # ---------------------------------------------------------------------------
 # Helpers for variant-aware Document subclass creation
 # ---------------------------------------------------------------------------
+
+
+async def _type_names(driver, variant) -> set[str]:
+    """UDT names that exist in ``test_ks``.
+
+    ``sync_type()`` returns only the DDL it ran, which is nothing once the
+    type exists, so tests check the schema instead of the returned list.
+    """
+    rows = await _maybe_await(
+        driver.execute if variant == "sync" else driver.execute_async,
+        "SELECT type_name FROM system_schema.types WHERE keyspace_name = ?",
+        ["test_ks"],
+    )
+    return {r["type_name"] for r in rows}
 
 
 def _make_address_doc(base_cls):
@@ -111,25 +142,24 @@ class TestUDTIntegration:
     """Integration tests for UserType DDL and round-trip behaviour."""
 
     async def test_sync_type_creates_udt(self, coodie_driver, variant) -> None:
-        """sync_type() executes CREATE TYPE without error."""
+        """sync_type() creates the type."""
         if variant == "sync":
-            stmts = IAddress.sync_type(keyspace="test_ks")
+            IAddress.sync_type(keyspace="test_ks")
         else:
-            stmts = await IAddress.sync_type_async(keyspace="test_ks")
-        assert any("it_address" in s for s in stmts)
+            await IAddress.sync_type_async(keyspace="test_ks")
+        assert "it_address" in await _type_names(coodie_driver, variant)
 
     async def test_sync_type_nested_dependency_order(self, coodie_driver, variant) -> None:
-        """sync_type() on a nested UDT creates dependencies first (IPhone before IContact)."""
+        """sync_type() on a nested UDT creates dependencies first (IPhone before IContact).
+
+        The server rejects ``CREATE TYPE it_contact`` while ``it_phone`` is
+        missing, so a wrong order fails here on a fresh cluster.
+        """
         if variant == "sync":
-            stmts = IContact.sync_type(keyspace="test_ks")
+            IContact.sync_type(keyspace="test_ks")
         else:
-            stmts = await IContact.sync_type_async(keyspace="test_ks")
-        # IPhone must appear before IContact in emitted statements
-        phone_idx = next((i for i, s in enumerate(stmts) if "it_phone" in s), None)
-        contact_idx = next((i for i, s in enumerate(stmts) if "it_contact" in s), None)
-        assert phone_idx is not None, "it_phone type was not created"
-        assert contact_idx is not None, "it_contact type was not created"
-        assert phone_idx < contact_idx, "it_phone must be created before it_contact"
+            await IContact.sync_type_async(keyspace="test_ks")
+        assert {"it_phone", "it_contact"} <= await _type_names(coodie_driver, variant)
 
     async def test_udt_field_roundtrip(self, coodie_driver, variant, driver_type) -> None:
         """A Document with a UDT field can be saved and loaded with equal values."""
@@ -192,3 +222,62 @@ class TestUDTIntegration:
         assert fetched.contact.name == "Alice"
 
         await _maybe_await(ContactDoc(id=rid).delete)
+
+    async def test_sync_type_adds_new_field(self, coodie_driver, variant) -> None:
+        """Re-syncing a UDT with an extra field issues ALTER TYPE ... ADD."""
+        type_name = f"it_evolve_{variant}"
+        await _maybe_await(
+            coodie_driver.execute if variant == "sync" else coodie_driver.execute_async,
+            f"DROP TYPE IF EXISTS test_ks.{type_name}",
+            [],
+        )
+
+        class V1(UserType):
+            a: str = ""
+
+            class Settings:
+                __type_name__ = type_name
+                keyspace = "test_ks"
+
+        class V2(UserType):
+            a: str = ""
+            b: int = 0
+
+            class Settings:
+                __type_name__ = type_name
+                keyspace = "test_ks"
+
+        sync = (lambda c: c.sync_type()) if variant == "sync" else (lambda c: c.sync_type_async())
+        await _maybe_await(sync, V1)
+        stmts = await _maybe_await(sync, V2)
+        assert stmts == [f'ALTER TYPE test_ks.{type_name} ADD "b" int']
+        # Idempotent: nothing left to add
+        assert await _maybe_await(sync, V2) == []
+
+    async def test_sync_table_auto_syncs_udts(self, coodie_driver, variant, driver_type) -> None:
+        """sync_table() creates referenced (nested) UDTs without explicit sync_type()."""
+        if variant == "sync":
+            from coodie.sync.document import Document as BaseDoc
+        else:
+            from coodie.aio.document import Document as BaseDoc
+
+        class AutoDoc(BaseDoc):
+            id: Annotated[UUID, PrimaryKey()] = __import__("pydantic").Field(default_factory=uuid4)
+            contact: AutoContact | None = None
+
+            class Settings:
+                name = f"it_auto_udt_docs_{variant}"
+                keyspace = "test_ks"
+
+        await _maybe_await(AutoDoc.sync_table)
+        assert {"it_auto_phone", "it_auto_contact"} <= await _type_names(coodie_driver, variant)
+
+        if driver_type == "acsylla":
+            return  # acsylla does not support UDT round-trips
+        rid = uuid4()
+        await _maybe_await(AutoDoc(id=rid, contact=AutoContact(name="Bob", phone=AutoPhone(number="1"))).save)
+        fetched = await _maybe_await(AutoDoc.find_one, id=rid)
+        assert fetched is not None
+        assert fetched.contact is not None
+        assert fetched.contact.phone is not None
+        assert fetched.contact.phone.number == "1"
