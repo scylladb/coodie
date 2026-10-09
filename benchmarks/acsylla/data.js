@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791556921694,
+  "lastUpdate": 1791556951240,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -19005,6 +19005,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000012249600003085638",
             "extra": "mean: 6.047951398377143 usec\nrounds: 7613"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "6b4fb18164f078cc97c68bf34083b6b0b81937a1",
+          "message": "ci(renovate): give 0.x minor bumps their own PR\n\nA 0.x minor bump is breaking under semver, but :separateMajorReleases\ndoes not treat it as major, so the non-major grouping rules lumped\nruff 0.15 -> 0.16 into \"pre-commit hooks (non-major)\" and broke lint.\n\nAdd a trailing packageRule matching 0.x minor updates that unsets\ngroupName/groupSlug so each such update gets a standalone PR.\n\nCloses #282\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-09T17:41:39+03:00",
+          "tree_id": "f4c7a30dbd5c71d271443ae9c3017ebcd351a8dd",
+          "url": "https://github.com/scylladb/coodie/commit/6b4fb18164f078cc97c68bf34083b6b0b81937a1"
+        },
+        "date": 1791556949512,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 83029.95035645686,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000015450528639169515",
+            "extra": "mean: 12.04384677705922 usec\nrounds: 8269"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1504978.5086246836,
+            "unit": "iter/sec",
+            "range": "stddev: 2.9566418568976707e-7",
+            "extra": "mean: 664.4613157392158 nsec\nrounds: 144426"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 127649.79307175429,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000423160365869286",
+            "extra": "mean: 7.833933576671618 usec\nrounds: 18894"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 581734.7725183481,
+            "unit": "iter/sec",
+            "range": "stddev: 5.539406992984703e-7",
+            "extra": "mean: 1.7189964348718036 usec\nrounds: 48525"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 552394.2232592731,
+            "unit": "iter/sec",
+            "range": "stddev: 8.452638011068279e-7",
+            "extra": "mean: 1.8103013353393407 usec\nrounds: 20970"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 793808.605272154,
+            "unit": "iter/sec",
+            "range": "stddev: 3.5910435429322195e-7",
+            "extra": "mean: 1.259749508078404 usec\nrounds: 116878"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 834642.4378101706,
+            "unit": "iter/sec",
+            "range": "stddev: 4.265116726032001e-7",
+            "extra": "mean: 1.198117846276393 usec\nrounds: 71449"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 683852.506647965,
+            "unit": "iter/sec",
+            "range": "stddev: 4.569447711505229e-7",
+            "extra": "mean: 1.46230362582378 usec\nrounds: 77197"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 164618.27448874616,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000010083303447394307",
+            "extra": "mean: 6.074659712633322 usec\nrounds: 6615"
           }
         ]
       }
