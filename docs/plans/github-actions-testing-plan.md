@@ -26,9 +26,7 @@
 4. [Implementation Phases](#4-implementation-phases)
 5. [Test Plan](#5-test-plan)
    - [5.1 Static Analysis (actionlint)](#51-static-analysis-actionlint)
-   - [5.2 Shell Script Unit Tests (Bats)](#52-shell-script-unit-tests-bats)
    - [5.3 YAML Validation (pytest)](#53-yaml-validation-pytest)
-   - [5.4 Live Smoke Tests (workflow_dispatch)](#54-live-smoke-tests-workflow_dispatch)
 6. [References](#6-references)
 
 ---
@@ -63,8 +61,6 @@ Legend:
 
 | Workflow | Complexity | Testable Shell Logic | Key Risks |
 |---------|:----------:|:--------------------:|-----------|
-| PR Rebase & Squash (removed) | 🔴 | Yes (9 shell steps) | Permission checks, command parsing, git rebase/squash, Copilot CLI fallback |
-| Self-Healing CI (removed) | 🔴 | Yes (3 shell steps) | Log collection loops, PR comment construction, `workflow_run` trigger |
 | Benchmarks | 🟡 | Minimal | Matrix strategy, artifact management, gh-pages deploy |
 | Integration Tests | 🟡 | Minimal | Matrix with driver exclusions, service containers |
 | Unit Tests | 🟡 | Minimal | Matrix (3 Python versions × 3 OSes) |
@@ -434,16 +430,6 @@ class BatsTestFailure(Exception):
 | 3.7 | Run as part of the existing `pytest` unit test suite (no new CI job needed) |
 | 3.8 | Verify: all convention tests pass |
 
-### Phase 4: workflow_dispatch Smoke Tests (Priority: Low)
-
-**Goal:** Document and optionally automate live smoke tests for workflows using `workflow_dispatch` triggers.
-
-| Task | Description |
-|---|---|
-| 4.1 | Document the manual smoke-test procedure in `CONTRIBUTING.md`: how to trigger via Actions tab, expected results, cleanup steps |
-| 4.2 | Create a test PR template (branch `test/workflow-smoke`) with known state for reproducible testing |
-| 4.4 | Verify: manual smoke tests pass |
-
 ---
 
 ## 5. Test Plan
@@ -456,41 +442,6 @@ class BatsTestFailure(Exception):
 | Pre-commit hook catches a deliberately introduced YAML error | 1 |
 | CI job fails when a PR introduces an invalid workflow expression | 1 |
 
-### 5.2 Shell Script Unit Tests (Bats)
-
-#### `tests/workflows/test_parse_command.bats`
-
-| Test Case | Phase |
-|---|---|
-| `/rebase` → `do_rebase=true`, `do_squash=false` | 2 |
-| `/squash` → `do_rebase=false`, `do_squash=true` | 2 |
-| `/rebase squash` → `do_rebase=true`, `do_squash=true` | 2 |
-| `/REBASE` (uppercase) → `do_rebase=true` (case-insensitive) | 2 |
-| `  /rebase  ` (whitespace) → `do_rebase=true` | 2 |
-| `rebase` (workflow_dispatch, no leading `/`) → `do_rebase=true` | 2 |
-| `rebase squash` (workflow_dispatch) → both true | 2 |
-| `hello world` (no command) → both false | 2 |
-| Empty string → both false | 2 |
-
-#### `tests/workflows/test_build_squash_message.bats`
-
-| Test Case | Phase |
-|---|---|
-| Copilot CLI returns valid body → message = title + body | 2 |
-| Copilot CLI returns empty → fallback to PR body | 2 |
-| Copilot CLI returns error text (contains "error:") → rejected, falls back | 2 |
-| PR body is also empty → message = title only | 2 |
-| Single-commit PR → exits with "nothing to squash" | 2 |
-
-#### `tests/workflows/test_collect_failed_logs.bats`
-
-| Test Case | Phase |
-|---|---|
-| No failed jobs → empty output | 2 |
-| One failed job → logs collected with job name header | 2 |
-| Multiple failed jobs → all logs concatenated | 2 |
-| API call fails → graceful error handling | 2 |
-
 ### 5.3 YAML Validation (pytest)
 
 #### `tests/test_workflow_conventions.py`
@@ -502,15 +453,6 @@ class BatsTestFailure(Exception):
 | All `run:` steps using `gh` CLI have `GH_TOKEN` in `env:` | 3 |
 | All workflows with `git log`/`git rebase` use `fetch-depth: 0` | 3 |
 | All `schedule` cron expressions are syntactically valid | 3 |
-
-### 5.4 Live Smoke Tests (workflow_dispatch)
-
-| Test Case | Phase |
-|---|---|
-| `/rebase` on a PR with no conflicts → branch rebased, comment posted | 4 |
-| `/squash` on a multi-commit PR → single commit with PR title as subject | 4 |
-| `/rebase squash` → rebase then squash in one run | 4 |
-| Trigger on closed PR → workflow exits with "not open" error | 4 |
 
 ---
 
