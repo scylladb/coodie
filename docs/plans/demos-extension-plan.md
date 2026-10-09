@@ -1467,10 +1467,10 @@ if __name__ == "__main__":
 - [flask-cqlalchemy](https://github.com/thegeorgeous/flask-cqlalchemy) — Flask + cqlengine integration patterns
 - [reddit/cqlmapper](https://github.com/reddit/cqlmapper) — production cqlengine fork with batch, UDT, advanced query patterns
 - [coodie documentation plan](documentation-plan.md) — documentation milestones and style guide
-- [coodie feature-parity plan](cqlengine-feature-parity.md) — full feature gap analysis against cqlengine
+- [coodie feature-parity plan](archive/cqlengine-feature-parity.md) — full feature gap analysis against cqlengine
 - [coodie benchmarks: argus models](../../benchmarks/models_argus_coodie.py) — existing benchmark models inspired by argus patterns
 - [ScyllaDB vector search docs](https://cloud.docs.scylladb.com/stable/vector-search/work-with-vector-search.html) — CQL syntax for `vector<T, N>` type, vector indexes, and ANN queries
 - [argus vector models: argus_ai.py](https://github.com/scylladb/argus/blob/master/argus/backend/models/argus_ai.py) — production `Vector` column type, `SCTErrorEventEmbedding` with 384-dim cosine-similarity index
 - [scylla-monitoring](https://github.com/scylladb/scylla-monitoring) — Prometheus + Grafana monitoring stack for ScyllaDB, used as the "War Room" dashboard in live demos
-- [GitHub Actions workflow testing plan](github-actions-testing-plan.md) — layered testing strategy for CI workflows (actionlint, Bats, pytest conventions)
+- [GitHub Actions workflow testing plan](archive/github-actions-testing-plan.md) — layered testing strategy for CI workflows (actionlint, Bats, pytest conventions)
 - [GitHub Actions service containers](https://docs.github.com/en/actions/use-cases-and-examples/using-containerized-services/about-service-containers) — running ScyllaDB as a service container in CI

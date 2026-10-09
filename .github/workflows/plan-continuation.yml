@@ -14,11 +14,11 @@
 # Manual testing (via Actions tab → "Run workflow"):
 #   Provide a plan file path and optional completed phase number.
 #
-# See docs/plans/plan-phase-continuation-action.md for full design details.
+# See docs/plans/archive/plan-phase-continuation-action.md for full design details.
 
 name: Plan Phase Continuation
 
-# See docs/plans/plan-phase-continuation-action.md for full design details.
+# See docs/plans/archive/plan-phase-continuation-action.md for full design details.
 on:
   pull_request:
     types: [closed]

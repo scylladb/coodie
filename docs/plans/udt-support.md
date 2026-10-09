@@ -356,8 +356,8 @@ recursively constructs nested `UserType` instances.
 |---|---|
 | 7.1 | Update `docs/source/migration/from-cqlengine.md` — remove UDT from "not yet implemented" list, add migration examples |
 | 7.2 | Add UDT section to `docs/source/guide/` (user guide) |
-| 7.3 | Update `docs/plans/cqlengine-feature-parity.md` — mark UDT features as ✅ |
-| 7.4 | Update `docs/plans/cqlengine-missing-features.md` — mark Phase A as complete |
+| 7.3 | Update `docs/plans/archive/cqlengine-feature-parity.md` — mark UDT features as ✅ |
+| 7.4 | Update `docs/plans/archive/cqlengine-missing-features.md` — mark Phase A as complete |
 | 7.5 | Add UDT example to demo app |
 | 7.6 | Verify all public API exports in `coodie.__init__` |
 | 7.7 | Integration tests: full round-trip with real ScyllaDB |
@@ -695,8 +695,8 @@ class Team(Document):
 
 ### coodie Internal References
 
-- [Feature parity plan — §1.5 UDT](cqlengine-feature-parity.md#15-user-defined-types-udt) — gap analysis
-- [Missing features plan — Phase A](cqlengine-missing-features.md#phase-a-user-defined-types-udt--future) — original task list
+- [Feature parity plan — §1.5 UDT](archive/cqlengine-feature-parity.md#15-user-defined-types-udt) — gap analysis
+- [Missing features plan — Phase A](archive/cqlengine-missing-features.md#phase-a-user-defined-types-udt--future) — original task list
 - [Migration guide](../source/migration/from-cqlengine.md) — cqlengine → coodie migration
 - `src/coodie/types.py` — `python_type_to_cql_type_str()` type system
 - `src/coodie/schema.py` — `build_schema()` schema introspection
