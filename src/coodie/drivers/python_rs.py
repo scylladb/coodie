@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import functools
 import threading
 from collections.abc import Awaitable, Callable
 from typing import Any
@@ -15,6 +16,14 @@ _DDL_PREFIXES = ("CREATE ", "ALTER ", "DROP ", "TRUNCATE ")
 def _is_ddl(stmt: str) -> bool:
     """Return ``True`` if *stmt* is a DDL statement that must not be prepared."""
     return stmt.lstrip().upper().startswith(_DDL_PREFIXES)
+
+
+@functools.cache
+def _dict_row_factory() -> Any:
+    """Row factory that makes python-rs-driver yield dicts (its default is named tuples)."""
+    from scylla.results import DictRowFactory  # type: ignore[import-untyped]
+
+    return DictRowFactory()
 
 
 class PythonRsDriver(AbstractDriver):
@@ -40,7 +49,7 @@ class PythonRsDriver(AbstractDriver):
 
     .. code-block:: python
 
-        from scylla.session import SessionBuilder
+        from scylla import SessionBuilder
         from coodie.aio import Document, init_coodie
         from coodie.drivers import register_driver
         from coodie.drivers.python_rs import PythonRsDriver
@@ -116,7 +125,7 @@ class PythonRsDriver(AbstractDriver):
 
         Example::
 
-            from scylla.session import SessionBuilder
+            from scylla import SessionBuilder
             from coodie.drivers.python_rs import PythonRsDriver
 
             async def make_session():
@@ -219,20 +228,24 @@ class PythonRsDriver(AbstractDriver):
     def _rows_to_dicts(result: Any) -> list[dict[str, Any]]:
         """Convert a ``RequestResult`` to a list of dicts.
 
-        Older python-rs-driver yields dicts; >= 0.2.0 yields tuples (zipped with column names).
-        Supports both the old API (``iter_rows()``) and the new paging API
-        (``iter_current_page()``).  Non-row-returning statements
-        (INSERT/UPDATE/DELETE) raise ``RuntimeError`` — return ``[]``.
+        Rows are dicts because every execute passes ``_dict_row_factory()``;
+        tuple rows (scylladb-rs-driver >= 0.2.0 without a row factory) are
+        zipped with column names.  Supports the ``first_page`` property
+        (result redesign), the paging API (``iter_current_page()``) and the
+        old API (``iter_rows()``).  Non-row-returning statements
+        (INSERT/UPDATE/DELETE) may raise ``RuntimeError`` — return ``[]``.
         """
         if result is None:
             return []
-        # Prefer iter_current_page (new paging API, 2026-03-13+),
-        # fall back to iter_rows (old API).  We check the *type* rather
-        # than the instance so that unittest MagicMock auto-attributes
-        # don't produce false positives.
-        method_name = "iter_current_page" if hasattr(type(result), "iter_current_page") else "iter_rows"
+        # We check the *type* rather than the instance so that unittest
+        # MagicMock auto-attributes don't produce false positives.
+        cls = type(result)
         try:
-            rows = list(getattr(result, method_name)())
+            if hasattr(cls, "first_page"):
+                rows = list(result.first_page)
+            else:
+                method_name = "iter_current_page" if hasattr(cls, "iter_current_page") else "iter_rows"
+                rows = list(getattr(result, method_name)())
         except RuntimeError as exc:
             if "does not have rows" in str(exc):
                 return []
@@ -284,12 +297,14 @@ class PythonRsDriver(AbstractDriver):
                 from scylla.statement import Statement  # type: ignore[import-untyped]
 
                 statement = self._apply_options(Statement(stmt), consistency, timeout)
-            result = await self._session.execute(statement, None)
+            result = await self._session.execute(statement, None, factory=_dict_row_factory())
             self._last_paging_state = None
             return self._rows_to_dicts(result)
 
         prepared = self._apply_options(await self._prepare(stmt), consistency, timeout)
-        result = await self._session.execute(prepared, self._serialize_params(params) if params else None)
+        result = await self._session.execute(
+            prepared, self._serialize_params(params) if params else None, factory=_dict_row_factory()
+        )
         self._last_paging_state = None
         return self._rows_to_dicts(result)
 
