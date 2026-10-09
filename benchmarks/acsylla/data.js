@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791555876451,
+  "lastUpdate": 1791556275374,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -18657,6 +18657,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 9.257414983665865e-7",
             "extra": "mean: 6.156075865370534 usec\nrounds: 6327"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "d34c0084f378f8692970af4de0ee039534428489",
+          "message": "ci(plan-continuation): run parse-plan unit tests in CI\n\nThe ~40 tests in .github/scripts/test_parse_plan.py were never executed:\npytest skips dot-directories during collection, so the default unit-test\nrun never picks them up. A parser regression would only surface when the\nPlan Phase Continuation workflow mis-delegates a phase after merge.\n\nAdd a Linux-only step to the Unit Tests workflow that runs them explicitly\n(the parser only runs on ubuntu in plan-continuation.yml).\n\nAlso fix one stale test: it assumed Phase D of migration-strategy.md was\nincomplete, but D is now done, so \"completed C\" correctly yields no next\nphase. Use \"completed B\" -> next C instead. Add explicit check=False to\nsubprocess.run calls to satisfy ruff PLW1510.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-09T17:28:21+03:00",
+          "tree_id": "137c81a9104f2ae0c499d8fffd60901bd3b71531",
+          "url": "https://github.com/scylladb/coodie/commit/d34c0084f378f8692970af4de0ee039534428489"
+        },
+        "date": 1791556274210,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 82448.50702704026,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000014520805819348133",
+            "extra": "mean: 12.128782388649373 usec\nrounds: 9687"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1517446.1649531154,
+            "unit": "iter/sec",
+            "range": "stddev: 2.889798370949898e-7",
+            "extra": "mean: 659.0019620438377 nsec\nrounds: 152393"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 130202.00370319448,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004238032778886531",
+            "extra": "mean: 7.6803733549260675 usec\nrounds: 12993"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 578201.6877557788,
+            "unit": "iter/sec",
+            "range": "stddev: 5.391668743065397e-7",
+            "extra": "mean: 1.729500313085182 usec\nrounds: 52699"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 597236.2200827913,
+            "unit": "iter/sec",
+            "range": "stddev: 6.195317747156195e-7",
+            "extra": "mean: 1.6743793600819723 usec\nrounds: 31221"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 817641.2501925075,
+            "unit": "iter/sec",
+            "range": "stddev: 3.779481883727297e-7",
+            "extra": "mean: 1.223030271240055 usec\nrounds: 95338"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 805901.9285585033,
+            "unit": "iter/sec",
+            "range": "stddev: 4.875644751472313e-7",
+            "extra": "mean: 1.240845771133313 usec\nrounds: 71757"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 705148.0970466194,
+            "unit": "iter/sec",
+            "range": "stddev: 8.869669589741241e-7",
+            "extra": "mean: 1.4181418118949942 usec\nrounds: 78040"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 115645.60285477058,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000011117490689489089",
+            "extra": "mean: 8.647107847721754 usec\nrounds: 6537"
           }
         ]
       }
