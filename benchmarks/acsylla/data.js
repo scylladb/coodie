@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791556732494,
+  "lastUpdate": 1791556921694,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -18918,6 +18918,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 8.735856818732772e-7",
             "extra": "mean: 5.954523427039014 usec\nrounds: 7470"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "9ecca5d45b8ed0f6a2680891914bedd71d884eb4",
+          "message": "docs(drivers): document sync bridge and python-rs driver\n\nAdd Google-style docstrings to init_coodie() and init_coodie_async()\ncovering every parameter and which driver_type each one applies to.\n\nIn guide/drivers.md, add a python-rs-driver section with Git install\ninstructions and caveats, plus a Sync Bridge section describing the\nbackground-loop pattern used by acsylla and python-rs. Remove the stale\nnote claiming sync init_coodie() cannot create acsylla sessions from\nhosts (it does, via AcsyllaDriver.connect_sync). Extend the parameter\ntable with python-rs and the missing ssl_context/lazy/compression/\nspeculative_execution_policy parameters. List python-rs install in\ninstallation.md. Sort __all__ as required by the ruff pre-commit hook.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-09T17:41:11+03:00",
+          "tree_id": "f4bdd0a00bca5df5a8b2ac72cac60ac870237159",
+          "url": "https://github.com/scylladb/coodie/commit/9ecca5d45b8ed0f6a2680891914bedd71d884eb4"
+        },
+        "date": 1791556920029,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 80144.08257617614,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021223983902529428",
+            "extra": "mean: 12.477527571040696 usec\nrounds: 11280"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1556441.3511650083,
+            "unit": "iter/sec",
+            "range": "stddev: 2.5414586898054263e-7",
+            "extra": "mean: 642.4912825989186 nsec\nrounds: 171498"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 135532.54033471586,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002485442938362817",
+            "extra": "mean: 7.378301901007428 usec\nrounds: 22567"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 585586.7127187907,
+            "unit": "iter/sec",
+            "range": "stddev: 4.946059122672452e-7",
+            "extra": "mean: 1.7076890207381088 usec\nrounds: 65924"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 594924.8217318,
+            "unit": "iter/sec",
+            "range": "stddev: 4.6316516920703183e-7",
+            "extra": "mean: 1.680884648734346 usec\nrounds: 42583"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 828849.455305624,
+            "unit": "iter/sec",
+            "range": "stddev: 3.9259606481012685e-7",
+            "extra": "mean: 1.2064917140245537 usec\nrounds: 153093"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 850541.1578673669,
+            "unit": "iter/sec",
+            "range": "stddev: 4.16597351701795e-7",
+            "extra": "mean: 1.1757220573633187 usec\nrounds: 107551"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 711578.0939671065,
+            "unit": "iter/sec",
+            "range": "stddev: 4.1546327473413463e-7",
+            "extra": "mean: 1.4053271292050569 usec\nrounds: 128784"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 165345.2440554221,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000012249600003085638",
+            "extra": "mean: 6.047951398377143 usec\nrounds: 7613"
           }
         ]
       }
