@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import logging
+import re
 from unittest.mock import AsyncMock
 
 import pytest
 
-from coodie.migrations.base import MigrationContext, _TOKEN_MAX, _TOKEN_MIN
-
+from coodie.migrations.base import _TOKEN_MAX, _TOKEN_MIN, MigrationContext
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -79,7 +79,7 @@ class TestScanTable:
         # Verify CQL contains token()
         for call in token_calls:
             cql = call[0][0]
-            assert "token(id)" in cql
+            assert 'token("id")' in cql
             assert "LIMIT" in cql
 
     async def test_scan_table_composite_pk(self):
@@ -97,7 +97,7 @@ class TestScanTable:
         token_calls = [c for c in driver.execute_async.call_args_list if "SELECT * FROM" in str(c)]
         assert len(token_calls) == 1
         cql = token_calls[0][0][0]
-        assert "token(region, user_id)" in cql
+        assert 'token("region", "user_id")' in cql
 
     async def test_scan_table_page_size(self):
         """page_size is reflected in the LIMIT clause."""
@@ -296,3 +296,92 @@ class TestScanTableThrottle:
 
         assert len(sleep_calls) == 5
         assert all(s == 0.1 for s in sleep_calls)
+
+
+# ---------------------------------------------------------------------------
+# scan_table paging within a token range (C3)
+# ---------------------------------------------------------------------------
+
+
+def _tok(pk: int) -> int:
+    return pk // 2  # every two partitions share a token, like a murmur3 collision
+
+
+class _FakeTable:
+    """In-memory table that answers the CQL shapes ``scan_table`` emits.
+
+    Rows are ``{"pk", "c1", "c2", "v"}`` with ``token(pk) == pk // 2``.
+    ``c1`` clusters ascending and ``c2`` descending.
+    """
+
+    def __init__(self, rows: list[dict]):
+        self.rows = sorted(rows, key=lambda r: (_tok(r["pk"]), r["pk"], r["c1"], -r["c2"]))
+
+    async def execute_async(self, cql: str, params: list | None = None, **kwargs):
+        params = list(params or [])
+        if "system_schema.columns" in cql:
+            return [
+                {"column_name": "pk", "kind": "partition_key", "position": 0, "clustering_order": "none"},
+                {"column_name": "c1", "kind": "clustering", "position": 0, "clustering_order": "ASC"},
+                {"column_name": "c2", "kind": "clustering", "position": 1, "clustering_order": "DESC"},
+                {"column_name": "v", "kind": "regular", "position": -1, "clustering_order": "none"},
+            ]
+        if cql.startswith("SELECT DISTINCT"):
+            assert 'token("pk") = token(?)' in cql
+            return [{"pk": pk} for pk in dict.fromkeys(r["pk"] for r in self.rows if _tok(r["pk"]) == _tok(params[0]))]
+        limit = int(re.search(r"LIMIT (\d+)", cql).group(1))
+        if 'token("pk") > token(?)' in cql:
+            last, end = params
+            hits = [r for r in self.rows if _tok(last) < _tok(r["pk"]) <= end]
+        elif 'token("pk") > ?' in cql:
+            start, end = params
+            hits = [r for r in self.rows if start < _tok(r["pk"]) <= end]
+        elif m := re.search(r'AND "(\w+)" ([<>]) \? LIMIT', cql):
+            pk, *ck = params
+            eqs = ["c1", "c2"][: len(ck) - 1]
+            col, op = m.groups()
+            assert op == (">" if col == "c1" else "<")
+            hits = [
+                r
+                for r in self.rows
+                if r["pk"] == pk
+                and all(r[c] == v for c, v in zip(eqs, ck))
+                and (r[col] > ck[-1] if op == ">" else r[col] < ck[-1])
+            ]
+        else:
+            assert '"pk" = ? LIMIT' in cql
+            hits = [r for r in self.rows if r["pk"] == params[0]]
+        return [dict(r) for r in hits[:limit]]
+
+
+def _key(row: dict) -> tuple:
+    return (row["pk"], row["c1"], row["c2"])
+
+
+class TestScanTablePaging:
+    """A token range holding more than ``page_size`` rows must not be truncated."""
+
+    async def _scan(self, rows: list[dict], page_size: int) -> list[dict]:
+        ctx = MigrationContext(_FakeTable(rows), dry_run=False)
+        return [r async for r in ctx.scan_table("ks", "tbl", page_size=page_size, num_ranges=1)]
+
+    async def test_many_partitions_in_one_range(self):
+        rows = [{"pk": pk, "c1": 0, "c2": 0, "v": pk} for pk in range(25)]
+        got = await self._scan(rows, page_size=10)
+        assert sorted(map(_key, got)) == sorted(map(_key, rows))
+
+    async def test_many_clustering_rows_in_one_partition(self):
+        rows = [{"pk": pk, "c1": c1, "c2": c2, "v": 0} for pk in (1, 2, 3) for c1 in range(4) for c2 in range(7)]
+        got = await self._scan(rows, page_size=5)
+        assert sorted(map(_key, got)) == sorted(map(_key, rows))
+
+    async def test_exact_page_size_multiple(self):
+        rows = [{"pk": pk, "c1": 0, "c2": 0, "v": 0} for pk in range(20)]
+        got = await self._scan(rows, page_size=10)
+        assert sorted(map(_key, got)) == sorted(map(_key, rows))
+
+    async def test_page_ends_on_token_shared_by_two_partitions(self):
+        # page 1 ends at pk 4; pk 5 has the same token and must not be skipped
+        rows = [{"pk": pk, "c1": c1, "c2": 0, "v": 0} for pk in range(10) for c1 in range(7 if pk == 5 else 1)]
+        got = await self._scan(rows, page_size=5)
+        assert sorted(map(_key, got)) == sorted(map(_key, rows))
