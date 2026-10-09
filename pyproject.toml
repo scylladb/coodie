@@ -90,6 +90,8 @@ scylla = { git = "https://github.com/scylladb-zpp-2025-python-rs-driver/python-r
 
 [tool.ruff]
 line-length = 120
+# ruff 0.16.10 formats markdown code blocks; docs are not ruff-formatted here
+extend-exclude = ["*.md"]
 
 [tool.ruff.lint]
 # ruff 0.16 expanded the default rule set; keep the pre-0.16 defaults
