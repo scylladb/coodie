@@ -544,5 +544,5 @@ Legend:
 - [ScyllaDB Data Manipulation (DML)](https://docs.scylladb.com/manual/stable/cql/dml.html)
 - [ScyllaDB CQL Extensions](https://docs.scylladb.com/manual/stable/cql/cql-extensions.html)
 - [Apache Cassandra CQL Reference](https://cassandra.apache.org/doc/stable/cassandra/developing/cql/)
-- [coodie cqlengine Feature-Parity Plan](cqlengine-feature-parity.md)
+- [coodie cqlengine Feature-Parity Plan](archive/cqlengine-feature-parity.md)
 - [coodie Python-RS Driver Support Plan](python-rs-driver-support.md)

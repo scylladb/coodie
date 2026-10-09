@@ -548,6 +548,6 @@ for the detailed upstream gap tracking.
 - [coodie AbstractDriver](../../../src/coodie/drivers/base.py) — driver interface contract
 - [coodie CassandraDriver](../../../src/coodie/drivers/cassandra.py) — reference implementation
 - [coodie AcsyllaDriver](../../../src/coodie/drivers/acsylla.py) — async-native reference
-- [coodie Rewrite Plan](rewrite-coodie-plan.md) — pluggable driver architecture design
+- [coodie Rewrite Plan](archive/rewrite-coodie-plan.md) — pluggable driver architecture design
 - [coodie Performance Improvement Plan](performance-improvement.md) — existing benchmark framework
 - [scylla-driver on PyPI](https://pypi.org/project/scylla-driver/) — mature Python driver for comparison
