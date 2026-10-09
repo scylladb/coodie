@@ -38,8 +38,8 @@ ignored, or worked around when using `driver_type="python-rs"`.
 |---|---------|--------|------------------|---------------|
 | 1 | Synchronous API | All sync variant tests skipped | async-only; `loop.run_until_complete()` fails inside running loop | `variant == "sync"` (68 tests) |
 | 2 | Pagination (`fetch_size` / `paging_state`) | `fetch_size` and `paging_state` silently ignored; all rows returned in one response | `Session.execute()` calls `execute_unpaged` internally | `test_fetch_size_limits_page`, `test_full_table_scan_spanning_multiple_pages`, `test_fetch_size_limits_rows_per_page` |
-| 3 | Per-query consistency level | `consistency` parameter accepted but ignored | Not forwarded to Rust driver | — (no dedicated test) |
-| 4 | Per-query timeout | `timeout` parameter accepted but ignored | No per-query timeout control | — (no dedicated test) |
+| 3 | ~~Per-query consistency level~~ | ✅ Fixed in Phase 1 — mapped to `scylla.enums.Consistency` via `with_consistency()` | — | — |
+| 4 | ~~Per-query timeout~~ | ✅ Fixed in Phase 1 — forwarded via `with_request_timeout()` (seconds) | — | — |
 | 5 | Session close | `close_async()` is a no-op | `Session` has no `close()` method | — (no dedicated test) |
 | 6 | Non-row result handling | `_rows_to_dicts()` catches `RuntimeError` for INSERT/UPDATE/DELETE | `iter_rows()` raises `RuntimeError: Result does not have rows` | — (workaround in driver) |
 | 7 | SSL/TLS | Not supported | Not exposed to Python | — (not tested) |
@@ -96,11 +96,11 @@ Legend:
 
 | coodie Need | python-rs-driver Equivalent | Status |
 |---|---|---|
-| `timeout` parameter on `execute_async()` | `Statement.with_request_timeout(ms)` / `ExecutionProfile` | ✅ API exists upstream |
+| `timeout` parameter on `execute_async()` | `Statement.with_request_timeout(seconds: float)` / `ExecutionProfile` | ✅ API exists upstream |
 
 **Gap summary — timeout:**
 - The upstream API (`Statement.with_request_timeout()`) supports per-query timeout
-- Fix → in `PythonRsDriver.execute_async()`, call `prepared.with_request_timeout(int(timeout * 1000))` before execute
+- Fix → in `PythonRsDriver.execute_async()`, call `prepared.with_request_timeout(timeout)` before execute (upstream takes seconds as `float`, not milliseconds)
 - Upstream dependency → none; this is a coodie-side wiring fix
 
 ### 2.5 Session Close / Shutdown
@@ -143,7 +143,7 @@ Legend:
 
 ## 3. Implementation Phases
 
-### Phase 1: Per-Query Consistency & Timeout (Priority: High)
+### Phase 1: Per-Query Consistency & Timeout (Priority: High) ✅ Done
 
 **Goal:** Wire the `consistency` and `timeout` parameters through to the Rust driver — no upstream changes needed.
 
@@ -151,9 +151,9 @@ Legend:
 |---|---|
 | 1.1 | Map coodie consistency strings (`"ONE"`, `"QUORUM"`, etc.) to `scylla.enums.Consistency` enum values in `PythonRsDriver` |
 | 1.2 | In `execute_async()`, call `prepared.with_consistency(c)` when `consistency` is not `None` |
-| 1.3 | In `execute_async()`, call `prepared.with_request_timeout(ms)` when `timeout` is not `None` (convert seconds → milliseconds) |
+| 1.3 | In `execute_async()`, call `prepared.with_request_timeout(timeout)` when `timeout` is not `None` (upstream takes seconds) |
 | 1.4 | Add unit tests verifying consistency and timeout are forwarded to the prepared statement |
-| 1.5 | Add integration tests verifying queries respect the configured consistency level |
+| 1.5 | Integration test: a read at `EACH_QUORUM` is rejected by the server, proving the consistency is forwarded (`test_per_query_consistency_reaches_server`) |
 
 ### Phase 2: Background-Thread Sync Bridge (Priority: High)
 

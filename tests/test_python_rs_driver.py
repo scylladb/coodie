@@ -194,6 +194,58 @@ async def test_python_rs_driver_prepared_cache(python_rs_driver, mock_scylla_ses
 
 
 # ------------------------------------------------------------------
+# Per-query consistency & timeout
+# ------------------------------------------------------------------
+
+
+async def test_python_rs_driver_execute_async_applies_consistency_and_timeout(python_rs_driver, mock_scylla_session):
+    modules = _mock_scylla_modules()
+    scylla_mod = modules["scylla"]
+    modules["scylla.enums"] = scylla_mod.enums
+    prepared = mock_scylla_session.prepare.return_value
+    with_cl = prepared.with_consistency.return_value
+    with_timeout = with_cl.with_request_timeout.return_value
+
+    with patch.dict("sys.modules", modules):
+        await python_rs_driver.execute_async("SELECT * FROM test_ks.t", ["p1"], consistency="LOCAL_QUORUM", timeout=2.5)
+
+    prepared.with_consistency.assert_called_once_with(scylla_mod.enums.Consistency.LocalQuorum)
+    with_cl.with_request_timeout.assert_called_once_with(2.5)
+    mock_scylla_session.execute.assert_awaited_once_with(with_timeout, ["p1"])
+    # cached prepared statement stays unmodified
+    assert python_rs_driver._prepared["SELECT * FROM test_ks.t"] is prepared
+
+
+async def test_python_rs_driver_execute_async_without_options_uses_cached_prepared(
+    python_rs_driver, mock_scylla_session
+):
+    prepared = mock_scylla_session.prepare.return_value
+    await python_rs_driver.execute_async("SELECT * FROM test_ks.t", [])
+    prepared.with_consistency.assert_not_called()
+    prepared.with_request_timeout.assert_not_called()
+    mock_scylla_session.execute.assert_awaited_once_with(prepared, None)
+
+
+async def test_python_rs_driver_execute_async_ddl_applies_timeout(python_rs_driver, mock_scylla_session):
+    modules = _mock_scylla_modules()
+    scylla_mod = modules["scylla"]
+    modules["scylla.statement"] = scylla_mod.statement
+    statement_cls = scylla_mod.statement.Statement
+    result = MagicMock()
+    result.iter_rows.return_value = iter([])
+    mock_scylla_session.execute = AsyncMock(return_value=result)
+
+    with patch.dict("sys.modules", modules):
+        await python_rs_driver.execute_async("DROP TABLE test_ks.t", [], timeout=10.0)
+
+    statement_cls.assert_called_once_with("DROP TABLE test_ks.t")
+    statement_cls.return_value.with_request_timeout.assert_called_once_with(10.0)
+    mock_scylla_session.execute.assert_awaited_once_with(
+        statement_cls.return_value.with_request_timeout.return_value, None
+    )
+
+
+# ------------------------------------------------------------------
 # _rows_to_dicts
 # ------------------------------------------------------------------
 

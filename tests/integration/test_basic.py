@@ -56,6 +56,13 @@ class TestIntegration:
         with pytest.raises(DocumentNotFound):
             await _maybe_await(Product.get, id=uuid4())
 
+    async def test_per_query_consistency_reaches_server(self, coodie_driver, driver_type) -> None:
+        """The server rejects reads at EACH_QUORUM, so an error proves the consistency was forwarded."""
+        if driver_type == "acsylla":
+            pytest.xfail("AcsyllaDriver passes consistency as str; acsylla.bind() expects acsylla.Consistency")
+        with pytest.raises(Exception, match="EACH_QUORUM"):
+            await coodie_driver.execute_async("SELECT release_version FROM system.local", [], consistency="EACH_QUORUM")
+
     async def test_delete(self, coodie_driver, Product) -> None:
         """delete() removes the row; subsequent find_one returns None."""
         pid = uuid4()
