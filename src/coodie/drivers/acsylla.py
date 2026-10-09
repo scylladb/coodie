@@ -267,7 +267,7 @@ class AcsyllaDriver(AbstractDriver):
         prepared = await self._prepare(stmt)
         bind_kwargs: dict[str, Any] = {}
         if consistency is not None:
-            bind_kwargs["consistency"] = consistency
+            bind_kwargs["consistency"] = getattr(self._acsylla.Consistency, consistency)
         if timeout is not None:
             bind_kwargs["timeout"] = timeout
         if fetch_size is not None:

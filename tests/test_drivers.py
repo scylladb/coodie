@@ -799,7 +799,7 @@ async def test_acsylla_driver_prepared_cache(acsylla_driver, mock_acsylla_sessio
 async def test_acsylla_driver_execute_async_with_consistency(acsylla_driver, mock_acsylla_session):
     await acsylla_driver.execute_async("SELECT * FROM test_ks.t", [], consistency="LOCAL_QUORUM")
     prepared = await mock_acsylla_session.create_prepared("SELECT * FROM test_ks.t")
-    prepared.bind.assert_called_with([], consistency="LOCAL_QUORUM")
+    prepared.bind.assert_called_with([], consistency=acsylla_driver._acsylla.Consistency.LOCAL_QUORUM)
 
 
 async def test_acsylla_driver_sync_table_async(acsylla_driver, mock_acsylla_session):
