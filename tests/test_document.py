@@ -113,6 +113,21 @@ async def test_insert_if_not_exists(Product, registered_mock_driver):
     assert "IF NOT EXISTS" in stmt
 
 
+async def test_insert_returns_lwt_result_applied(Product, registered_mock_driver):
+    registered_mock_driver.set_return_rows([{"[applied]": True}])
+    result = await _maybe_await(Product(name="Widget").insert)
+    assert result is not None
+    assert result.applied is True
+
+
+async def test_insert_returns_lwt_result_not_applied(Product, registered_mock_driver):
+    registered_mock_driver.set_return_rows([{"[applied]": False, "name": "Existing"}])
+    result = await _maybe_await(Product(name="Widget").insert)
+    assert result is not None
+    assert result.applied is False
+    assert result.existing == {"name": "Existing"}
+
+
 # -- Phase 5: Document.save_json() ----------------------------------------
 
 
