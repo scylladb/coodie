@@ -436,10 +436,10 @@ demos/
 
 | Task | Description |
 |---|---|
-| 9.1 | Write `demos/README.md` with a table listing all demos, their focus area, and quick-start links |
-| 9.2 | Add a `docker-compose.yml` at `demos/` level for shared ScyllaDB instance |
+| ✅ 9.1 | Write `demos/README.md` with a table listing all demos, their focus area, and quick-start links |
+| ✅ 9.2 | Add a `docker-compose.yml` at `demos/` level for shared ScyllaDB instance |
 | 9.3 | Ensure every demo has consistent Makefile targets, color theming, README structure, and seed.py interface |
-| 9.4 | Update the top-level `README.md` to link to the new `demos/` directory |
+| ✅ 9.4 | Update the top-level `README.md` to link to the new `demos/` directory |
 | 9.5 | Final review of all demos for consistency and correctness |
 
 ### Phase 10: Schema Migration Framework Demo (Priority: Medium)
