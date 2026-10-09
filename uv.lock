@@ -294,7 +294,7 @@ requires-dist = [
     { name = "cassandra-driver", marker = "extra == 'cassandra'", specifier = ">=3.25.0" },
     { name = "pydantic", specifier = ">=2.0" },
     { name = "scylla-driver", marker = "extra == 'scylla'", specifier = ">=3.25.4" },
-    { name = "scylladb-rs-driver", marker = "python_full_version >= '3.11' and extra == 'python-rs'", git = "https://github.com/scylladb-zpp-2025-python-rs-driver/python-rs-driver" },
+    { name = "scylladb-rs-driver", marker = "python_full_version >= '3.11' and extra == 'python-rs'", git = "https://github.com/scylladb-zpp-2025-python-rs-driver/python-rs-driver?rev=0f7fda89d9b90b437000ca044b75cc6eea2649a6" },
 ]
 provides-extras = ["acsylla", "cassandra", "python-rs", "scylla"]
 
@@ -1133,7 +1133,7 @@ wheels = [
 [[package]]
 name = "scylladb-rs-driver"
 version = "0.2.0"
-source = { git = "https://github.com/scylladb-zpp-2025-python-rs-driver/python-rs-driver#0f7fda89d9b90b437000ca044b75cc6eea2649a6" }
+source = { git = "https://github.com/scylladb-zpp-2025-python-rs-driver/python-rs-driver?rev=0f7fda89d9b90b437000ca044b75cc6eea2649a6#0f7fda89d9b90b437000ca044b75cc6eea2649a6" }
 
 [[package]]
 name = "snowballstemmer"

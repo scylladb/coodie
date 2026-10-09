@@ -26,13 +26,13 @@ def _mock_scylla_modules() -> dict[str, MagicMock]:
     """Return a dict suitable for ``patch.dict("sys.modules", ...)``.
 
     Mocks the ``scylla`` package and its sub-modules so that
-    ``import scylla`` and ``from scylla.session_builder import SessionBuilder``
+    ``import scylla`` and ``from scylla.session import SessionBuilder``
     succeed without the real package installed.
     """
     scylla_mod = MagicMock()
     return {
         "scylla": scylla_mod,
-        "scylla.session_builder": scylla_mod.session_builder,
+        "scylla.session": scylla_mod.session,
     }
 
 
@@ -235,6 +235,25 @@ def test_python_rs_driver_rows_to_dicts_new_api():
         assert PythonRsDriver._rows_to_dicts(NewRequestResult()) == [{"id": "1"}, {"id": "2"}]
 
 
+def test_python_rs_driver_rows_to_dicts_tuple_rows():
+    """scylladb-rs-driver >= 0.2.0 yields tuples; zip them with column names."""
+    with patch.dict("sys.modules", _mock_scylla_modules()):
+        from coodie.drivers.python_rs import PythonRsDriver
+
+        class TupleRequestResult:
+            columns = (MagicMock(), MagicMock())
+            columns[0].name = "id"
+            columns[1].name = "name"
+
+            def iter_current_page(self):
+                return iter([("1", "a"), ("2", "b")])
+
+        assert PythonRsDriver._rows_to_dicts(TupleRequestResult()) == [
+            {"id": "1", "name": "a"},
+            {"id": "2", "name": "b"},
+        ]
+
+
 # ------------------------------------------------------------------
 # _is_ddl helper
 # ------------------------------------------------------------------
@@ -392,13 +411,13 @@ async def test_init_coodie_async_python_rs_with_hosts():
     mock_scylla = MagicMock()
     mock_builder = MagicMock()
     mock_session = MagicMock()
-    mock_scylla.session_builder.SessionBuilder = MagicMock(return_value=mock_builder)
+    mock_scylla.session.SessionBuilder = MagicMock(return_value=mock_builder)
     mock_builder.contact_points.return_value = mock_builder
     mock_builder.connect = AsyncMock(return_value=mock_session)
 
     modules = {
         "scylla": mock_scylla,
-        "scylla.session_builder": mock_scylla.session_builder,
+        "scylla.session": mock_scylla.session,
     }
     with patch.dict("sys.modules", modules):
         driver = await init_coodie_async(
@@ -408,7 +427,7 @@ async def test_init_coodie_async_python_rs_with_hosts():
         )
     assert get_driver() is driver
     # connect() creates session on background loop via session_factory
-    mock_scylla.session_builder.SessionBuilder.assert_called_once()
+    mock_scylla.session.SessionBuilder.assert_called_once()
     mock_builder.contact_points.assert_called_once_with(("127.0.0.1",))
     mock_builder.connect.assert_awaited_once()
     assert driver._bridge_to_bg_loop is True
@@ -504,19 +523,19 @@ def test_init_coodie_python_rs_with_hosts():
     mock_scylla = MagicMock()
     mock_builder = MagicMock()
     mock_session = MagicMock()
-    mock_scylla.session_builder.SessionBuilder = MagicMock(return_value=mock_builder)
+    mock_scylla.session.SessionBuilder = MagicMock(return_value=mock_builder)
     mock_builder.contact_points.return_value = mock_builder
     mock_builder.connect = AsyncMock(return_value=mock_session)
 
     modules = {
         "scylla": mock_scylla,
-        "scylla.session_builder": mock_scylla.session_builder,
+        "scylla.session": mock_scylla.session,
     }
     with patch.dict("sys.modules", modules):
         driver = init_coodie(hosts=["127.0.0.1"], keyspace="ks", driver_type="python-rs")
     assert get_driver() is driver
     assert driver._bridge_to_bg_loop is True
-    mock_scylla.session_builder.SessionBuilder.assert_called_once()
+    mock_scylla.session.SessionBuilder.assert_called_once()
     mock_builder.contact_points.assert_called_once_with(("127.0.0.1",))
     mock_builder.connect.assert_awaited_once()
     _registry.clear()

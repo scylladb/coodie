@@ -40,7 +40,7 @@ class PythonRsDriver(AbstractDriver):
 
     .. code-block:: python
 
-        from scylla.session_builder import SessionBuilder
+        from scylla.session import SessionBuilder
         from coodie.aio import Document, init_coodie
         from coodie.drivers import register_driver
         from coodie.drivers.python_rs import PythonRsDriver
@@ -116,7 +116,7 @@ class PythonRsDriver(AbstractDriver):
 
         Example::
 
-            from scylla.session_builder import SessionBuilder
+            from scylla.session import SessionBuilder
             from coodie.drivers.python_rs import PythonRsDriver
 
             async def make_session():
@@ -201,7 +201,7 @@ class PythonRsDriver(AbstractDriver):
     def _rows_to_dicts(result: Any) -> list[dict[str, Any]]:
         """Convert a ``RequestResult`` to a list of dicts.
 
-        python-rs-driver yields dicts from its row iterators.
+        Older python-rs-driver yields dicts; >= 0.2.0 yields tuples (zipped with column names).
         Supports both the old API (``iter_rows()``) and the new paging API
         (``iter_current_page()``).  Non-row-returning statements
         (INSERT/UPDATE/DELETE) raise ``RuntimeError`` — return ``[]``.
@@ -214,11 +214,16 @@ class PythonRsDriver(AbstractDriver):
         # don't produce false positives.
         method_name = "iter_current_page" if hasattr(type(result), "iter_current_page") else "iter_rows"
         try:
-            return list(getattr(result, method_name)())
+            rows = list(getattr(result, method_name)())
         except RuntimeError as exc:
             if "does not have rows" in str(exc):
                 return []
             raise
+        # scylladb-rs-driver >= 0.2.0 yields tuples unless a row factory is configured.
+        if rows and isinstance(rows[0], tuple):
+            names = [col.name for col in result.columns]
+            return [dict(zip(names, row, strict=True)) for row in rows]
+        return rows
 
     # ------------------------------------------------------------------
     # Background-loop bridge

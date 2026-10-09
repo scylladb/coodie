@@ -86,7 +86,8 @@ conflicts = [
 [tool.uv.sources]
 # python-rs-driver is not published on PyPI — uv builds it from source via Git.
 # Requires a Rust toolchain and maturin.
-scylladb-rs-driver = { git = "https://github.com/scylladb-zpp-2025-python-rs-driver/python-rs-driver" }
+# Pinned: the driver API is still changing upstream (e.g. the a8116ce RequestResult redesign); bump deliberately.
+scylladb-rs-driver = { git = "https://github.com/scylladb-zpp-2025-python-rs-driver/python-rs-driver", rev = "0f7fda89d9b90b437000ca044b75cc6eea2649a6" }
 
 [tool.ruff]
 line-length = 120
