@@ -45,6 +45,9 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y bats
       - name: Run unit tests
         run: uv run pytest -m "not integration" --cov-report=xml
+      - name: Run plan parser tests (Linux only)
+        if: runner.os == 'Linux'
+        run: uv run pytest .github/scripts/test_parse_plan.py --no-cov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:

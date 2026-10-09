@@ -20,6 +20,7 @@ def run_parser(plan_file: str, completed_phase: str = "auto") -> dict:
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--plan-file", plan_file, "--completed-phase", completed_phase],
         capture_output=True,
+        check=False,
         text=True,
     )
     assert result.returncode == 0, f"parse-plan.py failed: {result.stderr}"
@@ -462,6 +463,7 @@ def test_plan_file_not_found_returns_nonzero():
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--plan-file", "docs/plans/nonexistent.md"],
         capture_output=True,
+        check=False,
         text=True,
     )
     assert result.returncode != 0
@@ -504,7 +506,7 @@ def test_real_plan_migration_strategy_letter_completed_phase_arg():
     if not plan_file.exists():
         pytest.skip("migration-strategy.md not found")
 
-    data = run_parser(str(plan_file), completed_phase="C")
-    # Caller says Phase C is done; next incomplete phase should be D
+    data = run_parser(str(plan_file), completed_phase="B")
+    # Caller says Phase B is done; next incomplete phase should be C (D is already done)
     assert data["next_phase"] is not None
-    assert data["next_phase"]["number"] == "D"
+    assert data["next_phase"]["number"] == "C"
