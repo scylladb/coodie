@@ -112,7 +112,7 @@ Legend:
 | `ALTER TABLE DROP column` | — | ❌ |
 | `ALTER TABLE RENAME column` | — | ❌ |
 | `ALTER TABLE WITH options` | `sync_table()` (auto-detects option changes) | ✅ |
-| `TRUNCATE TABLE` | — | ❌ |
+| `TRUNCATE TABLE` | `Document.truncate()` | ✅ |
 | Table compaction options | `Settings.__options__` | ✅ |
 | `default_time_to_live` | `Settings.__default_ttl__` | ✅ |
 | `CLUSTERING ORDER BY` | `ClusteringKey(order="DESC")` | ✅ |
@@ -195,11 +195,11 @@ Legend:
 | `LIMIT` | `QuerySet.limit(N)` | ✅ |
 | `PER PARTITION LIMIT` | `QuerySet.per_partition_limit(N)` | ✅ |
 | `ALLOW FILTERING` | `QuerySet.allow_filtering()` | ✅ |
-| `DISTINCT` (partition-level) | — | ❌ |
-| `GROUP BY` (clustering columns) | — | ❌ |
+| `DISTINCT` (partition-level) | `QuerySet.distinct()` | ✅ |
+| `GROUP BY` (clustering columns) | `QuerySet.group_by(*cols)` | ✅ |
 | `COUNT(*)` | `QuerySet.count()` | ✅ |
-| `SUM()`, `AVG()`, `MIN()`, `MAX()` | — | ❌ |
-| `CAST()` | — | ❌ |
+| `SUM()`, `AVG()`, `MIN()`, `MAX()` | `QuerySet.sum()/avg()/min()/max()/aggregate()` | ✅ |
+| `CAST()` | `QuerySet.cast(col, type)` | ✅ |
 | `SELECT JSON` | — | ❌ |
 | `WRITETIME(col)` | — | ❌ |
 | `TTL(col)` | — | ❌ |
@@ -272,7 +272,7 @@ Legend:
 | `LIKE` (SASI/SAI) | `filter(col__like=pattern)` | ✅ |
 | `!=` | `filter(col__ne=val)` | ✅ |
 | `TOKEN()` range queries | `filter(col__token__gt=val)` | ✅ |
-| `IS NOT NULL` | — | ❌ |
+| `IS NOT NULL` | `filter(col__isnull=False)` / `is_not_null(col)` | ✅ (MV definitions only, server-side) |
 
 **Gap summary — filtering:**
 - `IS NOT NULL` → Add `filter(col__isnull=False)` that generates `"col" IS NOT NULL`. Useful for materialized view queries and sparse data patterns.
@@ -383,16 +383,16 @@ Legend:
 
 **Goal:** Close the most impactful DML gaps — `TRUNCATE`, `DISTINCT`, `GROUP BY`, aggregates, and `IS NOT NULL`.
 
-| Task | Description |
-|---|---|
-| 1.1 | Add `build_truncate(table, keyspace)` to `cql_builder.py` |
-| 1.2 | Add `Document.truncate()` and async variant to `aio/document.py` and `sync/document.py` |
-| 1.3 | Add `QuerySet.distinct()` that emits `SELECT DISTINCT` in `build_select()` |
-| 1.4 | Add `QuerySet.group_by(*cols)` that appends `GROUP BY` clause to `build_select()` |
-| 1.5 | Add `QuerySet.sum(col)`, `.avg(col)`, `.min(col)`, `.max(col)` aggregate methods |
-| 1.6 | Add `build_aggregate(table, keyspace, func, col, where, ...)` to `cql_builder.py` |
-| 1.7 | Add `__isnull` filter operator mapping to `IS NOT NULL` / `IS NULL` in `parse_filter_kwargs()` |
-| 1.8 | Unit + integration tests for all Phase 1 features |
+| Task | Description | Status |
+|---|---|---|
+| 1.1 | Add `build_truncate(table, keyspace)` to `cql_builder.py` | ✅ |
+| 1.2 | Add `Document.truncate()` and async variant to `aio/document.py` and `sync/document.py` | ✅ |
+| 1.3 | Add `QuerySet.distinct()` that emits `SELECT DISTINCT` in `build_select()` | ✅ |
+| 1.4 | Add `QuerySet.group_by(*cols)` that appends `GROUP BY` clause to `build_select()` | ✅ |
+| 1.5 | Add `QuerySet.sum(col)`, `.avg(col)`, `.min(col)`, `.max(col)` aggregate methods | ✅ (plus `aggregate(**funcs)`) |
+| 1.6 | Add `build_aggregate(table, keyspace, func, col, where, ...)` to `cql_builder.py` | ✅ |
+| 1.7 | Add `__isnull` filter operator mapping to `IS NOT NULL` / `IS NULL` in `parse_filter_kwargs()` | ✅ (server rejects `IS NOT NULL` outside MV definitions; `IS NULL` is not valid CQL) |
+| 1.8 | Unit + integration tests for all Phase 1 features | ✅ (`tests/integration/test_dml_extras.py`, also covers `QuerySet.cast()`) |
 
 ### Phase 2: Data Type Gaps (Priority: High)
 
