@@ -19,22 +19,14 @@ Example::
 
 from __future__ import annotations
 
-import functools
+import logging
 import re
 import typing
 from typing import Any
 
 from pydantic import BaseModel, model_validator
 
-_SNAKE_RE1 = re.compile(r"(.)([A-Z][a-z]+)")
-_SNAKE_RE2 = re.compile(r"([a-z0-9])([A-Z])")
-
-
-@functools.lru_cache(maxsize=128)
-def _snake_case(name: str) -> str:
-    """Convert CamelCase class name to snake_case."""
-    s1 = _SNAKE_RE1.sub(r"\1_\2", name)
-    return _SNAKE_RE2.sub(r"\1_\2", s1).lower()
+logger = logging.getLogger("coodie")
 
 
 class UserType(BaseModel):
@@ -70,14 +62,11 @@ class UserType(BaseModel):
         """Return the CQL type name for this UDT.
 
         Uses ``Settings.__type_name__`` if set, otherwise converts the
-        class name to snake_case.
+        class name to snake_case (``HTTPAddress`` -> ``http_address``).
         """
-        settings = getattr(cls, "Settings", None)
-        if settings:
-            override = getattr(settings, "__type_name__", None)
-            if override:
-                return override
-        return _snake_case(cls.__name__)
+        from coodie.types import _udt_type_name
+
+        return _udt_type_name(cls)
 
     @classmethod
     def _get_keyspace(cls) -> str:
@@ -113,66 +102,118 @@ class UserType(BaseModel):
         return result
 
     @classmethod
-    def sync_type(cls, keyspace: str | None = None) -> list[str]:
+    def sync_type(cls, keyspace: str | None = None, dry_run: bool = False) -> list[str]:
         """Synchronously create or update this UDT in the database.
 
-        Recursively syncs any nested UDT dependencies first.
+        Syncs nested UDT dependencies first.  Fields missing from the
+        database type are added with ``ALTER TYPE ... ADD``; removed fields
+        and type changes are only logged (UDT fields are never dropped or
+        altered).
 
         Returns:
-            List of CQL statements that were executed.
+            List of DDL statements that were (or, with ``dry_run``, would be)
+            executed.
         """
         from coodie.drivers import get_driver
 
         driver = get_driver()
         ks = keyspace or cls._get_keyspace()
-
         stmts: list[str] = []
-
-        # Recursively sync nested UDT dependencies
-        for dep in _extract_udt_dependencies(cls):
-            if dep is not cls:
-                stmts.extend(dep.sync_type(keyspace=ks))
-
-        # Build and execute CREATE TYPE
-        fields = cls._get_field_cql_types()
-        from coodie.cql_builder import build_create_type
-
-        create_stmt = build_create_type(cls.type_name(), ks, fields)
-        driver.execute(create_stmt, [])
-        stmts.append(create_stmt)
-
+        for udt in [*_extract_udt_dependencies(cls), cls]:
+            stmts.extend(udt._sync_one(driver, ks, dry_run))
         return stmts
 
     @classmethod
-    async def sync_type_async(cls, keyspace: str | None = None) -> list[str]:
-        """Asynchronously create or update this UDT in the database.
-
-        Recursively syncs any nested UDT dependencies first.
-
-        Returns:
-            List of CQL statements that were executed.
-        """
+    async def sync_type_async(cls, keyspace: str | None = None, dry_run: bool = False) -> list[str]:
+        """Async version of :meth:`sync_type`."""
         from coodie.drivers import get_driver
 
         driver = get_driver()
         ks = keyspace or cls._get_keyspace()
-
         stmts: list[str] = []
+        for udt in [*_extract_udt_dependencies(cls), cls]:
+            stmts.extend(await udt._sync_one_async(driver, ks, dry_run))
+        return stmts
 
-        # Recursively sync nested UDT dependencies
-        for dep in _extract_udt_dependencies(cls):
-            if dep is not cls:
-                stmts.extend(await dep.sync_type_async(keyspace=ks))
-
-        # Build and execute CREATE TYPE
-        fields = cls._get_field_cql_types()
+    @classmethod
+    def _sync_one(cls, driver: Any, keyspace: str, dry_run: bool = False) -> list[str]:
+        """Create or extend this UDT only (no dependencies)."""
         from coodie.cql_builder import build_create_type
 
-        create_stmt = build_create_type(cls.type_name(), ks, fields)
-        await driver.execute_async(create_stmt, [])
-        stmts.append(create_stmt)
-
+        rows = driver.execute(_SELECT_TYPE_FIELDS, [keyspace, cls.type_name()])
+        if rows:
+            stmts = cls._plan_alters(keyspace, rows)
+        else:
+            stmts = [build_create_type(cls.type_name(), keyspace, cls._get_field_cql_types())]
+        if not dry_run:
+            for stmt in stmts:
+                driver.execute(stmt, [])
         return stmts
+
+    @classmethod
+    async def _sync_one_async(cls, driver: Any, keyspace: str, dry_run: bool = False) -> list[str]:
+        """Async version of :meth:`_sync_one`."""
+        from coodie.cql_builder import build_create_type
+
+        rows = await driver.execute_async(_SELECT_TYPE_FIELDS, [keyspace, cls.type_name()])
+        if rows:
+            stmts = cls._plan_alters(keyspace, rows)
+        else:
+            stmts = [build_create_type(cls.type_name(), keyspace, cls._get_field_cql_types())]
+        if not dry_run:
+            for stmt in stmts:
+                await driver.execute_async(stmt, [])
+        return stmts
+
+    @classmethod
+    def _plan_alters(cls, keyspace: str, rows: list[dict[str, Any]]) -> list[str]:
+        """Diff model fields against a ``system_schema.types`` row.
+
+        Returns ``ALTER TYPE ... ADD`` statements for new fields and logs a
+        warning for removed fields or changed field types.
+        """
+        from coodie.cql_builder import build_alter_type_add
+
+        type_name = cls.type_name()
+        existing = dict(zip(rows[0]["field_names"] or [], rows[0]["field_types"] or [], strict=False))
+        model = dict(cls._get_field_cql_types())
+        alters: list[str] = []
+        for name, cql_type in model.items():
+            if name not in existing:
+                alters.append(build_alter_type_add(type_name, keyspace, name, cql_type))
+            elif _normalize_cql_type(existing[name]) != _normalize_cql_type(cql_type):
+                logger.warning(
+                    "UDT %s.%s field %r has type %s in the database but %s in the model; not altering",
+                    keyspace,
+                    type_name,
+                    name,
+                    existing[name],
+                    cql_type,
+                )
+        removed = existing.keys() - model.keys()
+        if removed:
+            logger.warning(
+                "Schema drift detected: fields %s exist in UDT %s.%s but are not defined in the model",
+                removed,
+                keyspace,
+                type_name,
+            )
+        return alters
+
+
+_SELECT_TYPE_FIELDS = (
+    "SELECT field_names, field_types FROM system_schema.types WHERE keyspace_name = ? AND type_name = ?"
+)
+
+
+def _normalize_cql_type(cql_type: str) -> str:
+    """Normalize a CQL type string for comparison.
+
+    ponytail: drops ``frozen<`` and every ``>`` instead of parsing, since the
+    server may freeze collections inside UDTs; parse properly if it ever
+    yields a false match.
+    """
+    return re.sub(r"\s|frozen<|>", "", cql_type.lower())
 
 
 def _is_usertype(cls: Any) -> bool:

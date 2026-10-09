@@ -310,12 +310,12 @@ recursively constructs nested `UserType` instances.
 
 | Task | Description |
 |---|---|
-| 4.1 | Add `_get_existing_type_fields(type_name, keyspace)` to `CassandraDriver` — introspect `system_schema.types` |
-| 4.2 | Add `_get_existing_type_fields(type_name, keyspace)` to `AcsyllaDriver` |
-| 4.3 | Add `sync_type(type_name, keyspace, fields)` method to `AbstractDriver` base class |
-| 4.4 | Implement `sync_type()` in `CassandraDriver` — `CREATE TYPE IF NOT EXISTS`, `ALTER TYPE ADD` for new fields |
-| 4.5 | Implement `sync_type_async()` in `CassandraDriver` (asyncio bridge) |
-| 4.6 | Implement `sync_type()` / `sync_type_async()` in `AcsyllaDriver` |
+| 4.1 | ~~Add `_get_existing_type_fields(type_name, keyspace)` to `CassandraDriver`~~ — done driver-agnostically: `UserType` queries `system_schema.types` via `driver.execute()` |
+| 4.2 | ~~Add `_get_existing_type_fields(type_name, keyspace)` to `AcsyllaDriver`~~ — covered by 4.1 |
+| 4.3 | ~~Add `sync_type(type_name, keyspace, fields)` method to `AbstractDriver` base class~~ — not needed; logic lives in `UserType._sync_one()` |
+| 4.4 | `CREATE TYPE IF NOT EXISTS`, `ALTER TYPE ADD` for new fields; warn on removed/changed fields |
+| 4.5 | ~~Implement `sync_type_async()` in `CassandraDriver`~~ — `UserType.sync_type_async()` uses `driver.execute_async()` |
+| 4.6 | ~~Implement `sync_type()` / `sync_type_async()` in `AcsyllaDriver`~~ — covered by 4.5 |
 | 4.7 | Add `sync_type()` classmethod on `UserType` (sync variant) — resolves dependencies, calls driver |
 | 4.8 | Add `sync_type()` classmethod on `UserType` (async variant in `coodie.aio`) |
 | 4.9 | Integrate UDT sync into `Document.sync_table()` — auto-sync UDTs before table creation |

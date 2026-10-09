@@ -165,7 +165,14 @@ def python_type_to_cql_type_str(annotation: Any) -> str:
 # UDT (UserType / BaseModel subclass) helpers
 # ------------------------------------------------------------------
 
-_CAMEL_TO_SNAKE_RE = re.compile(r"(?<=[a-z0-9])(?=[A-Z])")
+_SNAKE_RE1 = re.compile(r"(.)([A-Z][a-z]+)")
+_SNAKE_RE2 = re.compile(r"([a-z0-9])([A-Z])")
+
+
+@functools.lru_cache(maxsize=128)
+def _snake_case(name: str) -> str:
+    """Convert a CamelCase class name to snake_case (``HTTPAddress`` -> ``http_address``)."""
+    return _SNAKE_RE2.sub(r"\1_\2", _SNAKE_RE1.sub(r"\1_\2", name)).lower()
 
 
 def _is_user_type(cls: type) -> bool:
@@ -181,14 +188,16 @@ def _udt_type_name(cls: type) -> str:
     """Derive the CQL type name for a UserType / BaseModel subclass.
 
     Uses ``Settings.__type_name__`` if defined, otherwise converts the
-    class name to ``lower_snake_case``.
+    class name to ``lower_snake_case``.  This is the single source of UDT
+    names: ``UserType.type_name()`` delegates here so column types and
+    ``CREATE TYPE`` always agree.
     """
     settings = getattr(cls, "Settings", None)
     if settings is not None:
         custom = getattr(settings, "__type_name__", None)
         if custom:
             return custom
-    return _CAMEL_TO_SNAKE_RE.sub("_", cls.__name__).lower()
+    return _snake_case(cls.__name__)
 
 
 # Mapping from collection origin types to their empty factory
