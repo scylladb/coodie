@@ -56,18 +56,21 @@ class MigrationContext:
         (``keyspace_name`` + ``table_name``) so no ALLOW FILTERING is needed.
         """
         return await self._driver.execute_async(
-            "SELECT column_name, kind, position FROM system_schema.columns WHERE keyspace_name = ? AND table_name = ?",
+            "SELECT column_name, kind, position, clustering_order FROM system_schema.columns WHERE keyspace_name = ? AND table_name = ?",
             [keyspace, table],
         )
 
-    async def _get_partition_key_columns(self, keyspace: str, table: str) -> list[str]:
-        """Query ``system_schema.columns`` to discover partition key column names."""
+    async def _get_key_columns(self, keyspace: str, table: str) -> tuple[list[str], list[dict[str, Any]]]:
+        """Return ``(partition_key_columns, clustering_column_rows)`` in schema order."""
         rows = await self._get_all_columns(keyspace, table)
-        pk_rows = [r for r in rows if r.get("kind") == "partition_key"]
-        if not pk_rows:
+
+        def _cols(kind: str) -> list[dict[str, Any]]:
+            return sorted((r for r in rows if r.get("kind") == kind), key=lambda r: r.get("position", 0))
+
+        pk_cols = [r["column_name"] for r in _cols("partition_key")]
+        if not pk_cols:
             raise ValueError(f"No partition key columns found for {keyspace}.{table}")
-        pk_rows.sort(key=lambda r: r.get("position", 0))
-        return [r["column_name"] for r in pk_rows]
+        return pk_cols, _cols("clustering")
 
     async def column_exists(self, keyspace: str, table: str, column: str) -> bool:
         if self._dry_run:
@@ -104,8 +107,9 @@ class MigrationContext:
 
         Uses ``token()`` on the partition key to walk through the full
         token ring in *num_ranges* sub-ranges, fetching at most
-        *page_size* rows per query.  Rows are yielded one at a time so
-        the entire table is never loaded into memory.
+        *page_size* rows per query and paging within each sub-range until
+        it is exhausted.  Rows are yielded one at a time so the entire
+        table is never loaded into memory.
 
         Parameters
         ----------
@@ -140,8 +144,55 @@ class MigrationContext:
             yield {"__dry_run__": True}
             return
 
-        pk_cols = await self._get_partition_key_columns(keyspace, table)
-        token_expr = f"token({', '.join(pk_cols)})"
+        pk_cols, ck_rows = await self._get_key_columns(keyspace, table)
+        ck_cols = [r["column_name"] for r in ck_rows]
+        pk_list = ", ".join(f'"{c}"' for c in pk_cols)
+        token_expr = f"token({pk_list})"
+        pk_token = f"token({', '.join('?' * len(pk_cols))})"
+        select = f"SELECT * FROM {keyspace}.{table} WHERE "
+        limit = f" LIMIT {page_size}"
+        first_cql = f"{select}{token_expr} > ? AND {token_expr} <= ?{limit}"
+        # Next partitions: strictly after the last seen partition's token.
+        next_cql = f"{select}{token_expr} > {pk_token} AND {token_expr} <= ?{limit}"
+        # Other partitions sharing that token (murmur3 collision), so they are not skipped.
+        same_token_cql = f"SELECT DISTINCT {pk_list} FROM {keyspace}.{table} WHERE {token_expr} = {pk_token}"
+        # One partition, in storage order: after_cql[k] fixes the first k
+        # clustering columns and slices on column k in its clustering order.
+        pk_eq = " AND ".join(f'"{c}" = ?' for c in pk_cols)
+        partition_cql = f"{select}{pk_eq}{limit}"
+        after_cql = [
+            f"{select}{pk_eq}"
+            + "".join(f' AND "{c}" = ?' for c in ck_cols[:k])
+            + f' AND "{ck_cols[k]}" {"<" if str(ck_rows[k].get("clustering_order")).lower() == "desc" else ">"} ?{limit}'
+            for k in range(len(ck_cols))
+        ]
+
+        async def run(cql: str, params: list[Any]) -> list[dict[str, Any]]:
+            self._executed_cql.append(cql)
+            return await self._driver.execute_async(cql, params)
+
+        async def partition_rows(pk_vals: list[Any], last: dict[str, Any] | None) -> AsyncIterator[dict[str, Any]]:
+            """Yield the rows of one partition after *last* (all rows if ``None``)."""
+            if last is None:
+                rows = await run(partition_cql, pk_vals)
+                for row in rows:
+                    yield row
+                if len(rows) < page_size:
+                    return
+                last = rows[-1]
+            ck_vals = [last.get(c) for c in ck_cols]
+            if None in ck_vals:  # static-only row: no clustering rows to continue from
+                return
+            k = len(ck_cols) - 1
+            while k >= 0:
+                rows = await run(after_cql[k], pk_vals + ck_vals[: k + 1])
+                for row in rows:
+                    yield row
+                if len(rows) < page_size:
+                    k -= 1
+                else:
+                    ck_vals = [rows[-1][c] for c in ck_cols]
+                    k = len(ck_cols) - 1
 
         # Build sub-range boundaries
         range_size = (_TOKEN_MAX - _TOKEN_MIN) // num_ranges
@@ -162,12 +213,26 @@ class MigrationContext:
                 ranges_done += 1
                 continue
 
-            cql = f"SELECT * FROM {keyspace}.{table} WHERE {token_expr} > ? AND {token_expr} <= ? LIMIT {page_size}"
-            self._executed_cql.append(cql)
-
-            rows = await self._driver.execute_async(cql, [range_start, range_end])
-            for row in rows:
-                yield row
+            # Page through the sub-range.  A full page may end mid-partition,
+            # so finish that partition (and any partition sharing its token)
+            # before resuming from the next token.
+            cql, params = first_cql, [range_start, range_end]
+            while True:
+                rows = await run(cql, params)
+                for row in rows:
+                    yield row
+                if len(rows) < page_size:
+                    break
+                pk_vals = [rows[-1][c] for c in pk_cols]
+                async for row in partition_rows(pk_vals, rows[-1]):
+                    yield row
+                seen = [[r[c] for c in pk_cols] for r in rows]
+                for other in await run(same_token_cql, pk_vals):
+                    other_vals = [other[c] for c in pk_cols]
+                    if other_vals not in seen:
+                        async for row in partition_rows(other_vals, None):
+                            yield row
+                cql, params = next_cql, [*pk_vals, range_end]
 
             ranges_done += 1
 
