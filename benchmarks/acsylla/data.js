@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791555857440,
+  "lastUpdate": 1791555876451,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -18570,6 +18570,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000010369704358642855",
             "extra": "mean: 6.043882074956823 usec\nrounds: 7403"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "4dd3897551a90008a7bf7d4e36403c04822fd9ad",
+          "message": "fix(migrations): page within token ranges in scan_table\n\nscan_table queried each token sub-range once with LIMIT page_size and\nmoved on, so any range holding more than page_size rows was silently\ntruncated (any table above ~1M rows with the defaults).\n\nPage within each range by resuming after the last seen row: when a page\nis full, finish the last partition with clustering-key slices\n(prefix equality + one slice column, honouring ASC/DESC clustering\norder), read any other partition sharing its token (murmur3 collision)\nvia SELECT DISTINCT ... WHERE token(pk) = token(?), then continue with\ntoken(pk) > token(<last pk>). This stays correct when a single\npartition holds more than page_size rows, and does not depend on\ndriver paging state (shared on the driver, see H4).\n\nKey column names are now double-quoted, matching cql_builder, so\ncase-sensitive and reserved-word columns work.\n\nFound in architecture review (#273), finding C3.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-09T17:23:42+03:00",
+          "tree_id": "bea1d7f0e75b54ce86fe20887530d8f11b36ff76",
+          "url": "https://github.com/scylladb/coodie/commit/4dd3897551a90008a7bf7d4e36403c04822fd9ad"
+        },
+        "date": 1791555874526,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 83065.62386351264,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000015765249668110154",
+            "extra": "mean: 12.038674405709958 usec\nrounds: 16238"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1507180.181772936,
+            "unit": "iter/sec",
+            "range": "stddev: 2.883075383013679e-7",
+            "extra": "mean: 663.4906775536775 nsec\nrounds: 176992"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 137231.23284704587,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000023449360654382202",
+            "extra": "mean: 7.286970897613171 usec\nrounds: 23675"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 588618.2046545733,
+            "unit": "iter/sec",
+            "range": "stddev: 5.247566589402923e-7",
+            "extra": "mean: 1.698894108426095 usec\nrounds: 66587"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 581317.3620681312,
+            "unit": "iter/sec",
+            "range": "stddev: 4.5053390439929877e-7",
+            "extra": "mean: 1.7202307470094083 usec\nrounds: 44902"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 804838.4577555425,
+            "unit": "iter/sec",
+            "range": "stddev: 3.4707700872492664e-7",
+            "extra": "mean: 1.2424853588491604 usec\nrounds: 36336"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 840654.0263246853,
+            "unit": "iter/sec",
+            "range": "stddev: 3.712202159082942e-7",
+            "extra": "mean: 1.1895500035513666 usec\nrounds: 112272"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 708622.3564309007,
+            "unit": "iter/sec",
+            "range": "stddev: 4.0616139441374315e-7",
+            "extra": "mean: 1.4111888947967621 usec\nrounds: 127796"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 162441.1430056036,
+            "unit": "iter/sec",
+            "range": "stddev: 9.257414983665865e-7",
+            "extra": "mean: 6.156075865370534 usec\nrounds: 6327"
           }
         ]
       }
