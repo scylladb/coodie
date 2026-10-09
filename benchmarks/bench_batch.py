@@ -6,7 +6,6 @@ from uuid import uuid4
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Batch INSERT (10 rows)
 # ---------------------------------------------------------------------------
@@ -28,9 +27,8 @@ def test_cqlengine_batch_insert_10(benchmark, bench_env):
 
 @pytest.mark.benchmark(group="batch-insert-10")
 def test_coodie_batch_insert_10(benchmark, bench_env):
-    from coodie.batch import BatchQuery
-
     from benchmarks.models_coodie import CoodieEvent
+    from coodie.batch import BatchQuery
 
     def _batch():
         with BatchQuery() as batch:
@@ -61,9 +59,8 @@ def test_cqlengine_batch_insert_100(benchmark, bench_env):
 
 @pytest.mark.benchmark(group="batch-insert-100")
 def test_coodie_batch_insert_100(benchmark, bench_env):
-    from coodie.batch import BatchQuery
-
     from benchmarks.models_coodie import CoodieEvent
+    from coodie.batch import BatchQuery
 
     def _batch():
         with BatchQuery() as batch:

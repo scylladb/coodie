@@ -98,8 +98,8 @@ class UserType(BaseModel):
     @classmethod
     def _get_field_cql_types(cls) -> list[tuple[str, str]]:
         """Return ``[(field_name, cql_type_str), ...]`` for this UDT's fields."""
-        from coodie.types import python_type_to_cql_type_str
         from coodie.schema import _cached_type_hints
+        from coodie.types import python_type_to_cql_type_str
 
         hints = _cached_type_hints(cls)
         result: list[tuple[str, str]] = []
@@ -186,8 +186,8 @@ def _extract_udt_dependencies(udt_cls: type[UserType]) -> list[type[UserType]]:
     Does **not** include *udt_cls* itself in the result.
     Raises ``InvalidQueryError`` if a circular dependency is detected.
     """
-    from coodie.schema import _cached_type_hints
     from coodie.exceptions import InvalidQueryError
+    from coodie.schema import _cached_type_hints
 
     result: list[type[UserType]] = []
     visited: set[type] = set()
@@ -259,8 +259,8 @@ def extract_udt_classes(doc_cls: type) -> list[type[UserType]]:
     inside collections, nested UDTs) and returns them in dependency order
     suitable for sequential ``sync_type()`` calls.
     """
-    from coodie.schema import _cached_type_hints
     from coodie.exceptions import InvalidQueryError
+    from coodie.schema import _cached_type_hints
 
     all_udts: list[type[UserType]] = []
     seen: set[type] = set()

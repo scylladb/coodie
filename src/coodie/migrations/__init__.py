@@ -11,10 +11,10 @@ Provides:
 from __future__ import annotations
 
 from coodie.migrations.autogen import (
-    DbColumnInfo,
-    SchemaDiff,
     ColumnChange,
+    DbColumnInfo,
     IndexChange,
+    SchemaDiff,
     diff_schema,
     format_diff,
     introspect_table,

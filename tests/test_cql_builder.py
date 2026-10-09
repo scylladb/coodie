@@ -3,6 +3,8 @@ from __future__ import annotations
 import pytest
 
 from coodie.cql_builder import (
+    _insert_cql_cache,
+    _select_cql_cache,
     build_batch,
     build_count,
     build_counter_update,
@@ -11,28 +13,26 @@ from coodie.cql_builder import (
     build_create_materialized_view,
     build_create_table,
     build_delete,
-    build_drop_materialized_view,
     build_drop_keyspace,
+    build_drop_materialized_view,
     build_drop_table,
     build_insert,
     build_insert_from_columns,
     build_insert_json,
     build_select,
+    build_select_column_ttl,
     build_select_json,
     build_select_writetime,
-    build_select_column_ttl,
     build_update,
     build_where_clause,
     parse_filter_kwargs,
     parse_update_kwargs,
-    _insert_cql_cache,
-    _select_cql_cache,
 )
 from coodie.schema import ColumnDefinition
 
 
 def make_col(**kwargs):  # type: ignore[no-untyped-def]
-    defaults = dict(name="x", cql_type="text")
+    defaults = {"name": "x", "cql_type": "text"}
     defaults.update(kwargs)
     return ColumnDefinition(**defaults)
 
@@ -168,7 +168,7 @@ def test_build_select_with_where():
 
 
 def test_build_select_with_limit():
-    cql, params = build_select("products", "ks", limit=10)
+    cql, _params = build_select("products", "ks", limit=10)
     assert "LIMIT 10" in cql
 
 
@@ -937,7 +937,7 @@ def test_build_select_ann_of_with_where():
 
 def test_build_select_ann_overrides_order_by():
     """When ann_of is provided, regular order_by should be ignored."""
-    cql, params = build_select(
+    cql, _params = build_select(
         "products",
         "ks",
         order_by=["name"],

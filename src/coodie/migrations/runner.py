@@ -92,7 +92,9 @@ def _load_migration_class(info: MigrationInfo) -> Migration:
     if cls is None:
         raise ImportError(f"Migration file {info.path} must define a 'ForwardMigration' class")
     if not (isinstance(cls, type) and issubclass(cls, Migration)):
-        raise ImportError(f"ForwardMigration in {info.path} must be a subclass of coodie.migrations.Migration")
+        raise ImportError(  # noqa: TRY004 - callers expect ImportError for invalid migration modules
+            f"ForwardMigration in {info.path} must be a subclass of coodie.migrations.Migration"
+        )
     return cls()
 
 
@@ -174,9 +176,7 @@ class MigrationRunner:
         await self._ensure_lock_table()
         cql = _ACQUIRE_LOCK.format(keyspace=self._keyspace, ttl=self._lock_ttl)
         rows = await self._driver.execute_async(cql, ["coodie_migration_lock", datetime.now(timezone.utc), owner])
-        if rows and not rows[0].get("[applied]", True):
-            return False
-        return True
+        return not (rows and not rows[0].get("[applied]", True))
 
     async def _release_lock(self) -> None:
         """Release the distributed migration lock."""
@@ -277,11 +277,10 @@ class MigrationRunner:
         """
         await self._ensure_state_table()
 
-        if not dry_run:
-            if not await self._acquire_lock():
-                from coodie.exceptions import MigrationError
+        if not dry_run and not await self._acquire_lock():
+            from coodie.exceptions import MigrationError
 
-                raise MigrationError("Cannot acquire migration lock — another migration may be in progress")
+            raise MigrationError("Cannot acquire migration lock — another migration may be in progress")
 
         try:
             return await self._apply_inner(dry_run=dry_run, target=target)
@@ -345,11 +344,10 @@ class MigrationRunner:
         """
         await self._ensure_state_table()
 
-        if not dry_run:
-            if not await self._acquire_lock():
-                from coodie.exceptions import MigrationError
+        if not dry_run and not await self._acquire_lock():
+            from coodie.exceptions import MigrationError
 
-                raise MigrationError("Cannot acquire migration lock — another migration may be in progress")
+            raise MigrationError("Cannot acquire migration lock — another migration may be in progress")
 
         try:
             return await self._rollback_inner(steps=steps, dry_run=dry_run)

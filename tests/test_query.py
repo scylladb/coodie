@@ -15,7 +15,6 @@ from coodie.fields import PrimaryKey
 from tests.conftest import _maybe_await
 from tests.models import make_item
 
-
 # ------------------------------------------------------------------
 # Fixtures
 # ------------------------------------------------------------------
@@ -198,7 +197,7 @@ async def test_update_with_if_conditions_not_applied(Item, queryset_cls, registe
 async def test_update_collection_add(document_cls, queryset_cls, registered_mock_driver):
     class TagItem(document_cls):
         id: Annotated[UUID, PrimaryKey()] = Field(default_factory=uuid4)
-        tags: set[str] = set()
+        tags: set[str] = Field(default_factory=set)
 
         class Settings:
             name = "tag_items"
@@ -218,7 +217,7 @@ async def test_update_noop_when_empty(Item, queryset_cls, registered_mock_driver
 async def test_update_map_update(document_cls, queryset_cls, registered_mock_driver):
     class MapItem(document_cls):
         id: Annotated[UUID, PrimaryKey()] = Field(default_factory=uuid4)
-        meta: dict[str, str] = {}
+        meta: dict[str, str] = Field(default_factory=dict)
 
         class Settings:
             name = "map_items"
@@ -233,7 +232,7 @@ async def test_update_map_update(document_cls, queryset_cls, registered_mock_dri
 async def test_update_map_remove(document_cls, queryset_cls, registered_mock_driver):
     class MapItem(document_cls):
         id: Annotated[UUID, PrimaryKey()] = Field(default_factory=uuid4)
-        meta: dict[str, str] = {}
+        meta: dict[str, str] = Field(default_factory=dict)
 
         class Settings:
             name = "map_items2"
@@ -536,7 +535,7 @@ async def test_rows_to_docs_none_collection_coerced(variant, queryset_cls, regis
 
     class TagDoc(Document):
         id: Annotated[UUID, PrimaryKey()] = Field(default_factory=uuid4)
-        tags: list[str] = []
+        tags: list[str] = Field(default_factory=list)
 
         class Settings:
             name = "tag_docs"
@@ -695,7 +694,7 @@ async def test_full_dml_chain_delete(Item, queryset_cls, registered_mock_driver)
         .timestamp(9999)
         .delete
     )
-    stmt, params = registered_mock_driver.executed[0]
+    stmt, _params = registered_mock_driver.executed[0]
     assert "DELETE FROM" in stmt
     assert '"name" = ?' in stmt
     assert '"rating" >= ?' in stmt

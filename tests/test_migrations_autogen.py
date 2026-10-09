@@ -20,7 +20,6 @@ from coodie.migrations.autogen import (
 )
 from coodie.schema import ColumnDefinition
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -122,7 +121,7 @@ class TestIntrospectTable:
             ],
             [{"index_name": "tbl_name_idx"}],
         ]
-        exists, cols, indexes = await introspect_table(driver, "ks", "tbl")
+        exists, _cols, indexes = await introspect_table(driver, "ks", "tbl")
         assert exists is True
         assert indexes == {"tbl_name_idx"}
 
@@ -141,7 +140,7 @@ class TestIntrospectTable:
             ],
             [],
         ]
-        exists, cols, indexes = await introspect_table(driver, "ks", "tbl")
+        _exists, cols, _indexes = await introspect_table(driver, "ks", "tbl")
         assert cols[0].position == 0
         assert cols[0].clustering_order == "ASC"
 

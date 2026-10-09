@@ -15,6 +15,7 @@ from uuid import uuid4
 
 import click
 from faker import Faker
+from models import UserProfile, UserRegistration
 from rich.columns import Columns
 from rich.console import Console
 from rich.panel import Panel
@@ -26,8 +27,6 @@ from coodie.aio import init_coodie
 from coodie.aio.document import _parse_lwt_result
 from coodie.cql_builder import build_insert_from_columns
 from coodie.schema import _insert_columns
-
-from models import UserProfile, UserRegistration
 
 fake = Faker()
 console = Console()

@@ -1,5 +1,5 @@
 try:
-    from importlib.metadata import version, PackageNotFoundError
+    from importlib.metadata import PackageNotFoundError, version
 
     try:
         __version__ = version("coodie")
@@ -12,23 +12,23 @@ except ImportError:
     __version__ = "unknown"
 
 from coodie.aio import (
-    Document,
     CounterDocument,
+    Document,
     MaterializedView,
     QuerySet,
-    init_coodie,
-    execute_raw,
     create_keyspace,
     drop_keyspace,
+    execute_raw,
+    init_coodie,
 )
-from coodie.batch import BatchQuery, AsyncBatchQuery
+from coodie.batch import AsyncBatchQuery, BatchQuery
 from coodie.exceptions import (
+    ConfigurationError,
     CoodieError,
     DocumentNotFound,
-    MultipleDocumentsFound,
-    ConfigurationError,
     InvalidQueryError,
     MigrationError,
+    MultipleDocumentsFound,
 )
 from coodie.fields import (
     Ascii,
@@ -56,45 +56,43 @@ from coodie.types import CqlDuration
 from coodie.usertype import UserType
 
 __all__ = [
-    "Document",
-    "CounterDocument",
-    "MaterializedView",
-    "QuerySet",
-    "LazyDocument",
-    "init_coodie",
-    "execute_raw",
-    "create_keyspace",
-    "drop_keyspace",
-    "BatchQuery",
-    "AsyncBatchQuery",
-    "CoodieError",
-    "DocumentNotFound",
-    "MultipleDocumentsFound",
-    "ConfigurationError",
-    "InvalidQueryError",
-    "MigrationError",
-    "PrimaryKey",
-    "ClusteringKey",
-    "Indexed",
-    "Counter",
-    "Discriminator",
-    "Static",
-    "BigInt",
-    "SmallInt",
-    "TinyInt",
-    "VarInt",
-    "Double",
     "Ascii",
-    "TimeUUID",
-    "Time",
+    "AsyncBatchQuery",
+    "BatchQuery",
+    "BigInt",
+    "ClusteringKey",
+    "ConfigurationError",
+    "CoodieError",
+    "Counter",
+    "CounterDocument",
+    "CqlDuration",
+    "Discriminator",
+    "Document",
+    "DocumentNotFound",
+    "Double",
     "Duration",
     "Frozen",
-    "Vector",
-    "VectorIndex",
-    "CqlDuration",
+    "Indexed",
+    "InvalidQueryError",
     "LWTResult",
+    "LazyDocument",
+    "MaterializedView",
+    "MigrationError",
+    "MultipleDocumentsFound",
     "PagedResult",
+    "PrimaryKey",
+    "QuerySet",
+    "SmallInt",
+    "Static",
+    "Time",
+    "TimeUUID",
+    "TinyInt",
     "UserType",
+    "VarInt",
     "Vector",
     "VectorIndex",
+    "create_keyspace",
+    "drop_keyspace",
+    "execute_raw",
+    "init_coodie",
 ]

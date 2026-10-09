@@ -19,6 +19,7 @@ from uuid import uuid4
 
 import click
 from faker import Faker
+from models import CargoEntry, ShipmentLog
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import BarColumn, Progress, TaskProgressColumn, TextColumn, TimeRemainingColumn
@@ -26,8 +27,6 @@ from rich.table import Table
 from rich.text import Text
 
 from coodie.sync import BatchQuery, init_coodie
-
-from models import CargoEntry, ShipmentLog
 
 fake = Faker()
 console = Console()

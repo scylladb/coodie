@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from typing import Any
+from types import TracebackType
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 from coodie.cql_builder import build_batch
 
@@ -19,7 +23,7 @@ class BatchQuery:
             Product(name="B").save(batch=batch)
     """
 
-    __slots__ = ("_logged", "_batch_type", "_timestamp", "_statements")
+    __slots__ = ("_batch_type", "_logged", "_statements", "_timestamp")
 
     def __init__(
         self,
@@ -36,7 +40,7 @@ class BatchQuery:
         """Add a CQL statement to the batch."""
         self._statements.append((stmt, params))
 
-    def __enter__(self) -> BatchQuery:
+    def __enter__(self) -> Self:
         self._statements.clear()
         return self
 
@@ -44,7 +48,7 @@ class BatchQuery:
         self,
         exc_type: type[BaseException] | None,
         exc_val: BaseException | None,
-        exc_tb: Any,
+        exc_tb: TracebackType | None,
     ) -> None:
         if exc_type is None and self._statements:
             self.execute()
@@ -94,7 +98,7 @@ class AsyncBatchQuery:
         """Add a CQL statement to the batch."""
         self._statements.append((stmt, params))
 
-    async def __aenter__(self) -> AsyncBatchQuery:
+    async def __aenter__(self) -> Self:
         self._statements.clear()
         return self
 
@@ -102,7 +106,7 @@ class AsyncBatchQuery:
         self,
         exc_type: type[BaseException] | None,
         exc_val: BaseException | None,
-        exc_tb: Any,
+        exc_tb: TracebackType | None,
     ) -> None:
         if exc_type is None and self._statements:
             await self.execute()

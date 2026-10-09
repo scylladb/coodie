@@ -6,9 +6,7 @@ These benchmarks compare UDT-related operations: type creation, serialization
 
 from __future__ import annotations
 
-
 import pytest
-
 
 # ---------------------------------------------------------------------------
 # UDT model_dump() — serialize UserType to dict (no DB)
@@ -18,8 +16,8 @@ import pytest
 @pytest.mark.benchmark(group="udt-serialization")
 def test_cqlengine_udt_serialization(benchmark):
     try:
-        from cassandra.cqlengine.usertype import UserType
         from cassandra.cqlengine import columns
+        from cassandra.cqlengine.usertype import UserType
     except ImportError:
         pytest.skip("cqlengine not available")
 
@@ -65,8 +63,8 @@ def test_coodie_udt_serialization(benchmark):
 @pytest.mark.benchmark(group="udt-instantiation")
 def test_cqlengine_udt_instantiation(benchmark):
     try:
-        from cassandra.cqlengine.usertype import UserType
         from cassandra.cqlengine import columns
+        from cassandra.cqlengine.usertype import UserType
     except ImportError:
         pytest.skip("cqlengine not available")
 
@@ -111,8 +109,8 @@ def test_coodie_udt_instantiation(benchmark):
 @pytest.mark.benchmark(group="udt-nested-serialization")
 def test_cqlengine_nested_udt_serialization(benchmark):
     try:
-        from cassandra.cqlengine.usertype import UserType
         from cassandra.cqlengine import columns
+        from cassandra.cqlengine.usertype import UserType
     except ImportError:
         pytest.skip("cqlengine not available")
 
@@ -167,8 +165,8 @@ def test_coodie_nested_udt_serialization(benchmark):
 @pytest.mark.benchmark(group="udt-ddl-generation")
 def test_cqlengine_udt_ddl_generation(benchmark):
     try:
-        from cassandra.cqlengine.usertype import UserType
         from cassandra.cqlengine import columns
+        from cassandra.cqlengine.usertype import UserType
     except ImportError:
         pytest.skip("cqlengine not available")
 

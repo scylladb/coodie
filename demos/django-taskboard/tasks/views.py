@@ -5,10 +5,9 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
+from cassandra_models import TaskCounter, TaskEvent
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
-
-from cassandra_models import TaskCounter, TaskEvent
 
 # Default board ID (single-board demo)
 DEFAULT_BOARD_ID = UUID("00000000-0000-0000-0000-000000000001")

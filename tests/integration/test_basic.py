@@ -333,7 +333,7 @@ class TestIntegration:
 
         results = await _maybe_await(QS(Product).filter(id=pid).only("id", "name").all)
         assert len(results) >= 1
-        found = [r for r in results if r.id == pid][0]
+        found = next(r for r in results if r.id == pid)
         assert found.name == "OnlyTest"
 
         await _maybe_await(Product(id=pid, name="").delete)
@@ -346,7 +346,7 @@ class TestIntegration:
 
         results = await _maybe_await(QS(Product).filter(id=pid).defer("description").all)
         assert len(results) >= 1
-        found = [r for r in results if r.id == pid][0]
+        found = next(r for r in results if r.id == pid)
         assert found.name == "DeferTest"
 
         await _maybe_await(Product(id=pid, name="").delete)

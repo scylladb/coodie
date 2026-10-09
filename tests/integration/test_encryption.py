@@ -28,7 +28,6 @@ import pytest_asyncio
 
 from tests.conftest_scylla import LocalhostTranslator
 
-
 # ---------------------------------------------------------------------------
 # Cert-generation helper
 # ---------------------------------------------------------------------------
@@ -214,13 +213,15 @@ class TestSSLCassandraDriver:
 
     def test_sync_execute_over_ssl(self, ssl_session: Any) -> None:
         """execute() returns rows when the session was created with an SSLContext."""
-        from coodie.drivers import _registry, register_driver
-        from coodie.drivers.cassandra import CassandraDriver
-        from coodie.sync.document import Document as SyncDocument
-        from coodie.fields import PrimaryKey
         from typing import Annotated
         from uuid import UUID, uuid4
+
         from pydantic import Field
+
+        from coodie.drivers import _registry, register_driver
+        from coodie.drivers.cassandra import CassandraDriver
+        from coodie.fields import PrimaryKey
+        from coodie.sync.document import Document as SyncDocument
 
         class SSLProduct(SyncDocument):
             id: Annotated[UUID, PrimaryKey()] = Field(default_factory=uuid4)
@@ -247,13 +248,15 @@ class TestSSLCassandraDriver:
     @pytest.mark.asyncio
     async def test_async_execute_over_ssl(self, ssl_session: Any) -> None:
         """execute_async() returns rows when the session was created with an SSLContext."""
-        from coodie.drivers import _registry, register_driver
-        from coodie.drivers.cassandra import CassandraDriver
-        from coodie.aio.document import Document as AsyncDocument
-        from coodie.fields import PrimaryKey
         from typing import Annotated
         from uuid import UUID, uuid4
+
         from pydantic import Field
+
+        from coodie.aio.document import Document as AsyncDocument
+        from coodie.drivers import _registry, register_driver
+        from coodie.drivers.cassandra import CassandraDriver
+        from coodie.fields import PrimaryKey
 
         class SSLAsyncProduct(AsyncDocument):
             id: Annotated[UUID, PrimaryKey()] = Field(default_factory=uuid4)
@@ -352,14 +355,15 @@ class TestSSLAcsyllaDriver:
     async def test_async_execute_over_ssl(self, acsylla_ssl_session: Any) -> None:
         """AcsyllaDriver.execute_async() returns rows over a TLS connection."""
         import asyncio
-
-        from coodie.drivers import _registry, register_driver
-        from coodie.drivers.acsylla import AcsyllaDriver
-        from coodie.aio.document import Document as AsyncDocument
-        from coodie.fields import PrimaryKey
         from typing import Annotated
         from uuid import UUID, uuid4
+
         from pydantic import Field
+
+        from coodie.aio.document import Document as AsyncDocument
+        from coodie.drivers import _registry, register_driver
+        from coodie.drivers.acsylla import AcsyllaDriver
+        from coodie.fields import PrimaryKey
 
         class SSLAcsyllaProduct(AsyncDocument):
             id: Annotated[UUID, PrimaryKey()] = Field(default_factory=uuid4)
@@ -392,8 +396,8 @@ class TestSSLAcsyllaDriver:
         except ImportError:
             pytest.skip("acsylla is not installed")
 
-        from coodie.drivers import _registry
         from coodie.aio import init_coodie
+        from coodie.drivers import _registry
 
         container_info = scylla_ssl_container.get_wrapped_container()
         container_info.reload()

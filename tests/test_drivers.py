@@ -7,17 +7,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+import coodie.drivers as _drivers_mod
 from coodie.drivers import (
+    _registry,
     get_driver,
     init_coodie,
     init_coodie_async,
     register_driver,
-    _registry,
 )
-import coodie.drivers as _drivers_mod
 from coodie.drivers.base import AbstractDriver
 from coodie.exceptions import ConfigurationError
-
 
 # ------------------------------------------------------------------
 # Registry tests
@@ -140,18 +139,19 @@ def test_init_coodie_unknown_driver_type():
 
 def test_init_coodie_acsylla_requires_session():
     _registry.clear()
-    with patch.dict("sys.modules", {"acsylla": MagicMock()}):
-        with pytest.raises(ConfigurationError, match="hosts or a pre-created acsylla session"):
-            init_coodie(driver_type="acsylla", keyspace="ks")
+    with (
+        patch.dict("sys.modules", {"acsylla": MagicMock()}),
+        pytest.raises(ConfigurationError, match="hosts or a pre-created acsylla session"),
+    ):
+        init_coodie(driver_type="acsylla", keyspace="ks")
     _registry.clear()
 
 
 def test_init_coodie_acsylla_with_session():
     _registry.clear()
     mock_session = MagicMock()
-    with patch.dict("sys.modules", {"acsylla": MagicMock()}):
-        with pytest.warns(UserWarning, match="sync calls.*may hang"):
-            driver = init_coodie(session=mock_session, keyspace="ks", driver_type="acsylla")
+    with patch.dict("sys.modules", {"acsylla": MagicMock()}), pytest.warns(UserWarning, match="sync calls.*may hang"):
+        driver = init_coodie(session=mock_session, keyspace="ks", driver_type="acsylla")
     assert get_driver() is driver
     _registry.clear()
 
@@ -200,13 +200,12 @@ async def test_init_coodie_async_acsylla_with_session_no_bridge():
     """Pre-created session passed to init_coodie_async keeps _bridge_to_bg_loop=False."""
     _registry.clear()
     mock_session = MagicMock()
-    with patch.dict("sys.modules", {"acsylla": MagicMock()}):
-        with pytest.warns(UserWarning, match="sync calls.*may hang"):
-            driver = await init_coodie_async(
-                session=mock_session,
-                keyspace="ks",
-                driver_type="acsylla",
-            )
+    with patch.dict("sys.modules", {"acsylla": MagicMock()}), pytest.warns(UserWarning, match="sync calls.*may hang"):
+        driver = await init_coodie_async(
+            session=mock_session,
+            keyspace="ks",
+            driver_type="acsylla",
+        )
     assert get_driver() is driver
     assert driver._bridge_to_bg_loop is False
     _registry.clear()
@@ -233,15 +232,15 @@ def test_init_coodie_ssl_context_forwarded_to_cluster():
     mock_cluster_inst.connect.return_value = mock_session
     mock_session.cluster = mock_cluster_inst
 
-    with patch("coodie.drivers.cassandra.CassandraDriver"):
-        with patch.dict(
-            "sys.modules", {"cassandra": MagicMock(), "cassandra.cluster": MagicMock(Cluster=mock_cluster_cls)}
-        ):
-            init_coodie(
-                hosts=["node1"],
-                keyspace="ks",
-                ssl_context=ctx,
-            )
+    with (
+        patch("coodie.drivers.cassandra.CassandraDriver"),
+        patch.dict("sys.modules", {"cassandra": MagicMock(), "cassandra.cluster": MagicMock(Cluster=mock_cluster_cls)}),
+    ):
+        init_coodie(
+            hosts=["node1"],
+            keyspace="ks",
+            ssl_context=ctx,
+        )
     mock_cluster_cls.assert_called_once_with(["node1"], ssl_context=ctx)
     _registry.clear()
 
@@ -257,14 +256,14 @@ def test_init_coodie_ssl_context_not_added_when_none():
     mock_cluster_inst.connect.return_value = mock_session
     mock_session.cluster = mock_cluster_inst
 
-    with patch("coodie.drivers.cassandra.CassandraDriver"):
-        with patch.dict(
-            "sys.modules", {"cassandra": MagicMock(), "cassandra.cluster": MagicMock(Cluster=mock_cluster_cls)}
-        ):
-            init_coodie(
-                hosts=["node1"],
-                keyspace="ks",
-            )
+    with (
+        patch("coodie.drivers.cassandra.CassandraDriver"),
+        patch.dict("sys.modules", {"cassandra": MagicMock(), "cassandra.cluster": MagicMock(Cluster=mock_cluster_cls)}),
+    ):
+        init_coodie(
+            hosts=["node1"],
+            keyspace="ks",
+        )
     mock_cluster_cls.assert_called_once_with(["node1"])
     _registry.clear()
 
@@ -360,15 +359,15 @@ async def test_init_coodie_async_ssl_context_forwarded_to_cassandra():
     mock_cluster_inst.connect.return_value = mock_session
     mock_session.cluster = mock_cluster_inst
 
-    with patch("coodie.drivers.cassandra.CassandraDriver"):
-        with patch.dict(
-            "sys.modules", {"cassandra": MagicMock(), "cassandra.cluster": MagicMock(Cluster=mock_cluster_cls)}
-        ):
-            await init_coodie_async(
-                hosts=["node1"],
-                keyspace="ks",
-                ssl_context=ctx,
-            )
+    with (
+        patch("coodie.drivers.cassandra.CassandraDriver"),
+        patch.dict("sys.modules", {"cassandra": MagicMock(), "cassandra.cluster": MagicMock(Cluster=mock_cluster_cls)}),
+    ):
+        await init_coodie_async(
+            hosts=["node1"],
+            keyspace="ks",
+            ssl_context=ctx,
+        )
     mock_cluster_cls.assert_called_once_with(["node1"], ssl_context=ctx)
     _registry.clear()
 
@@ -651,6 +650,7 @@ async def test_cassandra_driver_execute_async(cassandra_driver, mock_cassandra_s
 async def test_cassandra_driver_sync_table_async(cassandra_driver, mock_cassandra_session):
     """sync_table_async uses native async callbacks — no run_in_executor."""
     import asyncio
+
     from coodie.schema import ColumnDefinition
 
     cols = [
@@ -1305,12 +1305,12 @@ def test_lazy_driver_ssl_context_forwarded_on_connect():
     mock_cluster_cls.return_value = mock_cluster_inst
     mock_cluster_inst.connect.return_value = mock_session
 
-    with patch("coodie.drivers.cassandra.CassandraDriver"):
-        with patch.dict(
-            "sys.modules", {"cassandra": MagicMock(), "cassandra.cluster": MagicMock(Cluster=mock_cluster_cls)}
-        ):
-            driver = LazyDriver(hosts=["node1"], keyspace="ks", ssl_context=ctx, kwargs={})
-            driver._ensure_connected()
+    with (
+        patch("coodie.drivers.cassandra.CassandraDriver"),
+        patch.dict("sys.modules", {"cassandra": MagicMock(), "cassandra.cluster": MagicMock(Cluster=mock_cluster_cls)}),
+    ):
+        driver = LazyDriver(hosts=["node1"], keyspace="ks", ssl_context=ctx, kwargs={})
+        driver._ensure_connected()
 
     mock_cluster_cls.assert_called_once_with(["node1"], ssl_context=ctx)
     mock_cluster_inst.connect.assert_called_once_with("ks")
@@ -1334,8 +1334,8 @@ async def test_lazy_driver_close_async_noop_when_not_connected():
 
 async def test_lazy_driver_connects_on_execute_async():
     """LazyDriver connects on first execute_async() call."""
-    from coodie.drivers.lazy import LazyDriver
     from coodie.drivers.cassandra import CassandraDriver
+    from coodie.drivers.lazy import LazyDriver
 
     driver = LazyDriver(hosts=["node1"], keyspace="ks", ssl_context=None, kwargs={})
 
@@ -1369,11 +1369,11 @@ def test_init_coodie_compression_forwarded_to_cluster():
     mock_cluster_inst.connect.return_value = mock_session
     mock_session.cluster = mock_cluster_inst
 
-    with patch("coodie.drivers.cassandra.CassandraDriver"):
-        with patch.dict(
-            "sys.modules", {"cassandra": MagicMock(), "cassandra.cluster": MagicMock(Cluster=mock_cluster_cls)}
-        ):
-            init_coodie(hosts=["node1"], keyspace="ks", compression="lz4")
+    with (
+        patch("coodie.drivers.cassandra.CassandraDriver"),
+        patch.dict("sys.modules", {"cassandra": MagicMock(), "cassandra.cluster": MagicMock(Cluster=mock_cluster_cls)}),
+    ):
+        init_coodie(hosts=["node1"], keyspace="ks", compression="lz4")
     mock_cluster_cls.assert_called_once_with(["node1"], compression="lz4")
     _registry.clear()
 
@@ -1389,11 +1389,11 @@ def test_init_coodie_compression_not_added_when_none():
     mock_cluster_inst.connect.return_value = mock_session
     mock_session.cluster = mock_cluster_inst
 
-    with patch("coodie.drivers.cassandra.CassandraDriver"):
-        with patch.dict(
-            "sys.modules", {"cassandra": MagicMock(), "cassandra.cluster": MagicMock(Cluster=mock_cluster_cls)}
-        ):
-            init_coodie(hosts=["node1"], keyspace="ks")
+    with (
+        patch("coodie.drivers.cassandra.CassandraDriver"),
+        patch.dict("sys.modules", {"cassandra": MagicMock(), "cassandra.cluster": MagicMock(Cluster=mock_cluster_cls)}),
+    ):
+        init_coodie(hosts=["node1"], keyspace="ks")
     call_kwargs = mock_cluster_cls.call_args[1]
     assert "compression" not in call_kwargs
     _registry.clear()
@@ -1412,11 +1412,11 @@ def test_init_coodie_speculative_execution_policy_forwarded_to_cluster():
 
     mock_policy = MagicMock()
 
-    with patch("coodie.drivers.cassandra.CassandraDriver"):
-        with patch.dict(
-            "sys.modules", {"cassandra": MagicMock(), "cassandra.cluster": MagicMock(Cluster=mock_cluster_cls)}
-        ):
-            init_coodie(hosts=["node1"], keyspace="ks", speculative_execution_policy=mock_policy)
+    with (
+        patch("coodie.drivers.cassandra.CassandraDriver"),
+        patch.dict("sys.modules", {"cassandra": MagicMock(), "cassandra.cluster": MagicMock(Cluster=mock_cluster_cls)}),
+    ):
+        init_coodie(hosts=["node1"], keyspace="ks", speculative_execution_policy=mock_policy)
     mock_cluster_cls.assert_called_once_with(["node1"], speculative_execution_policy=mock_policy)
     _registry.clear()
 
@@ -1432,11 +1432,11 @@ def test_init_coodie_speculative_execution_policy_not_added_when_none():
     mock_cluster_inst.connect.return_value = mock_session
     mock_session.cluster = mock_cluster_inst
 
-    with patch("coodie.drivers.cassandra.CassandraDriver"):
-        with patch.dict(
-            "sys.modules", {"cassandra": MagicMock(), "cassandra.cluster": MagicMock(Cluster=mock_cluster_cls)}
-        ):
-            init_coodie(hosts=["node1"], keyspace="ks")
+    with (
+        patch("coodie.drivers.cassandra.CassandraDriver"),
+        patch.dict("sys.modules", {"cassandra": MagicMock(), "cassandra.cluster": MagicMock(Cluster=mock_cluster_cls)}),
+    ):
+        init_coodie(hosts=["node1"], keyspace="ks")
     call_kwargs = mock_cluster_cls.call_args[1]
     assert "speculative_execution_policy" not in call_kwargs
     _registry.clear()
@@ -1501,6 +1501,7 @@ def test_cassandra_driver_sync_table_warm_skipped_on_cache_hit(cassandra_driver,
 async def test_cassandra_driver_sync_table_async_warms_prepared_cache(cassandra_driver, mock_cassandra_session):
     """sync_table_async() also pre-prepares SELECT-by-PK and INSERT queries."""
     import asyncio
+
     from coodie.schema import ColumnDefinition
 
     cols = [
@@ -1538,7 +1539,6 @@ def test_cassandra_driver_logs_warning_on_missing_dict_factory(mock_cassandra_se
     """CassandraDriver logs a warning when cassandra.query.dict_factory cannot be imported."""
     from coodie.drivers.cassandra import CassandraDriver
 
-    with patch.dict("sys.modules", {"cassandra.query": None}):
-        with caplog.at_level(logging.WARNING, logger="coodie"):
-            CassandraDriver(session=mock_cassandra_session, default_keyspace="ks")
+    with patch.dict("sys.modules", {"cassandra.query": None}), caplog.at_level(logging.WARNING, logger="coodie"):
+        CassandraDriver(session=mock_cassandra_session, default_keyspace="ks")
     assert "dict_factory" in caplog.text

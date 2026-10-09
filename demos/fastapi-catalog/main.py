@@ -5,21 +5,20 @@ from __future__ import annotations
 __version__ = "0.1.0"
 
 import os
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import AsyncIterator
 from uuid import UUID
 
 from fastapi import FastAPI, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from models import Product, Review
 from pydantic import BaseModel
 
 from coodie.aio import init_coodie
 from coodie.exceptions import DocumentNotFound, MultipleDocumentsFound
-
-from models import Product, Review
 
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
@@ -45,12 +44,12 @@ app = FastAPI(title="Product Catalog", version="0.1.0", lifespan=lifespan)
 
 
 @app.exception_handler(DocumentNotFound)
-async def not_found_handler(request, exc):  # noqa: ANN001, ARG001
+async def not_found_handler(request, exc):
     raise HTTPException(status_code=404, detail=str(exc))
 
 
 @app.exception_handler(MultipleDocumentsFound)
-async def multiple_found_handler(request, exc):  # noqa: ANN001, ARG001
+async def multiple_found_handler(request, exc):
     raise HTTPException(status_code=409, detail=str(exc))
 
 

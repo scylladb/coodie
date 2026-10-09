@@ -40,7 +40,7 @@ def _has_vector_index() -> bool:
 
 
 def _random_vec(dims: int = DIMS) -> list[float]:
-    return [random.random() for _ in range(dims)]  # noqa: S311
+    return [random.random() for _ in range(dims)]
 
 
 # ---------------------------------------------------------------------------

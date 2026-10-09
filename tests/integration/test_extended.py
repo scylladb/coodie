@@ -9,7 +9,8 @@ from __future__ import annotations
 
 import decimal
 import ipaddress
-from datetime import date, datetime, time as dt_time, timezone
+from datetime import date, datetime, timezone
+from datetime import time as dt_time
 from uuid import uuid1, uuid4
 
 import pytest
@@ -43,7 +44,7 @@ class TestExtended:
         """All supported scalar types survive a save/load round-trip."""
         await _maybe_await(AllTypes.sync_table)
         rid = uuid4()
-        today = date.today()
+        today = date.today()  # noqa: DTZ011 - any date value works for the round-trip
         now = datetime.now(timezone.utc).replace(microsecond=0)
         original = AllTypes(
             id=rid,
@@ -697,8 +698,8 @@ class TestSchemaManagement:
         if variant == "async":
             pytest.skip("Uses sync driver.execute() directly")
 
-        from coodie.schema import ColumnDefinition
         from coodie.drivers import get_driver
+        from coodie.schema import ColumnDefinition
 
         drv = get_driver()
         ks = "test_ks"

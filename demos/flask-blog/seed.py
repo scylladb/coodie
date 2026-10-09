@@ -13,6 +13,7 @@ from uuid import uuid4
 
 import click
 from faker import Faker
+from models import Comment, Post
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import track
@@ -20,8 +21,6 @@ from rich.table import Table
 from rich.text import Text
 
 from coodie.sync import init_coodie
-
-from models import Comment, Post
 
 fake = Faker()
 console = Console()
@@ -235,8 +234,8 @@ def _seed(count: int) -> None:
     table.add_column("Status", style="dim")
     table.add_row("Posts Published", str(len(posts)), "✓ Deployed")
     table.add_row("Comments Filed", str(comments_count), "✓ Intercepted")
-    table.add_row("Categories Used", str(len(set(p.category for p in posts))), "✓ Indexed")
-    table.add_row("Authors Active", str(len(set(p.author for p in posts))), "✓ Tracked")
+    table.add_row("Categories Used", str(len({p.category for p in posts})), "✓ Indexed")
+    table.add_row("Authors Active", str(len({p.author for p in posts})), "✓ Tracked")
     console.print(table)
     console.print()
     console.print("[bold magenta]📝 The Propaganda Engine has been seeded. Counter-propaganda is live.[/]")

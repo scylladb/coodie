@@ -60,8 +60,8 @@ def test_document_model_config_has_performance_settings():
 
 def test_queryset_has_slots():
     """Both sync and async QuerySet should use __slots__."""
-    from coodie.sync.query import QuerySet as SyncQS
     from coodie.aio.query import QuerySet as AsyncQS
+    from coodie.sync.query import QuerySet as SyncQS
 
     assert hasattr(SyncQS, "__slots__")
     assert hasattr(AsyncQS, "__slots__")

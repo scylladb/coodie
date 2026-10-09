@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Annotated, Optional
+from typing import Annotated
 from uuid import UUID, uuid4
 
 from pydantic import Field
@@ -45,7 +45,7 @@ class ShipmentLog(Document):
     )
     entry_id: UUID
     event_type: Annotated[str, Indexed()]
-    notes: Optional[str] = None
+    notes: str | None = None
 
     class Settings:
         name = "shipment_logs"

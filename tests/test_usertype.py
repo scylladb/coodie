@@ -6,6 +6,7 @@ from typing import Annotated, Optional
 from uuid import UUID
 
 import pytest
+from pydantic import Field
 
 from coodie.cql_builder import (
     build_alter_type_add,
@@ -20,7 +21,6 @@ from coodie.usertype import (
     _is_usertype,
     extract_udt_classes,
 )
-
 
 # ---- UserType definition helpers ----
 
@@ -52,12 +52,12 @@ class Contact(UserType):
 class AddressWithOptional(UserType):
     street: str
     city: str
-    apt: Optional[str] = None
+    apt: str | None = None
 
 
 class AddressWithCollection(UserType):
     street: str
-    tags: list[str] = []
+    tags: list[str] = Field(default_factory=list)
 
 
 # ---- Phase 1: UserType class tests ----
@@ -197,7 +197,7 @@ class TestTypeSystemUDT:
         assert python_type_to_cql_type_str(Contact) == "frozen<contact>"
 
     def test_optional_usertype(self):
-        assert python_type_to_cql_type_str(Optional[Address]) == "frozen<address>"
+        assert python_type_to_cql_type_str(Optional[Address])  # noqa: UP045 - tests typing.Optional explicitly == "frozen<address>"
 
     def test_pep604_optional_usertype(self):
         assert python_type_to_cql_type_str(Address | None) == "frozen<address>"

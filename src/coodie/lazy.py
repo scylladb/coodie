@@ -15,7 +15,7 @@ class LazyDocument:
     status dashboards).
     """
 
-    __slots__ = ("_doc_cls", "_raw_data", "_parsed")
+    __slots__ = ("_doc_cls", "_parsed", "_raw_data")
 
     def __init__(self, doc_cls: type, raw_data: dict[str, Any]) -> None:
         self._doc_cls = doc_cls

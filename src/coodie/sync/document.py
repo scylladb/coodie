@@ -1,34 +1,32 @@
 from __future__ import annotations
 
 import warnings
-from typing import Any, ClassVar, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from pydantic import BaseModel
 
 from coodie.cql_builder import (
+    build_counter_update,
+    build_create_materialized_view,
+    build_delete,
+    build_drop_materialized_view,
+    build_drop_table,
     build_insert_from_columns,
     build_insert_json,
-    build_delete,
-    build_update,
-    build_counter_update,
-    build_drop_table,
     build_truncate,
-    build_create_materialized_view,
-    build_drop_materialized_view,
+    build_update,
     parse_update_kwargs,
 )
-
 from coodie.exceptions import (
     DocumentNotFound,
-    MultipleDocumentsFound,
     InvalidQueryError,
+    MultipleDocumentsFound,
 )
 from coodie.results import LWTResult
 
 if TYPE_CHECKING:
     from coodie.batch import BatchQuery
 from coodie.schema import (
-    build_schema,
     ColumnDefinition,
     _find_discriminator_column,
     _get_discriminator_value,
@@ -36,6 +34,7 @@ from coodie.schema import (
     _pk_columns,
     _resolve_polymorphic_base,
     _vector_columns,
+    build_schema,
 )
 from coodie.sync.query import QuerySet, _snake_case
 
@@ -440,7 +439,7 @@ class CounterDocument(Document):
     ``save()`` and ``insert()`` are forbidden.
     """
 
-    def save(  # noqa: ARG002
+    def save(
         self,
         ttl: int | None = None,
         timestamp: int | None = None,
@@ -449,7 +448,7 @@ class CounterDocument(Document):
     ) -> None:
         raise InvalidQueryError("Counter tables do not support save(). Use increment() or decrement() instead.")
 
-    def insert(  # noqa: ARG002
+    def insert(
         self,
         ttl: int | None = None,
         timestamp: int | None = None,

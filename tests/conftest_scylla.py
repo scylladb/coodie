@@ -67,7 +67,9 @@ def _start_scylla(image: str, base_cmd: str, ready_log: str, network: Any) -> An
     time.sleep(10)
     logs = container.get_wrapped_container().logs().decode("utf-8", errors="replace")
     if error_signature in logs:
-        logging.info("Container rejected --experimental-features=vector-search; retrying without it")
+        logging.getLogger(__name__).info(
+            "Container rejected --experimental-features=vector-search; retrying without it"
+        )
         container.stop()
         container = DockerContainer(image).with_command(cmd_without_flag).with_exposed_ports(9042)
         if network is not None:
@@ -190,7 +192,9 @@ def create_cql_session(scylla_container: Any, keyspace: str, *, tablets: bool = 
                 f"AND tablets = {{'enabled': true}}"
             )
         except Exception as exc:  # noqa: BLE001
-            logging.warning("Tablets not available (%s); creating %s without tablets", exc, keyspace)
+            logging.getLogger(__name__).warning(
+                "Tablets not available (%s); creating %s without tablets", exc, keyspace
+            )
             session.execute(
                 f"CREATE KEYSPACE IF NOT EXISTS {keyspace} "
                 "WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}"

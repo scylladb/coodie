@@ -16,7 +16,6 @@ import time
 
 import httpx
 
-
 APP_HOST = os.getenv("APP_HOST", "http://127.0.0.1:8001")
 APP_STARTUP_TIMEOUT = 20  # seconds
 

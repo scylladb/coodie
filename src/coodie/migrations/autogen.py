@@ -35,7 +35,7 @@ import textwrap
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from coodie.schema import ColumnDefinition
@@ -496,13 +496,12 @@ def next_migration_filename(migrations_dir: Path, description: str) -> str:
         if len(parts) >= 2:
             try:
                 seq = int(parts[1])
-                if seq > max_seq:
-                    max_seq = seq
+                max_seq = max(max_seq, seq)
             except ValueError:
                 pass
 
     next_seq = max_seq + 1
-    date_str = datetime.now().strftime("%Y%m%d")
+    date_str = datetime.now().strftime("%Y%m%d")  # noqa: DTZ005 - local date is intended for filenames
     slug = re.sub(r"[^a-z0-9]+", "_", description.lower()).strip("_") or "migration"
     return f"{date_str}_{next_seq:03d}_{slug}.py"
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import date, datetime, time as dt_time
+from datetime import date, datetime
+from datetime import time as dt_time
 from decimal import Decimal
 from ipaddress import IPv4Address
 from typing import Annotated, Optional
@@ -24,8 +25,7 @@ from coodie.fields import (
     Vector,
     VectorIndex,
 )
-from coodie.types import CqlDuration, python_type_to_cql_type_str, coerce_row_none_collections
-
+from coodie.types import CqlDuration, coerce_row_none_collections, python_type_to_cql_type_str
 
 # ---- python_type_to_cql_type_str: basic types ----
 
@@ -49,7 +49,7 @@ from coodie.types import CqlDuration, python_type_to_cql_type_str, coerce_row_no
         pytest.param(dict[str, int], "map<text, int>", id="dict-str-int"),
         pytest.param(frozenset[str], "frozen<set<text>>", id="frozenset-str"),
         pytest.param(frozenset[int], "frozen<set<int>>", id="frozenset-int"),
-        pytest.param(Optional[str], "text", id="optional-str"),
+        pytest.param(Optional[str], "text", id="optional-str"),  # noqa: UP045 - tests typing.Optional explicitly
         pytest.param(str | None, "text", id="pep604-optional-str"),
         pytest.param(list[int] | None, "list<int>", id="pep604-optional-list"),
         pytest.param(dict[str, int | None], "map<text, int>", id="pep604-optional-nested"),
@@ -187,7 +187,7 @@ class _FakeDoc:
     labels: set[int]
     meta: dict[str, int]
     name: str
-    description: Optional[str]
+    description: str | None
 
 
 @pytest.mark.parametrize(
@@ -223,7 +223,7 @@ def test_coerce_optional_collection():
     """Optional[list[str]] with None should be coerced to empty list."""
 
     class _OptionalListDoc:
-        tags: Optional[list[str]]
+        tags: list[str] | None
 
     row: dict = {"tags": None}
     result = coerce_row_none_collections(_OptionalListDoc, row)

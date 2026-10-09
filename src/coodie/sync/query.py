@@ -2,30 +2,31 @@ from __future__ import annotations
 
 import functools
 import re
-from typing import Any, Iterator, TYPE_CHECKING
+from collections.abc import Iterator
+from typing import TYPE_CHECKING, Any
 
 from coodie.cql_builder import (
-    build_select,
-    build_select_json,
-    build_select_writetime,
-    build_select_column_ttl,
+    build_aggregate,
     build_count,
     build_delete,
-    build_update,
     build_insert,
-    build_aggregate,
+    build_select,
+    build_select_column_ttl,
+    build_select_json,
+    build_select_writetime,
+    build_update,
     parse_filter_kwargs,
     parse_update_kwargs,
 )
+from coodie.drivers import get_driver as _get_driver_impl
 from coodie.lazy import LazyDocument
 from coodie.results import LWTResult, PagedResult
 from coodie.schema import (
+    _build_subclass_map,
     _find_discriminator_column,
     _resolve_polymorphic_base,
-    _build_subclass_map,
 )
 from coodie.types import _collection_fields
-from coodie.drivers import get_driver as _get_driver_impl
 
 if TYPE_CHECKING:
     from coodie.sync.document import Document
@@ -35,29 +36,29 @@ class QuerySet:
     """Synchronous chainable query builder."""
 
     __slots__ = (
-        "_doc_cls",
-        "_where",
-        "_limit_val",
-        "_order_by_val",
         "_allow_filtering_val",
-        "_if_not_exists_val",
-        "_if_exists_val",
-        "_ttl_val",
-        "_timestamp_val",
-        "_consistency_val",
-        "_timeout_val",
-        "_only_val",
-        "_defer_val",
-        "_values_list_val",
-        "_per_partition_limit_val",
-        "_fetch_size_val",
-        "_paging_state_val",
-        "_distinct_val",
-        "_group_by_val",
-        "_select_token_val",
-        "_cast_val",
         "_ann_of_val",
+        "_cast_val",
+        "_consistency_val",
+        "_defer_val",
+        "_distinct_val",
+        "_doc_cls",
+        "_fetch_size_val",
+        "_group_by_val",
+        "_if_exists_val",
+        "_if_not_exists_val",
+        "_limit_val",
+        "_only_val",
+        "_order_by_val",
+        "_paging_state_val",
+        "_per_partition_limit_val",
+        "_select_token_val",
+        "_timeout_val",
+        "_timestamp_val",
+        "_ttl_val",
         "_validate_val",
+        "_values_list_val",
+        "_where",
     )
 
     def __init__(

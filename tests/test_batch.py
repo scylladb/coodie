@@ -5,11 +5,11 @@ from uuid import UUID, uuid4
 
 from pydantic import Field
 
-from coodie.batch import BatchQuery, AsyncBatchQuery
+from coodie.aio.document import Document as AsyncDocument
+from coodie.batch import AsyncBatchQuery, BatchQuery
 from coodie.cql_builder import build_batch
 from coodie.fields import PrimaryKey
 from coodie.sync.document import Document
-from coodie.aio.document import Document as AsyncDocument
 
 
 class BatchItem(Document):
@@ -40,7 +40,7 @@ def test_build_batch_unlogged_type():
     stmts = [
         ("INSERT INTO ks.t (id) VALUES (?)", ["1"]),
     ]
-    cql, params = build_batch(stmts, batch_type="UNLOGGED")
+    cql, _params = build_batch(stmts, batch_type="UNLOGGED")
     assert "BEGIN UNLOGGED BATCH" in cql
 
 
@@ -175,7 +175,7 @@ def test_full_batch_workflow(registered_mock_driver):
         BatchItem(name="C").insert(batch=batch)
 
     assert len(registered_mock_driver.executed) == 1
-    stmt, params = registered_mock_driver.executed[0]
+    stmt, _params = registered_mock_driver.executed[0]
     assert "BEGIN BATCH" in stmt
     assert "APPLY BATCH" in stmt
     assert stmt.count("INSERT INTO") == 3
@@ -294,7 +294,7 @@ async def test_async_full_batch_workflow(registered_mock_driver):
         await AsyncBatchProduct(name="C").insert(batch=batch)
 
     assert len(registered_mock_driver.executed) == 1
-    stmt, params = registered_mock_driver.executed[0]
+    stmt, _params = registered_mock_driver.executed[0]
     assert "BEGIN BATCH" in stmt
     assert "APPLY BATCH" in stmt
     assert stmt.count("INSERT INTO") == 3
@@ -306,20 +306,20 @@ async def test_async_full_batch_workflow(registered_mock_driver):
 
 
 def test_batch_importable_from_sync():
-    from coodie.sync import BatchQuery as SyncBQ  # noqa: F401
+    from coodie.sync import BatchQuery as SyncBQ
 
     assert SyncBQ is BatchQuery
 
 
 def test_batch_importable_from_aio():
-    from coodie.aio import AsyncBatchQuery as AioBQ  # noqa: F401
+    from coodie.aio import AsyncBatchQuery as AioBQ
 
     assert AioBQ is AsyncBatchQuery
 
 
 def test_batch_importable_from_top_level():
-    from coodie import BatchQuery as BQ  # noqa: F401
-    from coodie import AsyncBatchQuery as ABQ  # noqa: F401
+    from coodie import AsyncBatchQuery as ABQ
+    from coodie import BatchQuery as BQ
 
     assert BQ is BatchQuery
     assert ABQ is AsyncBatchQuery

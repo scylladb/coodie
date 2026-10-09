@@ -10,10 +10,9 @@ from pathlib import Path
 from uuid import UUID
 
 from flask import Flask, abort, redirect, render_template, request, url_for
+from models import Comment, Post
 
 from coodie.sync import init_coodie
-
-from models import Comment, Post
 
 BASE_DIR = Path(__file__).resolve().parent
 

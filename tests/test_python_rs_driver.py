@@ -16,7 +16,6 @@ from coodie.drivers import (
 )
 from coodie.exceptions import ConfigurationError
 
-
 # ------------------------------------------------------------------
 # Helpers
 # ------------------------------------------------------------------
@@ -104,11 +103,10 @@ def python_rs_driver(mock_scylla_session):
 
 def test_python_rs_driver_import_error_when_scylla_missing():
     """PythonRsDriver raises ImportError when scylla is not installed."""
-    with patch.dict("sys.modules", {"scylla": None}):
-        with pytest.raises(ImportError, match="python-rs-driver is required"):
-            from coodie.drivers.python_rs import PythonRsDriver
+    with patch.dict("sys.modules", {"scylla": None}), pytest.raises(ImportError, match="python-rs-driver is required"):
+        from coodie.drivers.python_rs import PythonRsDriver
 
-            PythonRsDriver(session=MagicMock())
+        PythonRsDriver(session=MagicMock())
 
 
 def test_python_rs_driver_has_slots():
@@ -391,9 +389,11 @@ async def test_python_rs_driver_close_async(python_rs_driver):
 
 def test_init_coodie_python_rs_requires_session():
     _registry.clear()
-    with patch.dict("sys.modules", _mock_scylla_modules()):
-        with pytest.raises(ConfigurationError, match="pre-created python-rs-driver session or hosts"):
-            init_coodie(driver_type="python-rs", keyspace="ks")
+    with (
+        patch.dict("sys.modules", _mock_scylla_modules()),
+        pytest.raises(ConfigurationError, match="pre-created python-rs-driver session or hosts"),
+    ):
+        init_coodie(driver_type="python-rs", keyspace="ks")
     _registry.clear()
 
 
@@ -437,9 +437,11 @@ async def test_init_coodie_async_python_rs_with_hosts():
 async def test_init_coodie_async_python_rs_requires_session():
     """When no hosts and no session, python-rs should raise ConfigurationError."""
     _registry.clear()
-    with patch.dict("sys.modules", _mock_scylla_modules()):
-        with pytest.raises(ConfigurationError, match="pre-created python-rs-driver session"):
-            await init_coodie_async(driver_type="python-rs", keyspace="ks")
+    with (
+        patch.dict("sys.modules", _mock_scylla_modules()),
+        pytest.raises(ConfigurationError, match="pre-created python-rs-driver session"),
+    ):
+        await init_coodie_async(driver_type="python-rs", keyspace="ks")
     _registry.clear()
 
 
@@ -489,11 +491,10 @@ def test_python_rs_driver_connect_classmethod():
 
 def test_python_rs_driver_connect_import_error():
     """connect() raises ImportError when scylla is not installed."""
-    with patch.dict("sys.modules", {"scylla": None}):
-        with pytest.raises(ImportError, match="python-rs-driver is required"):
-            from coodie.drivers.python_rs import PythonRsDriver
+    with patch.dict("sys.modules", {"scylla": None}), pytest.raises(ImportError, match="python-rs-driver is required"):
+        from coodie.drivers.python_rs import PythonRsDriver
 
-            PythonRsDriver.connect(session_factory=AsyncMock())
+        PythonRsDriver.connect(session_factory=AsyncMock())
 
 
 def test_python_rs_driver_execute_via_run_coroutine_threadsafe():

@@ -46,14 +46,13 @@ def build_schema(doc_cls: type) -> list[ColumnDefinition]:
 
     Result is cached on ``doc_cls.__schema__``.
     """
-    if hasattr(doc_cls, "__schema__") and doc_cls.__schema__ is not None:
-        # Return cached if it's already built for this specific class (not inherited)
-        if "__schema__" in doc_cls.__dict__:
-            return doc_cls.__schema__
+    # Return cached if it's already built for this specific class (not inherited)
+    if hasattr(doc_cls, "__schema__") and doc_cls.__schema__ is not None and "__schema__" in doc_cls.__dict__:
+        return doc_cls.__schema__
 
-    from coodie.fields import PrimaryKey, ClusteringKey, Indexed, Counter, Static, VectorIndex
-    from coodie.types import python_type_to_cql_type_str
     from coodie.exceptions import InvalidQueryError
+    from coodie.fields import ClusteringKey, Counter, Indexed, PrimaryKey, Static, VectorIndex
+    from coodie.types import python_type_to_cql_type_str
 
     hints = _cached_type_hints(doc_cls)
 
@@ -269,7 +268,7 @@ def _own_annotations(cls: type) -> dict[str, Any]:
 
         return annotationlib.get_annotations(cls, format=annotationlib.Format.FORWARDREF)
     except ImportError:
-        return cls.__dict__.get("__annotations__", {})
+        return cls.__dict__.get("__annotations__", {})  # noqa: RUF063 - pre-3.14 fallback must read own annotations only
 
 
 def _resolve_polymorphic_base(doc_cls: type) -> type | None:

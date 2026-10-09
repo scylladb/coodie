@@ -297,7 +297,7 @@ async def _run_diff_for_classes(
     doc_classes: list[Any],
 ) -> list[Any]:
     """Return a list of :class:`SchemaDiff` objects, one per document class."""
-    from coodie.migrations.autogen import introspect_table, diff_schema
+    from coodie.migrations.autogen import diff_schema, introspect_table
     from coodie.schema import build_schema
 
     diffs = []

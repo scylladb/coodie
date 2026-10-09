@@ -6,7 +6,7 @@ These mirror the cqlengine models so that benchmarks compare equivalent schemas.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Annotated, List, Optional
+from typing import Annotated
 from uuid import UUID, uuid4
 
 from pydantic import Field, field_validator
@@ -23,8 +23,8 @@ class CoodieProduct(Document):
     brand: Annotated[str, Indexed()] = "Unknown"
     category: Annotated[str, Indexed()] = "general"
     price: float = 0.0
-    tags: List[str] = Field(default_factory=list)
-    description: Optional[str] = None
+    tags: list[str] = Field(default_factory=list)
+    description: str | None = None
 
     @field_validator("tags", mode="before")
     @classmethod

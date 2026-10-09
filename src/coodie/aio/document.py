@@ -1,30 +1,30 @@
 from __future__ import annotations
 
 import warnings
-from typing import Any, ClassVar, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from pydantic import BaseModel
 
+from coodie.aio.query import QuerySet
 from coodie.cql_builder import (
+    build_counter_update,
+    build_create_materialized_view,
+    build_delete,
+    build_drop_materialized_view,
+    build_drop_table,
     build_insert_from_columns,
     build_insert_json,
-    build_delete,
-    build_update,
-    build_counter_update,
-    build_drop_table,
     build_truncate,
-    build_create_materialized_view,
-    build_drop_materialized_view,
+    build_update,
     parse_update_kwargs,
 )
 from coodie.exceptions import (
     DocumentNotFound,
-    MultipleDocumentsFound,
     InvalidQueryError,
+    MultipleDocumentsFound,
 )
 from coodie.results import LWTResult
 from coodie.schema import (
-    build_schema,
     ColumnDefinition,
     _find_discriminator_column,
     _get_discriminator_value,
@@ -32,8 +32,8 @@ from coodie.schema import (
     _pk_columns,
     _resolve_polymorphic_base,
     _vector_columns,
+    build_schema,
 )
-from coodie.aio.query import QuerySet
 from coodie.sync.query import _snake_case
 
 if TYPE_CHECKING:
@@ -440,7 +440,7 @@ class CounterDocument(Document):
     ``save()`` and ``insert()`` are forbidden.
     """
 
-    async def save(  # noqa: ARG002
+    async def save(
         self,
         ttl: int | None = None,
         timestamp: int | None = None,
@@ -449,7 +449,7 @@ class CounterDocument(Document):
     ) -> None:
         raise InvalidQueryError("Counter tables do not support save(). Use increment() or decrement() instead.")
 
-    async def insert(  # noqa: ARG002
+    async def insert(
         self,
         ttl: int | None = None,
         timestamp: int | None = None,

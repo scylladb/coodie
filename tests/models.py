@@ -6,7 +6,7 @@ cannot resolve them for classes defined in local scope, which would
 cause ``build_schema()`` to return empty columns.
 """
 
-from typing import Annotated, Optional
+from typing import Annotated
 from uuid import UUID, uuid4
 
 from pydantic import Field
@@ -27,7 +27,7 @@ def make_product(base_cls):
         name: str
         brand: Annotated[str, Indexed()] = "Unknown"
         price: float = 0.0
-        description: Optional[str] = None
+        description: str | None = None
 
         class Settings:
             name = "products"
@@ -41,9 +41,9 @@ def make_tagged_product(base_cls):
         id: Annotated[UUID, PrimaryKey()] = Field(default_factory=uuid4)
         name: str = ""
         price: float = 0.0
-        tags: set[str] = set()
-        items: list[str] = []
-        meta: dict[str, str] = {}
+        tags: set[str] = Field(default_factory=set)
+        items: list[str] = Field(default_factory=list)
+        meta: dict[str, str] = Field(default_factory=dict)
 
         class Settings:
             name = "tagged_products"
