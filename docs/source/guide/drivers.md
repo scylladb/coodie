@@ -30,12 +30,13 @@ driver = await init_coodie(
 
 ## Supported Drivers
 
-coodie ships with two driver implementations:
+coodie ships with three driver implementations:
 
 | Driver | Backend | Protocol | Best For |
 |--------|---------|----------|----------|
 | `CassandraDriver` | `cassandra-driver` or `scylla-driver` | CQL native protocol | General use, sync and async |
 | `AcsyllaDriver` | `acsylla` | CQL native protocol (Cython) | High-performance async workloads |
+| `PythonRsDriver` | `python-rs-driver` | CQL native protocol (Rust, via PyO3) | Experimental Rust-backed async driver |
 
 ### scylla-driver (Default)
 
@@ -85,7 +86,8 @@ ScyllaDB clusters.
 ### acsylla (Async)
 
 For maximum async performance, use `acsylla` — a Cython-based ScyllaDB
-driver. Initialize with `init_coodie_async()` (or `coodie.aio.init_coodie()`):
+driver. It works with both `coodie.aio.init_coodie()` and
+`coodie.sync.init_coodie()` (see [Sync Bridge](#sync-bridge)):
 
 ```python
 from coodie.aio import init_coodie
@@ -103,12 +105,101 @@ Install:
 pip install acsylla
 ```
 
-```{note}
-The synchronous `init_coodie()` cannot create an acsylla session from
-hosts because acsylla requires a running event loop. Use
-`init_coodie_async()` with `hosts`, or create the session yourself and
-pass it via `session=`.
+Extra keyword arguments are forwarded to `acsylla.create_cluster(hosts, **kwargs)`.
+
+### python-rs-driver (Async, Experimental)
+
+[python-rs-driver](https://github.com/scylladb-zpp-2025-python-rs-driver/python-rs-driver)
+wraps the Rust [scylla-rust-driver](https://github.com/scylladb/scylla-rust-driver)
+via PyO3. It is async-native and, like acsylla, works from both the sync
+and async APIs through the [Sync Bridge](#sync-bridge):
+
+```python
+from coodie.aio import init_coodie
+
+driver = await init_coodie(
+    hosts=["node1", "node2"],
+    keyspace="my_ks",
+    driver_type="python-rs",
+    port=9042,  # optional; applied to every contact point
+)
 ```
+
+Extra keyword arguments are forwarded to `SessionBuilder(**kwargs)`,
+except `port`, which coodie applies to each host when building the
+contact points.
+
+Install: python-rs-driver is **not published on PyPI** and is built from
+source, so you need a Rust toolchain (`cargo`). Its Python package is
+named `scylla`. Install it from Git, then coodie:
+
+```bash
+pip install "scylla @ git+https://github.com/scylladb-zpp-2025-python-rs-driver/python-rs-driver"
+pip install coodie
+```
+
+Inside a coodie checkout, the `python-rs` extra resolves the same Git
+source through `[tool.uv.sources]`:
+
+```bash
+uv pip install -e ".[python-rs]"
+```
+
+```{note}
+Only Linux is exercised in coodie's CI for python-rs-driver. macOS and
+Windows builds need a working Rust toolchain and are untested. Per-query
+`consistency` and `timeout` are currently ignored by `PythonRsDriver`,
+and python-rs-driver does not expose SSL/TLS or authentication options
+to Python yet.
+```
+
+(sync-bridge)=
+
+## Sync Bridge
+
+acsylla and python-rs-driver only offer an async API, and their sessions
+are bound to the event loop they were created on. coodie bridges them to
+the sync API like this:
+
+1. With `hosts=`, `init_coodie()` / `init_coodie_async()` start a
+   dedicated event loop in a daemon thread (`coodie-acsylla-sync` or
+   `coodie-python-rs-sync`). They create the session **on that loop**,
+   and block until it is connected.
+2. Sync calls (`execute`, `sync_table`, `close`) submit the coroutine to
+   the background loop with `asyncio.run_coroutine_threadsafe()` and block
+   on the result. This works from any thread, including one that already
+   runs an event loop (for example pytest-asyncio or an ASGI handler).
+3. Async calls (`execute_async`, `sync_table_async`, `close_async`) are
+   also dispatched to the background loop, and the caller awaits the result
+   without blocking its own loop.
+
+So plain sync code can use acsylla:
+
+```python
+from coodie.sync import Document, init_coodie
+
+init_coodie(hosts=["127.0.0.1"], keyspace="my_ks", driver_type="acsylla")
+
+class Product(Document):
+    ...
+
+Product.sync_table()  # runs on the background loop, blocks until done
+```
+
+The same driver also serves `coodie.aio` documents.
+
+```{warning}
+The bridge needs the session to be created on the background loop. If you
+pass your own session via `session=`, async calls run directly on your
+loop, but sync calls may hang. `AcsyllaDriver` emits a `UserWarning` in
+this case. To get a sync-capable driver, pass `hosts=` or use
+`AcsyllaDriver.connect()` / `PythonRsDriver.connect()` with a session
+factory.
+```
+
+`CassandraDriver` (scylla/cassandra) needs no bridge: its sync calls use
+the driver's blocking API, and its async calls wrap the driver's
+`execute_async()` futures.
 
 ## init_coodie() Parameters
 
@@ -117,13 +208,23 @@ pass it via `session=`.
 | `hosts` | `list[str] \| None` | `None` | Contact points for the cluster |
 | `session` | `Any \| None` | `None` | Pre-created driver session (BYOS) |
 | `keyspace` | `str \| None` | `None` | Default keyspace |
-| `driver_type` | `str` | `"scylla"` | `"scylla"`, `"cassandra"`, or `"acsylla"` |
+| `driver_type` | `str` | `"scylla"` | `"scylla"`, `"cassandra"`, `"acsylla"`, or `"python-rs"` |
 | `name` | `str` | `"default"` | Name for multi-driver setups |
-| `**kwargs` | | | Passed to the underlying `Cluster()` constructor |
+| `ssl_context` | `ssl.SSLContext \| None` | `None` | TLS context (scylla/cassandra only) |
+| `lazy` | `bool` | `False` | Connect on first use (scylla/cassandra only) |
+| `compression` | `str \| bool \| None` | `None` | Passed to `Cluster()` (scylla/cassandra only, ignored when `lazy=True`) |
+| `speculative_execution_policy` | `Any \| None` | `None` | Passed to `Cluster()` (scylla/cassandra only, ignored when `lazy=True`) |
+| `**kwargs` | | | Passed to `Cluster()` (scylla/cassandra), `acsylla.create_cluster()` (acsylla), or `SessionBuilder()` (python-rs, except `port`) |
 
-Either `hosts` or `session` must be provided. If you pass `hosts`,
-coodie creates the cluster and session for you. If you pass `session`,
-coodie wraps your existing session.
+`init_coodie_async()` takes the same parameters, except that `lazy`,
+`compression`, and `speculative_execution_policy` go through `**kwargs`.
+It adds the acsylla TLS options `ssl_enabled`, `ssl_trusted_cert`,
+`ssl_cert`, `ssl_private_key`, and `ssl_verify_flags` (see {doc}`encryption`).
+
+If you pass `hosts`, coodie creates the cluster and session for you. If
+you pass `session`, coodie wraps your existing session and ignores
+`hosts` and `**kwargs`. acsylla and python-rs need one of the two.
+scylla/cassandra fall back to `["127.0.0.1"]` when neither is given.
 
 ## Bring Your Own Session (BYOS)
 
@@ -205,7 +306,8 @@ register_driver("my_driver", my_driver_instance, default=True)
 ## Extra Cluster Options
 
 Any extra keyword arguments to `init_coodie()` are forwarded to the
-underlying `Cluster()` constructor:
+underlying driver's cluster or session builder (`Cluster()` for
+scylla/cassandra):
 
 ```python
 init_coodie(
