@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791553171765,
+  "lastUpdate": 1791555802273,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -18309,6 +18309,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.9931139447961533e-7",
             "extra": "mean: 3.2590082103041698 usec\nrounds: 10840"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "b439b9f13a1780b409350487020af8220ec5910a",
+          "message": "fix(document): return LWTResult from insert() and conditional QuerySet.update()\n\nDocument.insert() issues INSERT ... IF NOT EXISTS but discarded the\ndriver result and returned None, so callers could not tell whether the\nrow was created. The docs (guide/lwt.md, guide/exceptions.md) already\nshow `result = lock.insert(); if result.applied: ...`, which raised\nAttributeError. QuerySet.update(if_conditions=...) had the same problem,\nalthough guide/lwt.md says all conditional operations return LWTResult.\n\nParse the result with the existing _parse_lwt_result helper (as\nupdate/delete already do) in the sync and async Document.insert() and\nQuerySet.update(). Batched inserts and unconditional QuerySet updates\nstill return None.\n\nFound in architecture review (#273), findings C2 and M7.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-09T17:22:33+03:00",
+          "tree_id": "f508390efebe9e6ae846f9485f42b91ca98598f3",
+          "url": "https://github.com/scylladb/coodie/commit/b439b9f13a1780b409350487020af8220ec5910a"
+        },
+        "date": 1791555800814,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 132247.30079475718,
+            "unit": "iter/sec",
+            "range": "stddev: 6.198536231780777e-7",
+            "extra": "mean: 7.561591004053552 usec\nrounds: 9626"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 2758010.391939132,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1308820670779215e-7",
+            "extra": "mean: 362.58021468037657 nsec\nrounds: 173341"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 254955.3901295888,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002861435286682926",
+            "extra": "mean: 3.922254789324986 usec\nrounds: 20986"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 963368.104557276,
+            "unit": "iter/sec",
+            "range": "stddev: 3.0193616888591884e-7",
+            "extra": "mean: 1.0380248165466912 usec\nrounds: 54681"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 1025659.6601126804,
+            "unit": "iter/sec",
+            "range": "stddev: 3.3124789162209644e-7",
+            "extra": "mean: 974.9822859272232 nsec\nrounds: 34718"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 1433015.362386202,
+            "unit": "iter/sec",
+            "range": "stddev: 3.371189948454127e-7",
+            "extra": "mean: 697.8292251765107 nsec\nrounds: 143042"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 1385123.764534713,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8580216755940407e-7",
+            "extra": "mean: 721.9571460720099 nsec\nrounds: 81183"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 1274869.396912162,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2554723042549267e-7",
+            "extra": "mean: 784.3940739514824 nsec\nrounds: 86603"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 320115.2302556349,
+            "unit": "iter/sec",
+            "range": "stddev: 3.628576931340177e-7",
+            "extra": "mean: 3.123875109601716 usec\nrounds: 10257"
           }
         ]
       }
