@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791557595684,
+  "lastUpdate": 1791557833932,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -19614,6 +19614,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000010187743481509798",
             "extra": "mean: 6.090890894115598 usec\nrounds: 6095"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "a12444232b1987f4fa90bbb79ddda120c4fa9b65",
+          "message": "style: adopt ruff 0.16 default lint rules\n\nmaster pinned ruff to the pre-0.16 rule set (E4, E7, E9, F) to keep lint\ngreen after #267. Drop that pin so ruff's 0.16 defaults apply, and fix\nwhat they flag.\n\n- apply ruff safe autofixes (import/__slots__ sorting, pyupgrade, ...),\n  ruff-format and end-of-file-fixer output\n- fix remaining findings by hand: RUF059 (prefix unused unpacked vars\n  with _), SIM102/SIM103/SIM117, RUF012 (pydantic Field(default_factory=...)\n  for mutable defaults, ClassVar for Settings attributes), RUF015, C401,\n  C408, UP028, PLW1510 (explicit check=False), PLW0602, LOG015 (module\n  logger), PYI034/PYI036 (Self / TracebackType in batch context managers),\n  EXE001 (mark shebang scripts executable), narrow demo cursor decode\n  except to ValueError\n- targeted noqa with a reason where the flagged pattern is intended\n  (driver SAI fallback, local-date filenames, FastAPI Query defaults,\n  integration probes/cleanup, explicit typing.Optional tests)\n\nUP045 rewrites Optional[X] model fields to X | None, which needs the\nPEP 604 union fix (#288) on Python 3.10-3.13.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-09T17:52:55+03:00",
+          "tree_id": "2c4164d32e9ecf8a75a605b602f18ff554c7c76b",
+          "url": "https://github.com/scylladb/coodie/commit/a12444232b1987f4fa90bbb79ddda120c4fa9b65"
+        },
+        "date": 1791557832265,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 76109.72510032337,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000012067924445678887",
+            "extra": "mean: 13.13892539595773 usec\nrounds: 8860"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1018071.3467838505,
+            "unit": "iter/sec",
+            "range": "stddev: 3.575914170037804e-7",
+            "extra": "mean: 982.249429923611 nsec\nrounds: 133316"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 142564.71019465395,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000034013422871523565",
+            "extra": "mean: 7.014358592912843 usec\nrounds: 16799"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 463382.0472515317,
+            "unit": "iter/sec",
+            "range": "stddev: 4.944511765595412e-7",
+            "extra": "mean: 2.158046488704779 usec\nrounds: 51819"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 586305.8558912093,
+            "unit": "iter/sec",
+            "range": "stddev: 5.655056784746682e-7",
+            "extra": "mean: 1.7055944264448089 usec\nrounds: 28636"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 625521.9511034647,
+            "unit": "iter/sec",
+            "range": "stddev: 4.230520245753997e-7",
+            "extra": "mean: 1.598664920129389 usec\nrounds: 96947"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 642479.7857928274,
+            "unit": "iter/sec",
+            "range": "stddev: 3.608258109634569e-7",
+            "extra": "mean: 1.5564692027874287 usec\nrounds: 65347"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 549417.1481400909,
+            "unit": "iter/sec",
+            "range": "stddev: 4.5236676948790257e-7",
+            "extra": "mean: 1.820110645226929 usec\nrounds: 77048"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 164107.32909196743,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001023117759132309",
+            "extra": "mean: 6.09357306302627 usec\nrounds: 6556"
           }
         ]
       }
