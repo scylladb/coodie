@@ -166,6 +166,24 @@ class PythonRsDriver(AbstractDriver):
         return self._prepared[cql]
 
     @staticmethod
+    def _apply_options(statement: Any, consistency: str | None, timeout: float | None) -> Any:
+        """Return *statement* with per-query consistency and timeout applied.
+
+        python-rs-driver statements are immutable: ``with_*`` returns a new
+        instance, so the cached prepared statement is left untouched.
+        *consistency* uses coodie/cassandra-driver names (``"LOCAL_QUORUM"``),
+        mapped to ``scylla.enums.Consistency`` members (``LocalQuorum``).
+        *timeout* is in seconds, which is what ``with_request_timeout`` expects.
+        """
+        if consistency is not None:
+            from scylla.enums import Consistency  # type: ignore[import-untyped]
+
+            statement = statement.with_consistency(getattr(Consistency, consistency.title().replace("_", "")))
+        if timeout is not None:
+            statement = statement.with_request_timeout(timeout)
+        return statement
+
+    @staticmethod
     def _serialize_param(p: Any) -> Any:
         """Recursively serialize a single param value for python-rs-driver.
 
@@ -261,11 +279,16 @@ class PythonRsDriver(AbstractDriver):
         paging_state: bytes | None = None,
     ) -> list[dict[str, Any]]:
         if _is_ddl(stmt):
-            result = await self._session.execute(stmt, None)
+            statement: Any = stmt
+            if consistency is not None or timeout is not None:
+                from scylla.statement import Statement  # type: ignore[import-untyped]
+
+                statement = self._apply_options(Statement(stmt), consistency, timeout)
+            result = await self._session.execute(statement, None)
             self._last_paging_state = None
             return self._rows_to_dicts(result)
 
-        prepared = await self._prepare(stmt)
+        prepared = self._apply_options(await self._prepare(stmt), consistency, timeout)
         result = await self._session.execute(prepared, self._serialize_params(params) if params else None)
         self._last_paging_state = None
         return self._rows_to_dicts(result)
