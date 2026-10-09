@@ -77,7 +77,7 @@ def init_coodie(
 
         if session is None and hosts is not None:
             try:
-                from scylla.session_builder import SessionBuilder  # type: ignore[import-untyped]
+                from scylla.session import SessionBuilder  # type: ignore[import-untyped]
             except ImportError as exc:
                 raise ImportError(
                     "python-rs-driver is required for PythonRsDriver. "
@@ -190,7 +190,7 @@ async def init_coodie_async(
 
     if driver_type == "python-rs" and session is None and hosts is not None:
         try:
-            from scylla.session_builder import SessionBuilder  # type: ignore[import-untyped]
+            from scylla.session import SessionBuilder  # type: ignore[import-untyped]
         except ImportError as exc:
             raise ImportError(
                 "python-rs-driver is required for PythonRsDriver. "
