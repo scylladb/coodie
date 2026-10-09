@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791557511646,
+  "lastUpdate": 1791557529240,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -19353,6 +19353,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 9.390454838813642e-7",
             "extra": "mean: 5.994019201104299 usec\nrounds: 7135"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "973795a19b8eff7c1995a6130cbdb57b69b3149a",
+          "message": "fix(ci): generate integration coverage xml and fail on codecov upload errors\n\nIntegration jobs never wrote coverage.xml, so their Codecov upload found\n0 files. Unit uploads were rejected with \"Repository not found\" (stale\nCODECOV_TOKEN). Both were silent because codecov-action defaults to\nfail_ci_if_error: false. Fail on master pushes so this can't regress\nunnoticed; PRs keep warning only.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-09T17:51:21+03:00",
+          "tree_id": "2059c0e593f1156658dcebd7bf0c23dd7982fee4",
+          "url": "https://github.com/scylladb/coodie/commit/973795a19b8eff7c1995a6130cbdb57b69b3149a"
+        },
+        "date": 1791557528056,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 82753.54417157332,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000016975812754874221",
+            "extra": "mean: 12.084074585696236 usec\nrounds: 9774"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1526009.615029837,
+            "unit": "iter/sec",
+            "range": "stddev: 2.670309115954751e-7",
+            "extra": "mean: 655.3038658150576 nsec\nrounds: 144238"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 134634.4557563572,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000030321065925940664",
+            "extra": "mean: 7.427519162031312 usec\nrounds: 20144"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 574271.965065085,
+            "unit": "iter/sec",
+            "range": "stddev: 5.213663329374135e-7",
+            "extra": "mean: 1.7413352223918248 usec\nrounds: 50641"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 582807.7243675953,
+            "unit": "iter/sec",
+            "range": "stddev: 4.986806999544823e-7",
+            "extra": "mean: 1.7158317540919692 usec\nrounds: 32084"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 802886.3825610031,
+            "unit": "iter/sec",
+            "range": "stddev: 3.886795513840451e-7",
+            "extra": "mean: 1.245506240634266 usec\nrounds: 116334"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 802118.6168835892,
+            "unit": "iter/sec",
+            "range": "stddev: 3.8556298745034804e-7",
+            "extra": "mean: 1.2466984046389853 usec\nrounds: 66944"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 701735.9663241382,
+            "unit": "iter/sec",
+            "range": "stddev: 4.0045627269443123e-7",
+            "extra": "mean: 1.4250374043648362 usec\nrounds: 78654"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 168500.76456646045,
+            "unit": "iter/sec",
+            "range": "stddev: 9.117078574589433e-7",
+            "extra": "mean: 5.934691172309653 usec\nrounds: 7318"
           }
         ]
       }
