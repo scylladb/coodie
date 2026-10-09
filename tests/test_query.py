@@ -11,6 +11,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import Field
 
+from coodie.exceptions import InvalidQueryError
 from coodie.fields import PrimaryKey
 from tests.conftest import _maybe_await
 from tests.models import make_item
@@ -812,20 +813,22 @@ async def test_aggregate_method(Item, queryset_cls, registered_mock_driver):
 # ------------------------------------------------------------------
 
 
-async def test_is_not_null_generates_correct_cql(Item, queryset_cls, registered_mock_driver):
-    registered_mock_driver.set_return_rows([])
-    await _maybe_await(queryset_cls(Item).filter(rating__gte=1).is_not_null("name").all)
-    stmt, params = registered_mock_driver.executed[0]
-    assert '"name" IS NOT NULL' in stmt
-    assert params == [1]
-
-
-async def test_is_null_generates_correct_cql(Item, queryset_cls, registered_mock_driver):
-    registered_mock_driver.set_return_rows([])
-    await _maybe_await(queryset_cls(Item).is_null("name").all)
-    stmt, params = registered_mock_driver.executed[0]
-    assert '"name" IS NULL' in stmt
-    assert params == []
+@pytest.mark.parametrize(
+    "build",
+    [
+        lambda qs: qs.is_not_null("name"),
+        lambda qs: qs.is_null("name"),
+        lambda qs: qs.filter(name__isnull=False),
+        lambda qs: qs.filter(name__isnull=True),
+    ],
+)
+@pytest.mark.parametrize("terminal", ["all", "delete"])
+async def test_isnull_raises_client_side(Item, queryset_cls, registered_mock_driver, build, terminal):
+    """IS [NOT] NULL is only valid in MV definitions; reject it before hitting the server."""
+    qs = build(queryset_cls(Item).filter(rating__gte=1))
+    with pytest.raises(InvalidQueryError, match="materialized view"):
+        await _maybe_await(getattr(qs, terminal))
+    assert registered_mock_driver.executed == []
 
 
 def test_is_not_null_preserved_through_chaining(Item, queryset_cls, registered_mock_driver):
@@ -836,15 +839,6 @@ def test_is_not_null_preserved_through_chaining(Item, queryset_cls, registered_m
 def test_is_null_preserved_through_chaining(Item, queryset_cls, registered_mock_driver):
     qs = queryset_cls(Item).is_null("name").filter(rating__gte=3).limit(10)
     assert any(op == "ISNULL" and val is True for _, op, val in qs._where)
-
-
-async def test_isnull_filter_still_works(Item, queryset_cls, registered_mock_driver):
-    """The __isnull filter kwarg still works as a fallback."""
-    registered_mock_driver.set_return_rows([])
-    await _maybe_await(queryset_cls(Item).filter(name__isnull=False).all)
-    stmt, params = registered_mock_driver.executed[0]
-    assert '"name" IS NOT NULL' in stmt
-    assert params == []
 
 
 # ------------------------------------------------------------------
