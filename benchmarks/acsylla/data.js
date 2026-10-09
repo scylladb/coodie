@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791551186401,
+  "lastUpdate": 1791551508262,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -17700,6 +17700,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 8.630899783823548e-7",
             "extra": "mean: 5.938133123530754 usec\nrounds: 5724"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "a767fa1cb62a6f83fd34d07b0c58208af6c28e9d",
+          "message": "ci: remove PR conflict detection workflow and stale rebase/squash plan items\n\nDrop pr-conflict-detect.yml, its concurrency convention test, and the\nconflict label. Prune the github-actions-testing-plan of the obsolete\nPhase 4 smoke tests and the /rebase, /squash, and self-healing CI items,\nwhose workflows were already removed.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-09T16:03:48+03:00",
+          "tree_id": "6c131c255e9f178a4eed0e61f818eb361660c4b3",
+          "url": "https://github.com/scylladb/coodie/commit/a767fa1cb62a6f83fd34d07b0c58208af6c28e9d"
+        },
+        "date": 1791551507229,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 83220.97803269952,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000016848360138772877",
+            "extra": "mean: 12.016201006518763 usec\nrounds: 10134"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1504706.7698741395,
+            "unit": "iter/sec",
+            "range": "stddev: 3.059696681388819e-7",
+            "extra": "mean: 664.5813124663781 nsec\nrounds: 148987"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 134560.33332193116,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002820262454043651",
+            "extra": "mean: 7.431610604051738 usec\nrounds: 18955"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 580664.3758705036,
+            "unit": "iter/sec",
+            "range": "stddev: 5.402131403255944e-7",
+            "extra": "mean: 1.7221652327144212 usec\nrounds: 54511"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 575695.0288079627,
+            "unit": "iter/sec",
+            "range": "stddev: 6.65925164744271e-7",
+            "extra": "mean: 1.7370308061728543 usec\nrounds: 33305"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 809276.9670017157,
+            "unit": "iter/sec",
+            "range": "stddev: 4.04256952420512e-7",
+            "extra": "mean: 1.2356709022683456 usec\nrounds: 134337"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 817785.3271664402,
+            "unit": "iter/sec",
+            "range": "stddev: 3.909859685563143e-7",
+            "extra": "mean: 1.222814798432394 usec\nrounds: 72386"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 698066.7042551113,
+            "unit": "iter/sec",
+            "range": "stddev: 4.516736221698535e-7",
+            "extra": "mean: 1.4325278571581117 usec\nrounds: 86423"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 170998.12704287784,
+            "unit": "iter/sec",
+            "range": "stddev: 8.369258643232767e-7",
+            "extra": "mean: 5.848017269506406 usec\nrounds: 7354"
           }
         ]
       }
