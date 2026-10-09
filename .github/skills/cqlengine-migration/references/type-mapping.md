@@ -21,7 +21,8 @@ Complete mapping of every cqlengine column type to its coodie equivalent.
 | `columns.TimeUUID()` | `timeuuid` | `Annotated[UUID, TimeUUID()]` | Marker needed to distinguish from plain UUID |
 | `columns.DateTime()` | `timestamp` | `datetime` | Import from `datetime` stdlib |
 | `columns.Date()` | `date` | `date` | Import from `datetime` stdlib |
-| `columns.Time()` | `time` | `Annotated[int, Time()]` | CQL `time` maps to nanoseconds-since-midnight |
+| `columns.Time()` | `time` | `time` | Import from `datetime` stdlib; `Annotated[int, Time()]` if you store nanoseconds since midnight |
+| `columns.Duration()` | `duration` | `Annotated[CqlDuration, Duration()]` | `CqlDuration` from `coodie.types` |
 | `columns.Blob()` | `blob` | `bytes` | Direct mapping |
 | `columns.Inet()` | `inet` | `IPv4Address` or `IPv6Address` | Import from `ipaddress` stdlib |
 | `columns.Counter()` | `counter` | `Annotated[int, Counter()]` | Must use `CounterDocument` base class |
@@ -108,6 +109,7 @@ from coodie.fields import (
     Counter,
     Discriminator,
     Double,
+    Duration,
     Frozen,
     Indexed,
     PrimaryKey,
@@ -117,7 +119,10 @@ from coodie.fields import (
     TimeUUID,
     TinyInt,
     VarInt,
+    Vector,
+    VectorIndex,
 )
+from coodie.types import CqlDuration
 
 # UDT
 from coodie.usertype import UserType
@@ -130,7 +135,7 @@ from coodie.lazy import LazyDocument
 from coodie.exceptions import DocumentNotFound, MultipleDocumentsFound
 
 # Standard library (commonly needed)
-from datetime import date, datetime, timezone
+from datetime import date, datetime, time, timezone
 from decimal import Decimal
 from ipaddress import IPv4Address, IPv6Address
 from typing import Annotated, Optional

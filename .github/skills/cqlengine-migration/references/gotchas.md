@@ -66,31 +66,32 @@ class Product(Document):
         keyspace = "catalog"
 ```
 
-**Also applies to:** `__default_ttl__`, `__options__`, `__connection__`.
+**Also applies to:** `__default_ttl__` → `Settings.__default_ttl__`,
+`__options__` → `Settings.__options__`, `__connection__` → `Settings.connection`
+(no dunders; the name passed to `init_coodie(name=...)`).
 
 ---
 
 ## G4: `default=callable` Requires `Field(default_factory=...)`
 
-**Impact:** All instances share the same mutable default, or Pydantic raises an
-error about mutable defaults.
+**Impact:** Assigning the callable itself stores the function object as the
+default instead of calling it per instance.
 
 ```python
 # cqlengine — callable default
 id = columns.UUID(primary_key=True, default=uuid.uuid4)
 tags = columns.List(columns.Text, default=list)
 
-# ❌ coodie — Pydantic rejects mutable defaults
-id: Annotated[UUID, PrimaryKey()] = uuid4  # passes uuid4 function, not result
-tags: list[str] = []  # Pydantic warns about mutable default
+# ❌ coodie — default is the uuid4 function, not a UUID
+id: Annotated[UUID, PrimaryKey()] = uuid4
 
 # ✅ coodie — use Field(default_factory=...)
 id: Annotated[UUID, PrimaryKey()] = Field(default_factory=uuid4)
-tags: list[str] = Field(default_factory=list)
+tags: list[str] = []  # fine too: Pydantic copies mutable defaults per instance
 ```
 
 **Applies to:** Any field with `default=<callable>`, especially `uuid4`,
-`uuid1`, `datetime.now`, `list`, `dict`, `set`.
+`uuid1`, `datetime.now`.
 
 ---
 
@@ -172,6 +173,7 @@ except DocumentNotFound:
 |---------------------|------------------|
 | `Model.DoesNotExist` | `coodie.exceptions.DocumentNotFound` |
 | `Model.MultipleObjectsReturned` | `coodie.exceptions.MultipleDocumentsFound` |
+| `LWTException` | _(not raised)_ — check `LWTResult.applied`, see [G14](#g14-conditional-insert-return-type-differs-by-api-path) |
 
 ---
 
@@ -275,18 +277,22 @@ Supported operators: `__gt`, `__gte`, `__lt`, `__lte`, `__in`, `__contains`,
 
 ## G14: Conditional Insert Return Type Differs by API Path
 
-**Impact:** Expecting `obj.insert()` to return an LWT result.
+**Impact:** Duplicate-insert checks silently stop working. cqlengine raises
+`LWTException` when the insert is not applied; coodie never raises.
 
 ```python
 # cqlengine
-Product.if_not_exists().create(id=pid, name="Widget")
+try:
+    Product.if_not_exists().create(id=pid, name="Widget")
+except LWTException:
+    ...
 
 # coodie — QuerySet conditional create returns LWTResult
 result = Product.find().if_not_exists().create(id=pid, name="Widget")
-if result and result.applied:
-    ...
+if result and not result.applied:
+    ...  # what used to be the LWTException branch
 
-# coodie instance insert still does IF NOT EXISTS, but returns None
+# ❌ coodie instance insert does IF NOT EXISTS, but returns None either way
 Product(id=pid, name="Widget").insert()
 ```
 
@@ -306,16 +312,22 @@ Product(id=pid, name="Widget").save(ttl=60)
 
 ---
 
-## G16: `update()` Instance Method Signature Differs
+## G16: `save()` Rewrites Every Column
 
-**Impact:** Calling `obj.save()` after field assignment doesn't persist changes.
+**Impact:** None for correctness — assign + `save()` still persists. But
+`save()` is a full `INSERT` of every column (unset ones written as null),
+while cqlengine's `save()` on a loaded instance only updated changed columns.
 
 ```python
-# cqlengine
+# cqlengine — UPDATE of changed columns only
 product.name = "New Name"
 product.save()
 
-# coodie — use update() with keyword arguments
+# coodie — works, but writes all columns
+product.name = "New Name"
+product.save()
+
+# coodie — preferred for partial writes: UPDATE of the given columns only
 product.update(name="New Name")
 ```
 

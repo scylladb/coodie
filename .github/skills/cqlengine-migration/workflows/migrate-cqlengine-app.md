@@ -25,12 +25,12 @@ test suite (or at least a way to run the application).
    ```
 4. **Identify connection setup** — find `connection.setup()` calls.
 5. **Identify batch usage** — find `BatchQuery` imports and usage.
-6. **Check for unsupported features** — review each model for:
-   - Static columns (`static=True`)
-   - Token-range queries (`__token`)
-   - Custom management scripts
-   - Per-model `__connection__`
-   - Counter columns
+6. **Flag features that need a different syntax** — review each model for:
+   - Counter columns → `CounterDocument` ([G10](../references/gotchas.md#g10-counter-columns-require-counterdocument))
+   - Composite partition keys → `PrimaryKey(partition_key_index=N)` ([G11](../references/gotchas.md#g11-partition_keytrue-is-not-the-same-as-primarykey))
+   - LWT calls (`if_not_exists()`, `iff()`) → `LWTResult` instead of `LWTException` ([G14](../references/gotchas.md#g14-conditional-insert-return-type-differs-by-api-path))
+   - Per-model `__connection__` → `Settings.connection` ([G3](../references/gotchas.md#g3-table-metadata-moves-to-settings-class))
+   - Custom management scripts calling `cassandra.cqlengine.management`
 7. **Create a migration tracking document** — list every model/UDT with status
    (pending / in-progress / done / verified).
 
@@ -43,10 +43,13 @@ potential blockers. No code changes yet.
 
 **Entry criteria:** Inventory complete from Phase 1.
 
-1. **Add coodie to dependencies:**
+1. **Add coodie with a driver extra** — plain `coodie` installs no driver:
    ```bash
-   uv add coodie  # or pip install coodie
+   uv add "coodie[scylla]"     # scylla-driver (default for init_coodie)
+   uv add "coodie[cassandra]"  # or keep using cassandra-driver
    ```
+   `scylla-driver` and `cassandra-driver` both provide the `cassandra` package;
+   install only one of them.
 2. **Verify coodie imports work:**
    ```python
    from coodie.sync import Document, init_coodie
@@ -146,12 +149,15 @@ tests pass.
    ```bash
    grep -rn "cassandra\.cqlengine" src/ --include="*.py"
    grep -rn "\.objects\." src/ --include="*.py"
-   grep -rn "from cassandra" src/ --include="*.py"
    ```
+   Imports from `cassandra` outside `cassandra.cqlengine` (e.g.
+   `cassandra.ConsistencyLevel`) are plain driver usage and can stay.
 
-2. **Remove cqlengine dependency:**
+2. **Keep exactly one driver** — the driver behind the coodie extra you chose
+   in Phase 2 must stay installed. If you switched to `coodie[scylla]`, remove
+   the now-duplicate direct dependency:
    ```bash
-   uv remove cassandra-driver  # if fully migrated
+   uv remove cassandra-driver  # only if coodie[scylla] provides the driver
    ```
 
 3. **Run the full test suite** — all tests must pass.

@@ -1,9 +1,10 @@
 # Migration Checklist: cqlengine → coodie
 
+Phase numbers match [the workflow](../workflows/migrate-cqlengine-app.md).
 Use this checklist when converting a cqlengine application to coodie. Work
 through items in order — models first, then queries, then infrastructure.
 
-## Pre-Migration
+## Phases 1–2: Preparation & Setup
 
 - [ ] **Inventory models:** List all `cassandra.cqlengine.models.Model` subclasses
 - [ ] **Inventory UDTs:** List all `cassandra.cqlengine.usertype.UserType` subclasses
@@ -11,7 +12,7 @@ through items in order — models first, then queries, then infrastructure.
 - [ ] **Check feature gaps:** Review unsupported features and plan workarounds
 - [ ] **Set up coodie:** Add `coodie` to project dependencies, ensure tests run
 
-## Phase 1: Model Conversion (per model)
+## Phase 3: Model Conversion (per model)
 
 - [ ] **Change base class:** `Model` → `Document`
 - [ ] **Update imports:** `cassandra.cqlengine` → `coodie.sync` / `coodie.aio` + `coodie.fields`
@@ -38,7 +39,7 @@ through items in order — models first, then queries, then infrastructure.
   - `columns.Map(K, V)` → `dict[K, V] = Field(default_factory=dict)`
 - [ ] **Verify model imports and compiles** — `python -c "from myapp.models import Product"`
 
-## Phase 2: UDT Conversion (per UDT)
+## Phase 3: UDT Conversion (per UDT)
 
 - [ ] **Change base class:** `cqlengine.UserType` → `coodie.usertype.UserType`
 - [ ] **Convert fields:** `columns.*` → Python type annotations
@@ -46,7 +47,7 @@ through items in order — models first, then queries, then infrastructure.
 - [ ] **Remove wrappers:** `columns.UserDefinedType(Addr)` → plain `Addr` annotation
 - [ ] **Update sync calls:** `management.sync_type("ks", Addr)` → `Addr.sync_type()`
 
-## Phase 3: Query & CRUD Conversion
+## Phase 4: Query & CRUD Conversion
 
 - [ ] **Replace query entry points:**
   - `M.objects.all()` → `M.find().all()`
@@ -62,7 +63,8 @@ through items in order — models first, then queries, then infrastructure.
 - [ ] **Replace delete patterns:**
   - `M.objects.filter().delete()` → `M.find().delete()`
 - [ ] **Replace LWT operations:**
-  - `M.if_not_exists().create()` → `M(...).insert()`
+  - `M.if_not_exists().create(**kw)` → `result = M.find().if_not_exists().create(**kw)`, then check `result.applied`
+  - `except LWTException` → `if not result.applied:` (coodie returns `LWTResult`, it does not raise)
 - [ ] **Replace TTL usage:**
   - `M.ttl(N).create()` → `M(...).save(ttl=N)`
 - [ ] **Replace exception handling:**
@@ -78,14 +80,14 @@ through items in order — models first, then queries, then infrastructure.
 - [ ] **Replace sync_table calls:**
   - `management.sync_table(M)` → `M.sync_table()`
 
-## Phase 5: Async Migration (if applicable)
+## Phase 4: Async Migration (if applicable)
 
 - [ ] **Change imports:** `coodie.sync` → `coodie.aio`
 - [ ] **Add `await`** to all terminal methods: `save()`, `delete()`, `get()`, `find().all()`, `find_one()`, `count()`, `sync_table()`, `insert()`, `update()`
 - [ ] **Replace `BatchQuery`** with `AsyncBatchQuery` and use `async with`
 - [ ] **Replace `init_coodie`** with `await init_coodie()`
 
-## Post-Migration Verification
+## Phase 5: Verification & Cleanup
 
 - [ ] **Run test suite** — all existing tests pass
 - [ ] **Search for leftover cqlengine imports:** `grep -r "cassandra\.cqlengine" src/`
@@ -104,6 +106,7 @@ These features have no cqlengine equivalent. Adopt them after the core migration
 - [ ] **Lazy Documents:** Use `M.find().all(lazy=True)` for large result sets — defers Pydantic parsing until field access
 - [ ] **Pagination:** Use `M.find().fetch_size(N).paged_all()` returning `PagedResult(data, paging_state)` for token-based pagination
 - [ ] **LWT Results:** Use `M.find().if_not_exists().create(**kw)` when you need typed `LWTResult(applied, existing)` from conditional inserts (`obj.insert()` returns `None`)
+- [ ] **Vector Search:** Use `Vector(dimensions=N)` + `VectorIndex()` markers and `order_by_ann(col, vec)` for ANN queries
 - [ ] **Raw CQL:** Use `execute_raw("SELECT ...")` for queries outside the ORM
 - [ ] **Keyspace Management:** Use `create_keyspace()` / `drop_keyspace()` for programmatic keyspace setup
 - [ ] **Advanced QuerySet:** Use `per_partition_limit(N)`, `only(*cols)`, `defer(*cols)`, `values_list(*cols)`, `consistency(level)`, `timeout(sec)`, `timestamp(ts)`

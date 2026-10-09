@@ -87,20 +87,20 @@ sync/async.
 What are you migrating?
 │
 ├─ A cqlengine Model class?
-│  └─ Phase 1: Convert model (see type-mapping reference)
-│     Then Phase 2: Convert queries
+│  └─ Phase 3: Convert model (see type-mapping reference)
+│     Then Phase 4: Convert queries
 │
 ├─ Connection setup / session management?
-│  └─ Phase 1: Replace connection.setup() → init_coodie()
+│  └─ Phase 4: Replace connection.setup() → init_coodie()
 │
 ├─ Batch operations?
-│  └─ Phase 2: Convert BatchQuery usage
+│  └─ Phase 4: Convert BatchQuery usage
 │
 ├─ User-Defined Types?
-│  └─ Phase 1: Convert UserType + sync_type() calls
+│  └─ Phase 3: Convert UserType + sync_type() calls
 │
 ├─ Custom management / sync_table calls?
-│  └─ Phase 1: Replace management.sync_table(M) → M.sync_table()
+│  └─ Phase 4: Replace management.sync_table(M) → M.sync_table()
 │
 └─ Entire application?
    └─ Follow the full workflow: workflows/migrate-cqlengine-app.md
@@ -128,6 +128,7 @@ What are you migrating?
 | `__keyspace__ = "ks"` | `class Settings: keyspace = "ks"` |
 | `__default_ttl__ = 3600` | `class Settings: __default_ttl__ = 3600` |
 | `__options__ = {...}` | `class Settings: __options__ = {...}` |
+| `__connection__ = "c"` | `class Settings: connection = "c"` (no dunders) |
 
 ### CRUD Operations
 
@@ -154,6 +155,7 @@ What are you migrating?
 |-----------|--------|
 | `Model.DoesNotExist` | `coodie.exceptions.DocumentNotFound` |
 | `Model.MultipleObjectsReturned` | `coodie.exceptions.MultipleDocumentsFound` |
+| `cassandra.cqlengine.query.LWTException` | _(not raised)_ — check `LWTResult.applied` from `M.find().if_not_exists().create()` |
 
 ## coodie-Only Features (No cqlengine Equivalent)
 
@@ -168,6 +170,7 @@ These features are new in coodie — adopt them after the core migration is comp
 | **LWT Results** | `M.find().if_not_exists().create(**kw)` | Returns `LWTResult(applied, existing)` for conditional inserts |
 | **Raw CQL** | `from coodie.sync import execute_raw` | Execute arbitrary CQL: `execute_raw("SELECT ...")` |
 | **Keyspace Mgmt** | `from coodie.sync import create_keyspace, drop_keyspace` | `create_keyspace("ks", replication_factor=3)` or `create_keyspace("ks", strategy="NetworkTopologyStrategy", dc_replication_map={"dc1": 3})` |
+| **Vector Search** | `from coodie.fields import Vector, VectorIndex` | `Annotated[list[float], Vector(dimensions=N), VectorIndex()]` + `M.find().order_by_ann("col", vec).limit(k).all()` |
 | **QuerySet Extras** | chained on `.find()` | `per_partition_limit(N)`, `only(*cols)`, `defer(*cols)`, `values_list(*cols)`, `consistency(level)`, `timeout(sec)`, `timestamp(ts)` |
 
 ## Gotchas Quick Reference
@@ -185,8 +188,8 @@ The most common migration pitfalls. Full details in [gotchas.md](references/gotc
 | `connection.setup()` signature differs | Connection fails | Use `init_coodie(hosts=[...], keyspace="...")` |
 | Batch API difference | Wrong batch context usage | Use `obj.save(batch=batch)`, not `Model.batch(b).create()` |
 | `DoesNotExist` exception class moved | Uncaught exceptions | Import `DocumentNotFound` from `coodie.exceptions` |
-| `default=callable` → `Field(default_factory=callable)` | Pydantic shares mutable default | Use `Field(default_factory=...)` for callables |
-| Collections need `Field(default_factory=...)` | Pydantic validation error | `list[str] = Field(default_factory=list)` |
+| `default=callable` → `Field(default_factory=callable)` | Default is the function object, not its result | Use `Field(default_factory=...)` for callables |
+| `if_not_exists().create()` no longer raises `LWTException` | Duplicate checks silently pass | Use `M.find().if_not_exists().create()` and check `result.applied` |
 | `columns.UserDefinedType(Addr)` wrapper removed | Unnecessary wrapper | Use the UDT class directly as type annotation |
 | Counter columns require `CounterDocument` | Cannot mix counter/non-counter | Inherit from `CounterDocument`, use `increment()`/`decrement()` |
 | `clustering_order` on column → `ClusteringKey(order=)` | Wrong CQL generated | Use `Annotated[T, ClusteringKey(order="DESC")]` |
