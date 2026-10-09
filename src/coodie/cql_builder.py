@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from coodie.exceptions import InvalidQueryError
 from coodie.schema import ColumnDefinition
 
 
@@ -237,11 +238,11 @@ def build_where_clause(
     params: list[Any] = []
     for col, op, value in filter_triples:
         if op == "ISNULL":
-            if value:
-                parts.append(f'"{col}" IS NULL')
-            else:
-                parts.append(f'"{col}" IS NOT NULL')
-        elif op.startswith("TOKEN "):
+            raise InvalidQueryError(
+                f"Cannot filter on '{col}' with IS [NOT] NULL: CQL only allows IS NOT NULL "
+                "in materialized view definitions, and IS NULL is not valid CQL."
+            )
+        if op.startswith("TOKEN "):
             actual_op = op[len("TOKEN ") :]
             parts.append(f'TOKEN("{col}") {actual_op} ?')
             params.append(value)
@@ -266,8 +267,6 @@ def _where_to_shape(where: list[tuple[str, str, Any]]) -> tuple:
     for col, op, value in where:
         if op == "IN":
             parts.append((col, op, len(value)))
-        elif op == "ISNULL":
-            parts.append((col, op, value))
         else:
             parts.append((col, op))
     return tuple(parts)
@@ -276,9 +275,7 @@ def _where_to_shape(where: list[tuple[str, str, Any]]) -> tuple:
 def _extract_where_params(where: list[tuple[str, str, Any]], params: list[Any]) -> None:
     """Append bind-parameter values from WHERE triples into *params*."""
     for _col, op, value in where:
-        if op == "ISNULL":
-            pass  # IS [NOT] NULL has no params
-        elif op == "IN":
+        if op == "IN":
             params.extend(value)
         else:
             params.append(value)
