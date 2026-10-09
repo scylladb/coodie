@@ -3,7 +3,7 @@ name: Unit Tests
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
   repository_dispatch:
     types: [trigger-main-ci]
