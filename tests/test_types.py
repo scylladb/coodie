@@ -50,6 +50,9 @@ from coodie.types import CqlDuration, python_type_to_cql_type_str, coerce_row_no
         pytest.param(frozenset[str], "frozen<set<text>>", id="frozenset-str"),
         pytest.param(frozenset[int], "frozen<set<int>>", id="frozenset-int"),
         pytest.param(Optional[str], "text", id="optional-str"),
+        pytest.param(str | None, "text", id="pep604-optional-str"),
+        pytest.param(list[int] | None, "list<int>", id="pep604-optional-list"),
+        pytest.param(dict[str, int | None], "map<text, int>", id="pep604-optional-nested"),
         pytest.param(Annotated[UUID, PrimaryKey()], "uuid", id="annotated-unwraps"),
     ],
 )
@@ -224,6 +227,16 @@ def test_coerce_optional_collection():
 
     row: dict = {"tags": None}
     result = coerce_row_none_collections(_OptionalListDoc, row)
+    assert result["tags"] == []
+
+
+def test_coerce_pep604_optional_collection():
+    """list[str] | None with None should be coerced to empty list."""
+
+    class _Pep604ListDoc:
+        tags: list[str] | None
+
+    result = coerce_row_none_collections(_Pep604ListDoc, {"tags": None})
     assert result["tags"] == []
 
 

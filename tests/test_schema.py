@@ -73,6 +73,17 @@ def test_build_schema_optional_column():
     assert rating_col.required is False
 
 
+def test_build_schema_pep604_optional_columns():
+    class _Pep604Doc(BaseModel):
+        id: Annotated[UUID, PrimaryKey()]
+        rating: int | None = None
+        tags: list[str] | None = None
+
+    cols = {c.name: c.cql_type for c in build_schema(_Pep604Doc)}
+    assert cols["rating"] == "int"
+    assert cols["tags"] == "list<text>"
+
+
 def test_build_schema_composite_primary_key():
     schema = build_schema(CompositeDoc)
     pk_cols = sorted([c for c in schema if c.primary_key], key=lambda c: c.partition_key_index)

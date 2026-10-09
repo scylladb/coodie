@@ -225,6 +225,8 @@ def _extract_udt_dependencies(udt_cls: type[UserType]) -> list[type[UserType]]:
 
 def _find_udt_types_in_annotation(annotation: Any) -> list[type[UserType]]:
     """Extract all ``UserType`` subclasses referenced in a type annotation."""
+    from coodie.types import _UNION_ORIGINS
+
     if _is_usertype(annotation):
         return [annotation]
 
@@ -234,7 +236,7 @@ def _find_udt_types_in_annotation(annotation: Any) -> list[type[UserType]]:
     if origin is typing.Annotated and args:
         return _find_udt_types_in_annotation(args[0])
 
-    if origin is typing.Union and args:
+    if origin in _UNION_ORIGINS and args:
         result: list[type[UserType]] = []
         for arg in args:
             if arg is not type(None):

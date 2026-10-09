@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, time as dt_time
 from decimal import Decimal
 from ipaddress import IPv4Address, IPv6Address
+from types import UnionType
 from typing import Any, Union
 from uuid import UUID
 
@@ -73,6 +74,10 @@ _MARKER_CQL_OVERRIDES: dict[type, str] = {
 }
 
 
+# ``Optional[X]`` has origin ``typing.Union``; ``X | None`` has ``types.UnionType`` (distinct before 3.14).
+_UNION_ORIGINS = (Union, UnionType)
+
+
 def python_type_to_cql_type_str(annotation: Any) -> str:
     """Map a Python type annotation to its CQL type string."""
     origin = typing.get_origin(annotation)
@@ -110,7 +115,7 @@ def python_type_to_cql_type_str(annotation: Any) -> str:
         return inner
 
     # Optional[X] == Union[X, None] -> unwrap to X
-    if origin is Union:
+    if origin in _UNION_ORIGINS:
         non_none = [a for a in args if a is not type(None)]
         if len(non_none) == 1:
             return python_type_to_cql_type_str(non_none[0])
@@ -203,7 +208,7 @@ def _unwrap_annotation(annotation: Any) -> Any:
     if origin is typing.Annotated:
         return _unwrap_annotation(args[0])
 
-    if origin is Union:
+    if origin in _UNION_ORIGINS:
         non_none = [a for a in args if a is not type(None)]
         if len(non_none) == 1:
             return _unwrap_annotation(non_none[0])
