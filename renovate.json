@@ -55,6 +55,15 @@
         "digest"
       ],
       "groupName": "pre-commit hooks (non-major)"
+    },
+    {
+      "description": "Ungroup 0.x minor bumps (breaking under semver) so they get their own PR; must stay after the grouping rules",
+      "matchCurrentVersion": "/^v?0\\./",
+      "matchUpdateTypes": [
+        "minor"
+      ],
+      "groupName": null,
+      "groupSlug": null
     }
   ]
 }
