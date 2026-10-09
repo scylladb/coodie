@@ -332,6 +332,10 @@ class TestSyncType:
         assert "CREATE TYPE" in cql
         assert params == []
 
+    def test_sync_type_lookup_folds_keyspace_case(self, registered_mock_driver):
+        Address.sync_type(keyspace="Test_KS")
+        assert registered_mock_driver.executed[0][1] == ["test_ks", "address"]
+
     def test_sync_type_nested_syncs_deps_first(self, registered_mock_driver):
         stmts = Contact.sync_type(keyspace="test_ks")
         # Should have 3 statements: PhoneNumber, Address, Contact

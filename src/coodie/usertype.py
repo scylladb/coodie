@@ -138,9 +138,9 @@ class UserType(BaseModel):
     @classmethod
     def _sync_one(cls, driver: Any, keyspace: str, dry_run: bool = False) -> list[str]:
         """Create or extend this UDT only (no dependencies)."""
-        from coodie.cql_builder import build_create_type
+        from coodie.cql_builder import build_create_type, schema_name
 
-        rows = driver.execute(_SELECT_TYPE_FIELDS, [keyspace, cls.type_name()])
+        rows = driver.execute(_SELECT_TYPE_FIELDS, [schema_name(keyspace), schema_name(cls.type_name())])
         if rows:
             stmts = cls._plan_alters(keyspace, rows)
         else:
@@ -153,9 +153,9 @@ class UserType(BaseModel):
     @classmethod
     async def _sync_one_async(cls, driver: Any, keyspace: str, dry_run: bool = False) -> list[str]:
         """Async version of :meth:`_sync_one`."""
-        from coodie.cql_builder import build_create_type
+        from coodie.cql_builder import build_create_type, schema_name
 
-        rows = await driver.execute_async(_SELECT_TYPE_FIELDS, [keyspace, cls.type_name()])
+        rows = await driver.execute_async(_SELECT_TYPE_FIELDS, [schema_name(keyspace), schema_name(cls.type_name())])
         if rows:
             stmts = cls._plan_alters(keyspace, rows)
         else:
