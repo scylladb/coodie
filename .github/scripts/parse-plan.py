@@ -86,9 +86,8 @@ def _task_rows_all_complete(content: str) -> bool:
             continue
 
         # Collect status cell from task data rows
-        if in_table and has_status_col and status_col_idx >= 0:
-            if status_col_idx < len(parts):
-                task_rows.append(parts[status_col_idx])
+        if in_table and has_status_col and status_col_idx >= 0 and status_col_idx < len(parts):
+            task_rows.append(parts[status_col_idx])
 
     if not task_rows:
         return False
@@ -120,9 +119,7 @@ def _is_phase_complete(header_line: str, content: str) -> bool:
         return True
     if _task_rows_all_complete(content):
         return True
-    if _checkboxes_all_complete(content):
-        return True
-    return False
+    return bool(_checkboxes_all_complete(content))
 
 
 def parse_phases(text: str) -> list[dict]:

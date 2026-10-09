@@ -2,7 +2,8 @@ import functools
 import re
 import typing
 from dataclasses import dataclass
-from datetime import date, datetime, time as dt_time
+from datetime import date, datetime
+from datetime import time as dt_time
 from decimal import Decimal
 from ipaddress import IPv4Address, IPv6Address
 from types import UnionType

@@ -18,6 +18,7 @@ def main() -> None:
     result = subprocess.run(
         [sys.executable, "seed.py", "--count", "10"],
         capture_output=True,
+        check=False,
         text=True,
         timeout=120,
     )

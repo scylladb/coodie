@@ -12,10 +12,9 @@ from contextlib import asynccontextmanager
 from uuid import UUID
 
 from fastapi import FastAPI
+from models import Product, Review
 
 from coodie.aio import init_coodie
-
-from models import Product, Review
 
 
 @asynccontextmanager

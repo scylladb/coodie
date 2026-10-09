@@ -22,7 +22,7 @@ class LazyDriver(AbstractDriver):
     or :meth:`sync_table_async`.
     """
 
-    __slots__ = ("_hosts", "_keyspace", "_ssl_context", "_kwargs", "_driver", "_lock")
+    __slots__ = ("_driver", "_hosts", "_keyspace", "_kwargs", "_lock", "_ssl_context")
 
     def __init__(
         self,

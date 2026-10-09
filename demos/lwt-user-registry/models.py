@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Annotated, Optional
+from typing import Annotated
 from uuid import UUID, uuid4
 
 from pydantic import Field
@@ -43,7 +43,7 @@ class UserProfile(Document):
 
     user_id: Annotated[UUID, PrimaryKey()]
     username: str
-    bio: Optional[str] = None
+    bio: str | None = None
     status: str = "active"
     version: int = 1
     updated_at: datetime = Field(

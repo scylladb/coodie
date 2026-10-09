@@ -20,18 +20,17 @@ import logging
 import os
 import random
 import uuid
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import date
 from pathlib import Path
-from typing import AsyncIterator
 
 from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from models import PageViewCounter
 
 from coodie.aio import init_coodie
-
-from models import PageViewCounter
 
 logger = logging.getLogger("coodie.demos.counters")
 
@@ -88,7 +87,7 @@ class VirtualUser:
 
     async def run(self) -> None:
         """Loop: pick a random URL, increment or decrement, sleep."""
-        today = date.today().isoformat()
+        today = date.today().isoformat()  # noqa: DTZ011 - demo uses the server's local date
         while True:
             url = random.choice(URLS)
             counter = PageViewCounter(url=url, date=today)
@@ -305,7 +304,7 @@ async def _render_counter_list(request: Request) -> HTMLResponse:
         "partials/counter_list.html",
         context={
             "counters": counters_sorted,
-            "today": date.today().isoformat(),
+            "today": date.today().isoformat(),  # noqa: DTZ011 - demo uses the server's local date
             "total_views": total_views,
             "total_visitors": total_visitors,
         },

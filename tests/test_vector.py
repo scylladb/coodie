@@ -11,10 +11,10 @@ Covers:
 
 from __future__ import annotations
 
-import pytest
 from typing import Annotated
 from uuid import UUID, uuid4
 
+import pytest
 from pydantic import Field
 
 from coodie.cql_builder import _select_cql_cache, build_create_vector_index, build_select
@@ -22,9 +22,7 @@ from coodie.exceptions import InvalidQueryError
 from coodie.fields import ClusteringKey, Indexed, PrimaryKey, Static, Vector, VectorIndex
 from coodie.schema import ColumnDefinition, build_schema
 from coodie.types import python_type_to_cql_type_str
-
 from tests.conftest import _maybe_await
-
 
 # ------------------------------------------------------------------
 # Type mapping tests

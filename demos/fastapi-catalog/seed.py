@@ -18,6 +18,7 @@ from uuid import uuid4
 
 import click
 from faker import Faker
+from models import Product, Review
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import track
@@ -25,8 +26,6 @@ from rich.table import Table
 from rich.text import Text
 
 from coodie.aio import init_coodie
-
-from models import Product, Review
 
 fake = Faker()
 console = Console()
@@ -333,7 +332,7 @@ async def _seed(count: int, feed: str | None) -> None:
     table.add_column("Status", style="dim")
     table.add_row("Artifacts Cataloged", str(len(products)), "✓ Contained")
     table.add_row("Field Reports Filed", str(reviews_count), "✓ Encrypted")
-    table.add_row("Dimensions Scanned", str(len(set(p.brand for p in products))), "✓ Mapped")
+    table.add_row("Dimensions Scanned", str(len({p.brand for p in products})), "✓ Mapped")
     console.print(table)
     console.print()
     console.print("[bold cyan]⚡ MerchBot Prime's inventory has been cataloged. The Bazaar is under control.[/]")

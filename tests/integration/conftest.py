@@ -15,8 +15,9 @@ from __future__ import annotations
 import asyncio
 import decimal
 import ipaddress
-from datetime import date, datetime, time as dt_time, timezone
-from typing import Annotated, Dict, List, Optional, Set
+from datetime import date, datetime, timezone
+from datetime import time as dt_time
+from typing import Annotated
 from uuid import UUID, uuid4
 
 import pytest
@@ -47,9 +48,14 @@ from coodie.sync.document import CounterDocument as SyncCounterDocument
 from coodie.sync.document import Document as SyncDocument
 from coodie.sync.document import MaterializedView as SyncMaterializedView
 from tests.conftest import _maybe_await
-from tests.conftest_scylla import create_acsylla_session, create_cql_session, create_python_rs_session  # noqa: F401
-from tests.conftest_scylla import _test_network, scylla_container, vector_store_container  # noqa: F401
-
+from tests.conftest_scylla import (  # noqa: F401
+    _test_network,
+    create_acsylla_session,
+    create_cql_session,
+    create_python_rs_session,
+    scylla_container,
+    vector_store_container,
+)
 
 # ---------------------------------------------------------------------------
 # Session-scoped fixtures
@@ -162,8 +168,8 @@ class SyncProduct(SyncDocument):
     brand: Annotated[str, Indexed()] = "Unknown"
     category: Annotated[str, Indexed()] = "general"
     price: float = 0.0
-    tags: List[str] = Field(default_factory=list)
-    description: Optional[str] = None
+    tags: list[str] = Field(default_factory=list)
+    description: str | None = None
 
     @field_validator("tags", mode="before")
     @classmethod
@@ -181,8 +187,8 @@ class AsyncProduct(AsyncDocument):
     brand: Annotated[str, Indexed()] = "Unknown"
     category: Annotated[str, Indexed()] = "general"
     price: float = 0.0
-    tags: List[str] = Field(default_factory=list)
-    description: Optional[str] = None
+    tags: list[str] = Field(default_factory=list)
+    description: str | None = None
 
     @field_validator("tags", mode="before")
     @classmethod
@@ -259,10 +265,10 @@ class SyncAllTypes(SyncDocument):
     blob_val: bytes = b""
     ts: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     day: date = Field(default_factory=date.today)
-    ip4: Optional[ipaddress.IPv4Address] = None
-    ip6: Optional[ipaddress.IPv6Address] = None
-    tags_set: Set[str] = Field(default_factory=set)
-    scores_map: Dict[str, int] = Field(default_factory=dict)
+    ip4: ipaddress.IPv4Address | None = None
+    ip6: ipaddress.IPv6Address | None = None
+    tags_set: set[str] = Field(default_factory=set)
+    scores_map: dict[str, int] = Field(default_factory=dict)
 
     @field_validator("tags_set", mode="before")
     @classmethod
@@ -297,10 +303,10 @@ class AsyncAllTypes(AsyncDocument):
     blob_val: bytes = b""
     ts: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     day: date = Field(default_factory=date.today)
-    ip4: Optional[ipaddress.IPv4Address] = None
-    ip6: Optional[ipaddress.IPv6Address] = None
-    tags_set: Set[str] = Field(default_factory=set)
-    scores_map: Dict[str, int] = Field(default_factory=dict)
+    ip4: ipaddress.IPv4Address | None = None
+    ip6: ipaddress.IPv6Address | None = None
+    tags_set: set[str] = Field(default_factory=set)
+    scores_map: dict[str, int] = Field(default_factory=dict)
 
     @field_validator("tags_set", mode="before")
     @classmethod
@@ -391,11 +397,11 @@ class SyncExtendedTypes(SyncDocument):
     var_val: Annotated[int, VarInt()] = 0
     dbl_val: Annotated[float, Double()] = 0.0
     ascii_val: Annotated[str, Ascii()] = ""
-    timeuuid_val: Annotated[Optional[UUID], TimeUUID()] = None
-    time_val: Optional[dt_time] = None
-    frozen_list: Annotated[List[str], Frozen()] = Field(default_factory=list)
-    frozen_set: Annotated[Set[int], Frozen()] = Field(default_factory=set)
-    frozen_map: Annotated[Dict[str, int], Frozen()] = Field(default_factory=dict)
+    timeuuid_val: Annotated[UUID | None, TimeUUID()] = None
+    time_val: dt_time | None = None
+    frozen_list: Annotated[list[str], Frozen()] = Field(default_factory=list)
+    frozen_set: Annotated[set[int], Frozen()] = Field(default_factory=set)
+    frozen_map: Annotated[dict[str, int], Frozen()] = Field(default_factory=dict)
 
     @field_validator("frozen_list", mode="before")
     @classmethod
@@ -432,11 +438,11 @@ class AsyncExtendedTypes(AsyncDocument):
     var_val: Annotated[int, VarInt()] = 0
     dbl_val: Annotated[float, Double()] = 0.0
     ascii_val: Annotated[str, Ascii()] = ""
-    timeuuid_val: Annotated[Optional[UUID], TimeUUID()] = None
-    time_val: Optional[dt_time] = None
-    frozen_list: Annotated[List[str], Frozen()] = Field(default_factory=list)
-    frozen_set: Annotated[Set[int], Frozen()] = Field(default_factory=set)
-    frozen_map: Annotated[Dict[str, int], Frozen()] = Field(default_factory=dict)
+    timeuuid_val: Annotated[UUID | None, TimeUUID()] = None
+    time_val: dt_time | None = None
+    frozen_list: Annotated[list[str], Frozen()] = Field(default_factory=list)
+    frozen_set: Annotated[set[int], Frozen()] = Field(default_factory=set)
+    frozen_map: Annotated[dict[str, int], Frozen()] = Field(default_factory=dict)
 
     @field_validator("frozen_list", mode="before")
     @classmethod
@@ -724,9 +730,9 @@ class SyncContainerDoc(SyncDocument):
     """Document with list, set, and map columns for collection mutation tests."""
 
     id: Annotated[UUID, PrimaryKey()] = Field(default_factory=uuid4)
-    items: List[str] = Field(default_factory=list)
-    tags: Set[str] = Field(default_factory=set)
-    meta: Dict[str, str] = Field(default_factory=dict)
+    items: list[str] = Field(default_factory=list)
+    tags: set[str] = Field(default_factory=set)
+    meta: dict[str, str] = Field(default_factory=dict)
 
     @field_validator("items", mode="before")
     @classmethod
@@ -752,9 +758,9 @@ class AsyncContainerDoc(AsyncDocument):
     """Async counterpart of SyncContainerDoc."""
 
     id: Annotated[UUID, PrimaryKey()] = Field(default_factory=uuid4)
-    items: List[str] = Field(default_factory=list)
-    tags: Set[str] = Field(default_factory=set)
-    meta: Dict[str, str] = Field(default_factory=dict)
+    items: list[str] = Field(default_factory=list)
+    tags: set[str] = Field(default_factory=set)
+    meta: dict[str, str] = Field(default_factory=dict)
 
     @field_validator("items", mode="before")
     @classmethod
@@ -947,7 +953,7 @@ class SyncTTLItem(SyncDocument):
 
     id: Annotated[UUID, PrimaryKey()] = Field(default_factory=uuid4)
     name: str = ""
-    description: Optional[str] = None
+    description: str | None = None
 
     class Settings:
         name = "it_sync_ttl_items"
@@ -960,7 +966,7 @@ class AsyncTTLItem(AsyncDocument):
 
     id: Annotated[UUID, PrimaryKey()] = Field(default_factory=uuid4)
     name: str = ""
-    description: Optional[str] = None
+    description: str | None = None
 
     class Settings:
         name = "it_async_ttl_items"

@@ -55,14 +55,14 @@ class PythonRsDriver(AbstractDriver):
     needs_row_validation: bool = True
 
     __slots__ = (
-        "_session",
-        "_default_keyspace",
-        "_prepared",
         "_bg_loop",
         "_bg_thread",
         "_bridge_to_bg_loop",
-        "_last_paging_state",
+        "_default_keyspace",
         "_known_tables",
+        "_last_paging_state",
+        "_prepared",
+        "_session",
     )
 
     def __init__(
@@ -103,7 +103,7 @@ class PythonRsDriver(AbstractDriver):
         cls,
         session_factory: Callable[[], Awaitable[Any]],
         default_keyspace: str | None = None,
-    ) -> "PythonRsDriver":
+    ) -> PythonRsDriver:
         """Create a driver whose python-rs session lives on the background loop.
 
         ``session_factory`` is a zero-argument callable that returns an
@@ -145,7 +145,7 @@ class PythonRsDriver(AbstractDriver):
 
         session = asyncio.run_coroutine_threadsafe(session_factory(), bg_loop).result()
 
-        driver: "PythonRsDriver" = cls.__new__(cls)
+        driver: PythonRsDriver = cls.__new__(cls)
         driver._session = session
         driver._default_keyspace = default_keyspace
         driver._prepared = {}
@@ -357,10 +357,10 @@ class PythonRsDriver(AbstractDriver):
             return []  # table already synced this session with same columns
 
         from coodie.cql_builder import (
-            build_create_table,
-            build_create_index,
-            build_drop_index,
             build_alter_table_options,
+            build_create_index,
+            build_create_table,
+            build_drop_index,
         )
 
         planned: list[str] = []

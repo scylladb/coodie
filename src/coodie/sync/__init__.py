@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from coodie.sync.document import Document, CounterDocument, MaterializedView
-from coodie.sync.query import QuerySet
 from coodie.batch import BatchQuery
 from coodie.drivers import init_coodie
+from coodie.sync.document import CounterDocument, Document, MaterializedView
+from coodie.sync.query import QuerySet
 
 
 def execute_raw(stmt: str, params: list[Any] | None = None) -> list[dict[str, Any]]:
@@ -78,13 +78,13 @@ def drop_keyspace(
 
 
 __all__ = [
-    "Document",
+    "BatchQuery",
     "CounterDocument",
+    "Document",
     "MaterializedView",
     "QuerySet",
-    "BatchQuery",
-    "init_coodie",
-    "execute_raw",
     "create_keyspace",
     "drop_keyspace",
+    "execute_raw",
+    "init_coodie",
 ]

@@ -9,7 +9,7 @@ FastAPI app layer.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Annotated, Optional
+from typing import Annotated
 from uuid import UUID, uuid4
 
 from pydantic import Field
@@ -31,7 +31,7 @@ class Product(Document):
     manufacturer: str
     category: Annotated[str, Indexed()]
     price: float
-    description: Optional[str] = None
+    description: str | None = None
     tags: list[str] = Field(default_factory=list)
     featured: Annotated[bool, Indexed()] = False
     created_at: datetime = Field(
@@ -57,7 +57,7 @@ class Review(Document):
     id: UUID = Field(default_factory=uuid4)
     author: str
     rating: Annotated[int, Indexed()]
-    content: Optional[str] = None
+    content: str | None = None
 
     class Settings:
         name = "reviews"

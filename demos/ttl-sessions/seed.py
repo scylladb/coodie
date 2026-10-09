@@ -14,6 +14,7 @@ import os
 import random
 
 import click
+from models import Session
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import track
@@ -21,8 +22,6 @@ from rich.table import Table
 from rich.text import Text
 
 from coodie.aio import init_coodie
-
-from models import Session
 
 console = Console()
 
@@ -163,7 +162,7 @@ async def _seed(count: int, min_ttl: int, max_ttl: int) -> None:
     table.add_row("Memories Stolen", str(len(sessions)), "✓ Stored with TTL")
     table.add_row("TTL range (seconds)", f"{min_ttl}–{max_ttl}", "✓ Randomized per row")
     table.add_row("Default TTL (model)", "300s", "✓ Settings.__default_ttl__")
-    table.add_row("Victims", str(len(set(s.user_name for s in sessions))), "✓ Cataloged")
+    table.add_row("Victims", str(len({s.user_name for s in sessions})), "✓ Cataloged")
     console.print(table)
     console.print()
     console.print(f"[bold cyan]👻 {len(sessions)} memories harvested. They dissolve in {min_ttl}–{max_ttl} seconds.[/]")

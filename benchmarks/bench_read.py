@@ -6,7 +6,6 @@ from uuid import uuid4
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Seed data (module-level, populated once per session)
 # ---------------------------------------------------------------------------
@@ -17,7 +16,7 @@ _SEED_IDS: list = []
 
 def _seed_data(bench_env):
     """Insert seed rows for read benchmarks (idempotent)."""
-    global _SEEDED, _SEED_IDS
+    global _SEEDED
     if _SEEDED:
         return
     from benchmarks.models_coodie import CoodieProduct

@@ -9,6 +9,7 @@ Run with:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from typing import Annotated
 from uuid import UUID, uuid4
 
@@ -90,16 +91,14 @@ def sai_capable(scylla_vector_session):
                 "USING 'vector_index' "
                 "WITH OPTIONS = {'similarity_function': 'COSINE'}"
             )
-        except Exception:
+        except Exception:  # noqa: BLE001 - probe: any failure means SAI vector index is unsupported
             return False
         return True
-    except Exception:
+    except Exception:  # noqa: BLE001 - probe: any failure means vector support is unavailable
         return False
     finally:
-        try:
+        with contextlib.suppress(Exception):  # best-effort probe cleanup
             scylla_vector_session.execute("DROP TABLE IF EXISTS sai_probe")
-        except Exception:
-            pass
 
 
 @pytest.fixture(params=["sync", "async"])
@@ -160,7 +159,7 @@ class TestVectorIntegration:
             try:
                 results = await _maybe_await(VectorProduct.find().order_by_ann("embedding", query_vec).limit(3).all)
                 break
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 - retry on any indexing-lag error
                 last_err = exc
                 await asyncio.sleep(5)
         else:

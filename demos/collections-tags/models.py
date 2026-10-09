@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Annotated, Optional
+from typing import Annotated
 from uuid import UUID, uuid4
 
 from pydantic import Field
@@ -47,7 +47,7 @@ class FrozenTagSnapshot(Document):
 
     article_id: Annotated[UUID, PrimaryKey()]
     snapshot_at: Annotated[datetime, ClusteringKey()]
-    frozen_tags: Annotated[Optional[set[str]], Frozen()] = None
+    frozen_tags: Annotated[set[str] | None, Frozen()] = None
     note: str = ""
 
     class Settings:

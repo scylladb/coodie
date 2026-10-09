@@ -16,7 +16,6 @@ import uuid
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -242,9 +241,8 @@ def test_cqlengine_batch_events(benchmark, bench_env):
 
 def test_coodie_batch_events(benchmark, bench_env):
     """coodie: create 10 events in a BatchQuery."""
-    from coodie.batch import BatchQuery
-
     from benchmarks.models_argus_coodie import CoodieArgusEvent
+    from coodie.batch import BatchQuery
 
     release = _make_uuid()
     run = _make_uuid()

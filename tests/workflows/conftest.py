@@ -39,6 +39,7 @@ class BatsItem(pytest.Item):
         result = subprocess.run(
             ["bats", "--filter", re.escape(self.name), str(self.path)],
             capture_output=True,
+            check=False,
             text=True,
             timeout=30,
         )

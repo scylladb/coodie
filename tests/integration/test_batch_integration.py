@@ -177,10 +177,9 @@ class TestBatchWrites:
         if variant == "sync":
             from coodie.batch import BatchQuery
 
-            with pytest.raises(ValueError, match="intentional"):
-                with BatchQuery() as batch:
-                    batch.add(stmt, p)
-                    raise ValueError("intentional error")
+            with pytest.raises(ValueError, match="intentional"), BatchQuery() as batch:
+                batch.add(stmt, p)
+                raise ValueError("intentional error")
         else:
             from coodie.batch import AsyncBatchQuery
 

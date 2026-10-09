@@ -13,7 +13,7 @@ logger = logging.getLogger("coodie")
 class CassandraDriver(AbstractDriver):
     """Driver backed by cassandra-driver / scylla-driver."""
 
-    __slots__ = ("_session", "_default_keyspace", "_prepared", "_last_paging_state", "_known_tables")
+    __slots__ = ("_default_keyspace", "_known_tables", "_last_paging_state", "_prepared", "_session")
 
     def __init__(
         self,
@@ -110,11 +110,11 @@ class CassandraDriver(AbstractDriver):
             return []  # table already synced this session with same columns
 
         from coodie.cql_builder import (
-            build_create_table,
+            build_alter_table_options,
             build_create_index,
+            build_create_table,
             build_create_vector_index,
             build_drop_index,
-            build_alter_table_options,
         )
 
         planned: list[str] = []
@@ -179,7 +179,7 @@ class CassandraDriver(AbstractDriver):
                 if not dry_run:
                     try:
                         self._session.execute(vec_idx_cql)
-                    except Exception as _exc:
+                    except Exception as _exc:  # noqa: BLE001 - any failure is inspected for missing SAI support
                         self._warn_if_sai_unsupported(_exc)
 
         # 6. Drop removed indexes
@@ -419,11 +419,11 @@ class CassandraDriver(AbstractDriver):
             return []  # table already synced this session with same columns
 
         from coodie.cql_builder import (
-            build_create_table,
+            build_alter_table_options,
             build_create_index,
+            build_create_table,
             build_create_vector_index,
             build_drop_index,
-            build_alter_table_options,
         )
 
         planned: list[str] = []
@@ -488,7 +488,7 @@ class CassandraDriver(AbstractDriver):
                 if not dry_run:
                     try:
                         await self._execute_cql_async(vec_idx_cql)
-                    except Exception as _exc:
+                    except Exception as _exc:  # noqa: BLE001 - any failure is inspected for missing SAI support
                         self._warn_if_sai_unsupported(_exc)
 
         # 6. Drop removed indexes

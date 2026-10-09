@@ -15,6 +15,7 @@ from uuid import uuid4
 
 import click
 from faker import Faker
+from models import Article, FrozenTagSnapshot
 from rich.columns import Columns
 from rich.console import Console
 from rich.panel import Panel
@@ -23,8 +24,6 @@ from rich.table import Table
 from rich.text import Text
 
 from coodie.aio import init_coodie
-
-from models import Article, FrozenTagSnapshot
 
 fake = Faker()
 console = Console()

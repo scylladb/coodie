@@ -15,7 +15,6 @@ import pytest
 
 from benchmarks.models_raw_dc import RawEvent, RawProduct
 
-
 # ---------------------------------------------------------------------------
 # Helpers — lazily cached prepared statements
 # ---------------------------------------------------------------------------
@@ -151,7 +150,7 @@ _SEED_IDS: list = []
 
 def _seed_read_data(cql_session):
     """Insert seed rows for Raw+DC read benchmarks (idempotent)."""
-    global _SEEDED, _SEED_IDS
+    global _SEEDED
     if _SEEDED:
         return
     _ensure_prepared(cql_session)

@@ -19,20 +19,19 @@ import asyncio
 import base64
 import logging
 import os
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from typing import AsyncIterator
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from models import SensorReading
+from seed import _generate_reading
 
 from coodie.aio import init_coodie
 from coodie.results import PagedResult
-
-from models import SensorReading
-from seed import _generate_reading
 
 logger = logging.getLogger("coodie")
 
@@ -116,7 +115,7 @@ async def _ensure_sensors_loaded() -> list[str]:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Startup: connect to ScyllaDB, sync tables, and start background device."""
-    global _bg_task  # noqa: PLW0603
+    global _bg_task
 
     hosts = os.getenv("SCYLLA_HOSTS", "127.0.0.1").split(",")
     keyspace = os.getenv("SCYLLA_KEYSPACE", "iot")
@@ -179,8 +178,8 @@ async def get_latest_readings(
 @app.get("/readings/paged")
 async def get_paged_readings(
     sensor_id: str | None = Query(default=None),
-    bucket: date | None = Query(default=None),
-    start_date: date | None = Query(default=None),
+    bucket: date | None = Query(default=None),  # noqa: B008 - FastAPI dependency declaration
+    start_date: date | None = Query(default=None),  # noqa: B008 - FastAPI dependency declaration
     page_size: int = Query(default=10, ge=1, le=100),
     cursor: str | None = Query(default=None),
 ) -> dict:
@@ -203,7 +202,7 @@ async def get_paged_readings(
         if cursor:
             try:
                 offset = int(base64.urlsafe_b64decode(cursor.encode()).decode())
-            except Exception:
+            except ValueError:
                 raise HTTPException(status_code=400, detail="Invalid cursor")
 
         # Collect readings across all date partitions in the range
@@ -240,7 +239,7 @@ async def get_paged_readings(
     if cursor:
         try:
             paging_bytes = base64.urlsafe_b64decode(cursor.encode())
-        except Exception:
+        except ValueError:
             raise HTTPException(status_code=400, detail="Invalid cursor")
         qs = qs.page(paging_bytes)
 
@@ -369,7 +368,7 @@ async def ui_paged_readings(
     request: Request,
     page_size: int = Query(default=15, ge=1, le=50),
     cursor: str | None = Query(default=None),
-    start_date: date | None = Query(default=None),
+    start_date: date | None = Query(default=None),  # noqa: B008 - FastAPI dependency declaration
     sensor_id: str | None = Query(default=None),
 ) -> HTMLResponse:
     """Return a page of readings using paged_all() for HTMX infinite scroll.
@@ -389,7 +388,7 @@ async def ui_paged_readings(
     if cursor:
         try:
             paging_bytes = base64.urlsafe_b64decode(cursor.encode())
-        except Exception:
+        except ValueError:
             raise HTTPException(status_code=400, detail="Invalid cursor")
         qs = qs.page(paging_bytes)
 

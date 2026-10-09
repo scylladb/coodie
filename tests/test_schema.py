@@ -1,34 +1,34 @@
 from __future__ import annotations
 
 from datetime import time as dt_time
-from typing import Annotated, Optional
+from typing import Annotated
 from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
 
+from coodie.exceptions import InvalidQueryError
 from coodie.fields import (
     BigInt,
     ClusteringKey,
+    Counter,
     Duration,
     Frozen,
     Indexed,
     PrimaryKey,
     Static,
     TimeUUID,
-    Counter,
     Vector,
     VectorIndex,
 )
 from coodie.schema import ColumnDefinition, build_schema
 from coodie.types import CqlDuration
-from coodie.exceptions import InvalidQueryError
 
 
 class SimpleDoc(BaseModel):
     id: Annotated[UUID, PrimaryKey()]
     name: str
-    rating: Optional[int] = None
+    rating: int | None = None
 
     class Settings:
         name = "simple_docs"

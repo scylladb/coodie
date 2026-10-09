@@ -17,11 +17,10 @@ class Command(BaseCommand):
     help = "Create or update Cassandra tables for coodie models"
 
     def handle(self, *args: object, **options: object) -> None:
+        from cassandra_models import TaskCounter, TaskEvent
         from django.conf import settings
 
         from coodie.sync import init_coodie
-
-        from cassandra_models import TaskCounter, TaskEvent
 
         hosts = settings.SCYLLA_HOSTS
         keyspace = settings.SCYLLA_KEYSPACE

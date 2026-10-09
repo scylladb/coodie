@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Annotated, Optional
+from typing import Annotated
 from uuid import UUID, uuid4
 
 from pydantic import Field
@@ -23,7 +23,7 @@ class Post(Document):
     title: str
     author: Annotated[str, Indexed()]
     category: Annotated[str, Indexed()]
-    content: Optional[str] = None
+    content: str | None = None
     tags: list[str] = Field(default_factory=list)
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
@@ -46,7 +46,7 @@ class Comment(Document):
     )
     id: UUID = Field(default_factory=uuid4)
     author: str
-    content: Optional[str] = None
+    content: str | None = None
 
     class Settings:
         name = "comments"

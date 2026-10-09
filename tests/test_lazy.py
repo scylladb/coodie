@@ -26,7 +26,7 @@ def _make_doc_cls(base_cls):
 def _make_collection_doc_cls(base_cls):
     class CollDoc(base_cls):
         id: Annotated[UUID, PrimaryKey()] = Field(default_factory=uuid4)
-        tags: list[str] = []
+        tags: list[str] = Field(default_factory=list)
 
         class Settings:
             name = "coll_docs"

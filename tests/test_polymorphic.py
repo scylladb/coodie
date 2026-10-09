@@ -8,7 +8,6 @@ from coodie.fields import PrimaryKey
 from tests.conftest import _maybe_await
 from tests.models import make_pet_hierarchy, make_vehicle_hierarchy
 
-
 # ------------------------------------------------------------------
 # Fixtures
 # ------------------------------------------------------------------
@@ -291,7 +290,7 @@ def test_base_with_discriminator_value_filters(registered_mock_driver, Vehicle):
 async def test_base_with_discriminator_value_saves(registered_mock_driver, Vehicle):
     v = Vehicle(make="Ford")
     await _maybe_await(v.save)
-    stmt, params = registered_mock_driver.executed[0]
+    _stmt, params = registered_mock_driver.executed[0]
     assert "vehicle" in params
 
 

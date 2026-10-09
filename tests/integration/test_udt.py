@@ -7,7 +7,7 @@ Every test runs twice (sync and async) via the ``variant`` fixture.
 
 from __future__ import annotations
 
-from typing import Annotated, List, Optional
+from typing import Annotated
 from uuid import UUID, uuid4
 
 import pytest
@@ -52,7 +52,7 @@ class IContact(UserType):
     """Contact UDT that embeds IPhone — tests nested dependency resolution."""
 
     name: str = ""
-    phone: Optional[IPhone] = None
+    phone: IPhone | None = None
 
     class Settings:
         __type_name__ = "it_contact"
@@ -79,7 +79,7 @@ def _make_address_doc(base_cls):
 def _make_address_list_doc(base_cls):
     class AddressListDoc(base_cls):
         id: Annotated[UUID, PrimaryKey()] = __import__("pydantic").Field(default_factory=uuid4)
-        addresses: Annotated[List[Annotated[IAddress, Frozen()]], Frozen()] = __import__("pydantic").Field(
+        addresses: Annotated[list[Annotated[IAddress, Frozen()]], Frozen()] = __import__("pydantic").Field(
             default_factory=list
         )
 

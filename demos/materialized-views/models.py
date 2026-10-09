@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Annotated, Optional
+from typing import Annotated, ClassVar
 from uuid import UUID, uuid4
 
 from pydantic import Field
@@ -23,7 +23,7 @@ class Product(Document):
     category: Annotated[str, Indexed()]
     brand: Annotated[str, Indexed()]
     price: float
-    description: Optional[str] = None
+    description: str | None = None
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
     )
@@ -45,14 +45,14 @@ class ProductByCategory(MaterializedView):
     name: str
     brand: str
     price: float
-    description: Optional[str] = None
-    created_at: Optional[datetime] = None
+    description: str | None = None
+    created_at: datetime | None = None
 
     class Settings:
         name = "products_by_category"
         keyspace = "viewdemo"
         __base_table__ = "products"
-        __view_columns__ = ["*"]
+        __view_columns__: ClassVar[list[str]] = ["*"]
         __where_clause__ = '"category" IS NOT NULL AND "id" IS NOT NULL'
 
 
@@ -68,12 +68,12 @@ class ProductByBrand(MaterializedView):
     name: str
     category: str
     price: float
-    description: Optional[str] = None
-    created_at: Optional[datetime] = None
+    description: str | None = None
+    created_at: datetime | None = None
 
     class Settings:
         name = "products_by_brand"
         keyspace = "viewdemo"
         __base_table__ = "products"
-        __view_columns__ = ["*"]
+        __view_columns__: ClassVar[list[str]] = ["*"]
         __where_clause__ = '"brand" IS NOT NULL AND "id" IS NOT NULL'

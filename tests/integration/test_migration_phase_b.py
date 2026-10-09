@@ -9,6 +9,7 @@ Every test runs the async path via the ``coodie_driver`` session fixture.
 
 from __future__ import annotations
 
+import contextlib
 import textwrap
 
 import pytest
@@ -55,14 +56,10 @@ class TestMigrationPhaseBIntegration:
     @pytest.fixture(autouse=True)
     async def _cleanup_migration_tables(self, coodie_driver):
         """Drop migration tracking tables before each test."""
-        try:
+        with contextlib.suppress(Exception):  # best-effort cleanup
             await coodie_driver.execute_async('DROP TABLE IF EXISTS test_ks."_coodie_migrations"', [])
-        except Exception:
-            pass
-        try:
+        with contextlib.suppress(Exception):  # best-effort cleanup
             await coodie_driver.execute_async('DROP TABLE IF EXISTS test_ks."_coodie_migrations_lock"', [])
-        except Exception:
-            pass
 
     async def test_apply_creates_state_table_and_records_migration(self, coodie_driver, migrations_dir):
         """apply() should create the state table and record applied migrations."""

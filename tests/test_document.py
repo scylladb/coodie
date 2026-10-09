@@ -4,21 +4,20 @@ Every test is parametrised over ``variant`` ("sync" / "async") so that a
 single test body exercises both the synchronous and asynchronous code paths.
 """
 
-from typing import Annotated
+from typing import Annotated, Any, ClassVar
 from uuid import UUID, uuid4
 
 import pytest
 from pydantic import Field
 
-from coodie.fields import PrimaryKey, ClusteringKey
 from coodie.exceptions import (
     DocumentNotFound,
-    MultipleDocumentsFound,
     InvalidQueryError,
+    MultipleDocumentsFound,
 )
+from coodie.fields import ClusteringKey, PrimaryKey
 from tests.conftest import _maybe_await
-from tests.models import make_product, make_tagged_product, make_page_view, make_products_by_brand, make_sensor_reading
-
+from tests.models import make_page_view, make_product, make_products_by_brand, make_sensor_reading, make_tagged_product
 
 # ------------------------------------------------------------------
 # Fixtures
@@ -102,7 +101,7 @@ async def test_save(Product, registered_mock_driver):
     p = Product(name="Widget", price=9.99)
     await _maybe_await(p.save)
     assert len(registered_mock_driver.executed) == 1
-    stmt, params = registered_mock_driver.executed[0]
+    stmt, _params = registered_mock_driver.executed[0]
     assert "INSERT INTO test_ks.products" in stmt
 
 
@@ -524,7 +523,7 @@ async def test_delete_columns_generates_delete_cols_cql(Product, registered_mock
     with pytest.warns(UserWarning, match="delete_columns\\(\\)"):
         await _maybe_await(p.delete_columns, "description", "price")
     assert len(registered_mock_driver.executed) == 1
-    stmt, params = registered_mock_driver.executed[0]
+    stmt, _params = registered_mock_driver.executed[0]
     assert 'DELETE "description", "price" FROM test_ks.products' in stmt
     assert "WHERE" in stmt
 
@@ -752,7 +751,7 @@ async def test_options_in_sync_table(document_cls, registered_mock_driver):
         class Settings:
             name = "options_models"
             keyspace = "test_ks"
-            __options__ = {"gc_grace_seconds": 864000, "comment": "test table"}
+            __options__: ClassVar[dict[str, Any]] = {"gc_grace_seconds": 864000, "comment": "test table"}
 
     await _maybe_await(OptionsModel.sync_table)
     options = OptionsModel._get_table_options()
@@ -769,7 +768,7 @@ def test_default_ttl_merged_with_options(document_cls):
             name = "merged"
             keyspace = "test_ks"
             __default_ttl__ = 3600
-            __options__ = {"gc_grace_seconds": 1000}
+            __options__: ClassVar[dict[str, Any]] = {"gc_grace_seconds": 1000}
 
     options = MergedModel._get_table_options()
     assert options == {"default_time_to_live": 3600, "gc_grace_seconds": 1000}
@@ -943,7 +942,7 @@ async def test_materialized_view_custom_columns(mv_cls, registered_mock_driver):
             name = "columns_view"
             keyspace = "test_ks"
             __base_table__ = "products"
-            __view_columns__ = ["brand", "id", "name"]
+            __view_columns__: ClassVar[list[str]] = ["brand", "id", "name"]
 
     await _maybe_await(ColumnsView.sync_view)
     stmt, _ = registered_mock_driver.executed[0]

@@ -28,11 +28,14 @@ from uuid import uuid4
 
 import pytest
 
-from tests.conftest_scylla import create_acsylla_session, create_cql_session, create_python_rs_session  # noqa: F401
-from tests.conftest_scylla import _test_network  # noqa: F401
-from tests.conftest_scylla import scylla_container  # noqa: F401
-from tests.conftest_scylla import vector_store_container  # noqa: F401
-
+from tests.conftest_scylla import (  # noqa: F401
+    _test_network,
+    create_acsylla_session,
+    create_cql_session,
+    create_python_rs_session,
+    scylla_container,
+    vector_store_container,
+)
 
 # ---------------------------------------------------------------------------
 # CLI option
@@ -87,14 +90,14 @@ def cqlengine_connection(cql_session: Any):
     cql_conn.register_connection("bench", session=cql_session)
     cql_conn.set_default_connection("bench")
 
-    from benchmarks.models_cqlengine import CqlProduct, CqlReview, CqlEvent, CqlVectorProduct
     from benchmarks.models_argus_cqlengine import (
-        CqlArgusUser,
-        CqlArgusTestRun,
+        CqlArgusComment,
         CqlArgusEvent,
         CqlArgusNotification,
-        CqlArgusComment,
+        CqlArgusTestRun,
+        CqlArgusUser,
     )
+    from benchmarks.models_cqlengine import CqlEvent, CqlProduct, CqlReview, CqlVectorProduct
 
     sync_table(CqlProduct, keyspaces=["bench_ks"])
     sync_table(CqlReview, keyspaces=["bench_ks"])
@@ -135,7 +138,7 @@ def coodie_connection(cql_session: Any, scylla_container: Any, vector_store_cont
         _vec_session, _vec_cluster = create_cql_session(scylla_container, "bench_vector_ks")
         _vec_cluster.shutdown()
     except Exception as exc:  # noqa: BLE001
-        logging.warning("Could not create bench_vector_ks with tablets (%s)", exc)
+        logging.getLogger(__name__).warning("Could not create bench_vector_ks with tablets (%s)", exc)
 
     if driver_type == "acsylla":
         try:
@@ -164,14 +167,14 @@ def coodie_connection(cql_session: Any, scylla_container: Any, vector_store_cont
     else:
         driver = init_coodie(session=cql_session, keyspace="bench_ks", driver_type=driver_type)
 
-    from benchmarks.models_coodie import CoodieProduct, CoodieReview, CoodieEvent, CoodieVectorProduct
     from benchmarks.models_argus_coodie import (
-        CoodieArgusUser,
-        CoodieArgusTestRun,
+        CoodieArgusComment,
         CoodieArgusEvent,
         CoodieArgusNotification,
-        CoodieArgusComment,
+        CoodieArgusTestRun,
+        CoodieArgusUser,
     )
+    from benchmarks.models_coodie import CoodieEvent, CoodieProduct, CoodieReview, CoodieVectorProduct
 
     CoodieProduct.sync_table()
     CoodieReview.sync_table()
