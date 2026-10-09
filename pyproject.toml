@@ -30,7 +30,7 @@ acsylla = [
     "acsylla>=0.1.0",
 ]
 python-rs = [
-    "scylla>=0.1.0",
+    "scylladb-rs-driver>=0.1.0; python_version >= '3.11'",
 ]
 
 [project.scripts]
@@ -86,7 +86,7 @@ conflicts = [
 [tool.uv.sources]
 # python-rs-driver is not published on PyPI — uv builds it from source via Git.
 # Requires a Rust toolchain and maturin.
-scylla = { git = "https://github.com/scylladb-zpp-2025-python-rs-driver/python-rs-driver" }
+scylladb-rs-driver = { git = "https://github.com/scylladb-zpp-2025-python-rs-driver/python-rs-driver" }
 
 [tool.ruff]
 line-length = 120
