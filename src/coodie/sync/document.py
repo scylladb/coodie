@@ -228,8 +228,13 @@ class Document(BaseModel):
         consistency: str | None = None,
         timeout: float | None = None,
         batch: BatchQuery | None = None,
-    ) -> None:
-        """Insert IF NOT EXISTS (create-only)."""
+    ) -> LWTResult | None:
+        """Insert IF NOT EXISTS (create-only).
+
+        Returns a :class:`~coodie.results.LWTResult` whose ``applied`` is
+        ``False`` (with the existing row in ``existing``) when the row was
+        already present. Returns ``None`` when added to a *batch*.
+        """
         cls = self.__class__
         for vec_name, vec_dims in _vector_columns(cls):
             val = getattr(self, vec_name, None)
@@ -252,8 +257,9 @@ class Document(BaseModel):
         )
         if batch is not None:
             batch.add(cql, params)
-        else:
-            cls._get_driver().execute(cql, params, consistency=consistency, timeout=timeout)
+            return None
+        rows = cls._get_driver().execute(cql, params, consistency=consistency, timeout=timeout)
+        return _parse_lwt_result(rows)
 
     def delete_columns(
         self,
@@ -570,7 +576,7 @@ class MaterializedView(Document):
     def save(self, **kwargs: Any) -> None:  # type: ignore[override]
         raise InvalidQueryError("Materialized views are read-only. Use the base table to write data.")
 
-    def insert(self, **kwargs: Any) -> None:  # type: ignore[override]
+    def insert(self, **kwargs: Any) -> LWTResult | None:  # type: ignore[override]
         raise InvalidQueryError("Materialized views are read-only. Use the base table to write data.")
 
     def delete(self, **kwargs: Any) -> LWTResult | None:  # type: ignore[override]

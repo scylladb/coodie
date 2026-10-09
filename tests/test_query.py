@@ -180,10 +180,19 @@ async def test_update_with_ttl(Item, queryset_cls, registered_mock_driver):
 
 
 async def test_update_with_if_conditions(Item, queryset_cls, registered_mock_driver):
-    await _maybe_await(queryset_cls(Item).filter(name="old").update, if_conditions={"rating": 5}, name="new")
+    registered_mock_driver.set_return_rows([{"[applied]": True}])
+    result = await _maybe_await(queryset_cls(Item).filter(name="old").update, if_conditions={"rating": 5}, name="new")
     stmt, params = registered_mock_driver.executed[0]
     assert 'IF "rating" = ?' in stmt
     assert 5 in params
+    assert result.applied is True
+
+
+async def test_update_with_if_conditions_not_applied(Item, queryset_cls, registered_mock_driver):
+    registered_mock_driver.set_return_rows([{"[applied]": False, "rating": 3}])
+    result = await _maybe_await(queryset_cls(Item).filter(name="old").update, if_conditions={"rating": 5}, name="new")
+    assert result.applied is False
+    assert result.existing == {"rating": 3}
 
 
 async def test_update_collection_add(document_cls, queryset_cls, registered_mock_driver):

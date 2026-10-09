@@ -521,11 +521,14 @@ class QuerySet:
         ttl: int | None = None,
         if_conditions: dict[str, Any] | None = None,
         **kwargs: Any,
-    ) -> None:
-        """Bulk UPDATE matching rows. TTL may be provided as a parameter or via the ``ttl()`` chain modifier."""
+    ) -> LWTResult | None:
+        """Bulk UPDATE matching rows. TTL may be provided as a parameter or via the ``ttl()`` chain modifier.
+
+        Returns a :class:`~coodie.results.LWTResult` when *if_conditions* is given, else ``None``.
+        """
         set_data, collection_ops = parse_update_kwargs(kwargs)
         if not set_data and not collection_ops:
-            return
+            return None
         cql, params = build_update(
             self._table(),
             self._keyspace(),
@@ -535,7 +538,10 @@ class QuerySet:
             if_conditions=if_conditions,
             collection_ops=collection_ops or None,
         )
-        self._get_driver().execute(cql, params)
+        rows = self._get_driver().execute(cql, params)
+        if if_conditions:
+            return _parse_lwt_result(rows)
+        return None
 
     def __iter__(self) -> Iterator[Document]:
         return iter(self.all())

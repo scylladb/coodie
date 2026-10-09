@@ -3,7 +3,8 @@
 Covers: ``Document.update(if_conditions={...})`` edge-cases (multiple
 conditions, LWT result existing-value completeness),
 ``Document.delete(if_exists=True)``, ``QuerySet.if_not_exists().create()``,
-``QuerySet.if_exists().delete()``,
+``QuerySet.if_exists().delete()``, ``Document.insert()``,
+``QuerySet.update(if_conditions={...})``,
 ``Document.delete(if_conditions={...})`` conditional deletes,
 ``QuerySet.delete(if_conditions={...})``,
 extended IF operators (``!=``, ``IN``, ``>``, ``<``),
@@ -103,6 +104,27 @@ class TestConditionalUpdateEdgeCases:
         await _maybe_await(Product(id=pid, name="").delete)
 
 
+class TestConditionalInsert:
+    """Integration tests for Document.insert() (INSERT ... IF NOT EXISTS)."""
+
+    async def test_insert_applied_then_not_applied(self, coodie_driver, Product) -> None:
+        """insert() returns applied=True first, then applied=False with the existing row."""
+        await _maybe_await(Product.sync_table)
+        pid = uuid4()
+
+        result = await _maybe_await(Product(id=pid, name="First").insert)
+        assert isinstance(result, LWTResult)
+        assert result.applied is True
+
+        result = await _maybe_await(Product(id=pid, name="Second").insert)
+        assert isinstance(result, LWTResult)
+        assert result.applied is False
+        assert result.existing is not None
+        assert result.existing.get("name") == "First"
+
+        await _maybe_await(Product(id=pid, name="").delete)
+
+
 class TestConditionalDelete:
     """Integration tests for Document.delete(if_exists=True)."""
 
@@ -187,6 +209,27 @@ class TestQuerySetConditionalCreate:
         fetched = await _maybe_await(Product.get, id=pid)
         assert fetched.name == "Existing"
         assert fetched.price == 10.0
+
+        await _maybe_await(Product(id=pid, name="").delete)
+
+
+class TestQuerySetConditionalUpdate:
+    """Integration tests for QuerySet.update(if_conditions={...})."""
+
+    async def test_queryset_update_if_conditions(self, coodie_driver, Product) -> None:
+        """update(if_conditions=...) returns applied=True on match, applied=False with the current row otherwise."""
+        await _maybe_await(Product.sync_table)
+        pid = uuid4()
+        await _maybe_await(Product(id=pid, name="Before").save)
+
+        result = await _maybe_await(Product.find(id=pid).update, if_conditions={"name": "Before"}, name="After")
+        assert isinstance(result, LWTResult)
+        assert result.applied is True
+
+        result = await _maybe_await(Product.find(id=pid).update, if_conditions={"name": "Before"}, name="Again")
+        assert isinstance(result, LWTResult)
+        assert result.applied is False
+        assert result.existing == {"name": "After"}
 
         await _maybe_await(Product(id=pid, name="").delete)
 
