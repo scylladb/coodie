@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
 from coodie.cql_builder import build_batch
+from coodie.results import LWTResult
 
 
 class BatchQuery:
@@ -21,9 +22,12 @@ class BatchQuery:
         with BatchQuery() as batch:
             Product(name="A").save(batch=batch)
             Product(name="B").save(batch=batch)
+
+    For conditional batches (``IF NOT EXISTS`` / ``IF ...``) the outcome is
+    returned by :meth:`execute` and also kept on ``batch.result``.
     """
 
-    __slots__ = ("_batch_type", "_logged", "_statements", "_timestamp")
+    __slots__ = ("_batch_type", "_logged", "_statements", "_timestamp", "result")
 
     def __init__(
         self,
@@ -35,6 +39,7 @@ class BatchQuery:
         self._batch_type = batch_type
         self._timestamp = timestamp
         self._statements: list[tuple[str, list[Any]]] = []
+        self.result: LWTResult | None = None
 
     def add(self, stmt: str, params: list[Any]) -> None:
         """Add a CQL statement to the batch."""
@@ -42,6 +47,7 @@ class BatchQuery:
 
     def __enter__(self) -> Self:
         self._statements.clear()
+        self.result = None
         return self
 
     def __exit__(
@@ -53,11 +59,18 @@ class BatchQuery:
         if exc_type is None and self._statements:
             self.execute()
 
-    def execute(self) -> None:
-        """Execute the accumulated batch immediately."""
+    def execute(self) -> LWTResult | None:
+        """Execute the accumulated batch immediately.
+
+        Returns an :class:`~coodie.results.LWTResult` when the batch contains
+        conditional statements, else ``None``.  When a multi-statement
+        conditional batch is not applied, the server returns one row per
+        statement; only the first row is reported in ``existing``.
+        """
         if not self._statements:
-            return
+            return None
         from coodie.drivers import get_driver
+        from coodie.sync.document import _parse_lwt_result
 
         cql, params = build_batch(
             self._statements,
@@ -65,8 +78,10 @@ class BatchQuery:
             batch_type=self._batch_type,
             timestamp=self._timestamp,
         )
-        get_driver().execute(cql, params)
+        rows = get_driver().execute(cql, params)
         self._statements.clear()
+        self.result = _parse_lwt_result(rows) if rows and "[applied]" in rows[0] else None
+        return self.result
 
 
 class AsyncBatchQuery:
@@ -81,6 +96,9 @@ class AsyncBatchQuery:
         async with AsyncBatchQuery() as batch:
             await Product(name="A").save(batch=batch)
             await Product(name="B").save(batch=batch)
+
+    For conditional batches (``IF NOT EXISTS`` / ``IF ...``) the outcome is
+    returned by :meth:`execute` and also kept on ``batch.result``.
     """
 
     def __init__(
@@ -93,6 +111,7 @@ class AsyncBatchQuery:
         self._batch_type = batch_type
         self._timestamp = timestamp
         self._statements: list[tuple[str, list[Any]]] = []
+        self.result: LWTResult | None = None
 
     def add(self, stmt: str, params: list[Any]) -> None:
         """Add a CQL statement to the batch."""
@@ -100,6 +119,7 @@ class AsyncBatchQuery:
 
     async def __aenter__(self) -> Self:
         self._statements.clear()
+        self.result = None
         return self
 
     async def __aexit__(
@@ -111,11 +131,18 @@ class AsyncBatchQuery:
         if exc_type is None and self._statements:
             await self.execute()
 
-    async def execute(self) -> None:
-        """Execute the accumulated batch immediately."""
+    async def execute(self) -> LWTResult | None:
+        """Execute the accumulated batch immediately.
+
+        Returns an :class:`~coodie.results.LWTResult` when the batch contains
+        conditional statements, else ``None``.  When a multi-statement
+        conditional batch is not applied, the server returns one row per
+        statement; only the first row is reported in ``existing``.
+        """
         if not self._statements:
-            return
+            return None
         from coodie.drivers import get_driver
+        from coodie.sync.document import _parse_lwt_result
 
         cql, params = build_batch(
             self._statements,
@@ -123,5 +150,7 @@ class AsyncBatchQuery:
             batch_type=self._batch_type,
             timestamp=self._timestamp,
         )
-        await get_driver().execute_async(cql, params)
+        rows = await get_driver().execute_async(cql, params)
         self._statements.clear()
+        self.result = _parse_lwt_result(rows) if rows and "[applied]" in rows[0] else None
+        return self.result

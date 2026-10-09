@@ -206,3 +206,31 @@ class TestBatchWrites:
             async with AsyncBatchQuery() as _batch:
                 pass  # no statements added
             # Should complete without error — nothing to verify beyond no exception
+
+    async def test_conditional_batch_reports_lwt_result(self, coodie_driver, Product, variant) -> None:
+        """A conditional batch exposes [applied] via execute() and batch.result."""
+        from coodie.batch import AsyncBatchQuery, BatchQuery
+        from coodie.results import LWTResult
+
+        await _maybe_await(Product.sync_table)
+        rid = uuid4()
+
+        batch = BatchQuery() if variant == "sync" else AsyncBatchQuery()
+        await _maybe_await(Product(id=rid, name="First").insert, batch=batch)
+        result = await _maybe_await(batch.execute)
+        assert result == LWTResult(applied=True)
+        assert batch.result is result
+
+        if variant == "sync":
+            with BatchQuery() as batch:
+                Product(id=rid, name="Second").insert(batch=batch)
+        else:
+            async with AsyncBatchQuery() as batch:
+                await Product(id=rid, name="Second").insert(batch=batch)
+
+        assert isinstance(batch.result, LWTResult)
+        assert batch.result.applied is False
+        assert batch.result.existing is not None
+        assert batch.result.existing["name"] == "First"
+
+        await _maybe_await(Product(id=rid, name="").delete)
