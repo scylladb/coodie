@@ -398,6 +398,11 @@ class TestRenderMigration:
         assert "TODO" in src
         assert "does not exist" in src
 
+    def test_table_not_exists_drop_hint_quotes_name(self):
+        diff = SchemaDiff(keyspace="ks", table="select", table_exists=False)
+        src = render_migration(diff, "create table")
+        assert 'DROP TABLE IF EXISTS ks."select"' in src
+
     def test_generated_file_is_importable(self, tmp_path):
         """The rendered source should be valid Python that defines ForwardMigration."""
         import importlib.util
