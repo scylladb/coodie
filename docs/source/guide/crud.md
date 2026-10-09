@@ -230,6 +230,16 @@ Task.find(status="cancelled").delete()           # sync
 await Task.find(status="cancelled").delete()      # async
 ```
 
+### `truncate()` — Remove All Rows
+
+Issue `TRUNCATE TABLE` to empty the table while keeping its schema. Handy
+for test fixtures and data resets:
+
+```python
+Task.truncate()           # sync
+await Task.truncate()     # async
+```
+
 ## Counter Operations
 
 `CounterDocument` instances use `increment()` and `decrement()` instead of
