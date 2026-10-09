@@ -383,30 +383,29 @@ Key differences:
 
 See the {doc}`/guide/user-defined-types` guide for full details.
 
-(cqlengine-features-not-yet-in-coodie)=
-## cqlengine Features Not Yet in coodie
+(cqlengine-features-different-syntax)=
+## cqlengine Features with a Different Syntax
 
-The following cqlengine features are **not available** in coodie today.
-If your application relies on any of them, you will need a workaround
-(often raw CQL via the driver) or wait for a future coodie release.
+These cqlengine features exist in coodie, but are spelled differently.
 
-| cqlengine Feature | Notes |
+| cqlengine Feature | coodie |
 |---|---|
-| **Static columns** — `columns.Text(static=True)` | Not implemented. Use a separate table or denormalise the static data. |
-| **`Model.create()` class method** | Use `MyModel(**kwargs).save()` instead. |
-| **`__like` filter operator** (SASI / SAI indexes) | No LIKE queries. SASI/SAI pattern matching (`col LIKE 'prefix%'`) is not supported; filter at the application level or use a full-text search engine. |
-| **Token-range queries** — `__token` filter, cursor-based `paging_state` | No token-aware paging. Use `limit()` and application-level cursors. |
-| **Per-model `__connection__`** — routing different models to different clusters | coodie has a single global driver registry. Use separate `init_coodie()` calls with explicit driver names if needed. |
-| **`create_keyspace_network_topology()`** | Only simple keyspace creation via `build_create_keyspace()` in `cql_builder`. Use raw CQL for NetworkTopology. |
-| **Counter columns on regular models** | Counter columns require inheriting from `CounterDocument` (which provides `increment()`/`decrement()`). You cannot mix counter and non-counter columns in a single model, matching the CQL restriction. |
+| **Static columns** — `columns.Text(static=True)` | `Annotated[str, Static()]` |
+| **`Model.create()` class method** | `Model.create(**kwargs)` (or `Model(**kwargs).save()`) |
+| **`__like` filter operator** (SASI / SAI indexes) | `Model.find(name__like="prefix%")` |
+| **Token-range queries** — `__token` filter | `Model.find(id__token__gt=token)` |
+| **Cursor-based `paging_state`** | `Model.find().fetch_size(n).page(state).paged_all()` returns `PagedResult(data, paging_state)` |
+| **Per-model `__connection__`** | `class Settings: connection = "name"` with `init_coodie(name="name", ...)` |
+| **`create_keyspace_network_topology()`** | `create_keyspace("ks", strategy="NetworkTopologyStrategy", dc_replication_map={"dc1": 3})` |
+| **Counter columns** | Inherit from `CounterDocument` and use `increment()`/`decrement()`. You cannot mix counter and non-counter columns in a single model, matching the CQL restriction. |
 
 ## Common Gotchas
 
 1. **No `Model.objects` attribute.** cqlengine uses `Model.objects.filter(...)`.
    In coodie, use `Model.find(...)` directly on the class.
 
-2. **No `Model.create()` class method.** Instead, instantiate the model and
-   call `.save()`: `Product(id=uuid4(), name="Widget").save()`.
+2. **`Model.create()` still works.** `Product.create(id=uuid4(), name="Widget")`
+   is equivalent to `Product(id=uuid4(), name="Widget").save()`.
 
 3. **`__table_name__` moves to `Settings`.** Don't put table metadata as class
    attributes. Use the inner `Settings` class:
@@ -439,12 +438,11 @@ Use this checklist when converting a cqlengine application to coodie:
 - [ ] **Convert `__table_name__` / `__keyspace__`:** Move to inner `Settings` class
 - [ ] **Convert connection setup:** `connection.setup()` → `init_coodie()`
 - [ ] **Convert table sync:** `sync_table(Model)` → `Model.sync_table()`
-- [ ] **Convert creates:** `Model.create(...)` → `Model(...).save()`
 - [ ] **Convert queries:** `Model.objects.filter(...)` → `Model.find(...)`
 - [ ] **Convert `objects.get()`:** `Model.objects.get(...)` → `Model.get(...)`
 - [ ] **Convert batch operations:** `BatchQuery()` context manager → coodie `BatchQuery()` with `.save(batch=batch)`
 - [ ] **Handle async:** If migrating to async, add `await` before all Document and QuerySet terminal methods
-- [ ] **Check for unsupported features:** Review the [feature gaps](#cqlengine-features-not-yet-in-coodie) table — if you use static columns, plan workarounds
+- [ ] **Check syntax differences:** Review the [different syntax](#cqlengine-features-different-syntax) table for static columns, counters, token queries and per-model connections
 - [ ] **Migrate UDTs:** Convert `UserType` + `columns.*` to `UserType` + type annotations; replace `sync_type()` with `Address.sync_type()` (see above)
 - [ ] **Test thoroughly:** Run your existing test suite against coodie to verify parity
 
