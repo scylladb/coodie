@@ -24,8 +24,7 @@ def _load_workflow(path: Path) -> dict:
 def _iter_steps(workflow: dict):
     """Yield every step dict from every job in the workflow."""
     for job in workflow.get("jobs", {}).values():
-        for step in job.get("steps", []):
-            yield step
+        yield from job.get("steps", [])
 
 
 # ---------------------------------------------------------------------------
@@ -142,20 +141,3 @@ def test_schedule_cron_valid(workflow_path: Path):
     for entry in schedules:
         cron = entry.get("cron", "")
         assert _CRON_RE.match(cron), f"{workflow_path.name}: invalid cron expression {cron!r}"
-
-
-# ---------------------------------------------------------------------------
-# 3.7 — Slash-command workflows have per-PR concurrency groups
-# ---------------------------------------------------------------------------
-
-_SLASH_COMMAND_WORKFLOWS = [p for p in WORKFLOW_FILES if p.name in ("pr-conflict-detect.yml",)]
-
-
-@pytest.mark.parametrize("workflow_path", _SLASH_COMMAND_WORKFLOWS, ids=[p.name for p in _SLASH_COMMAND_WORKFLOWS])
-def test_slash_command_concurrency(workflow_path: Path):
-    """Slash-command and conflict-detection workflows must define a concurrency group
-    to prevent overlapping operations on the same PR, even if they have a single job."""
-    workflow = _load_workflow(workflow_path)
-    assert "concurrency" in workflow, (
-        f"{workflow_path.name}: slash-command workflow missing top-level concurrency group"
-    )

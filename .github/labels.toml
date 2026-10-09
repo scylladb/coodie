@@ -87,8 +87,3 @@ description = "Automatically closes as answered after a delay"
 color = "5f7972"
 name = "waiting"
 description = "Automatically closes if no answer after a delay"
-
-[conflict]
-color = "e11d48"
-name = "conflict"
-description = "PR has merge conflicts with the base branch"
