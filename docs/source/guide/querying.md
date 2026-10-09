@@ -224,6 +224,43 @@ Control pagination:
 qs = BugReport.find(project="coodie").fetch_size(100)
 ```
 
+### `distinct()`
+
+Emit `SELECT DISTINCT`. CQL only allows partition key (and static)
+columns here, so pair it with `only()`:
+
+```python
+projects = BugReport.find().only("project").distinct().values_list("project").all()
+# [("coodie",), ("scylla",)]
+```
+
+### `group_by(*columns)`
+
+Append a `GROUP BY` clause. CQL restricts grouping to the primary key
+columns, in order (partition key first, then clustering columns). Without
+aggregates, each group returns its first row:
+
+```python
+latest_per_project = BugReport.find(project__in=["coodie", "scylla"]).group_by("project").all()
+```
+
+### `cast(column, cql_type)`
+
+Add `CAST("column" AS type)` to the selected columns. The cast value is
+not a model field, so read it from the raw row via `all(lazy=True)`:
+
+```python
+rows = BugReport.find(project="coodie").only("project").cast("created_at", "date").all(lazy=True)
+rows[0]._raw_data["cast(created_at as date)"]
+```
+
+### `is_not_null(column)` / `filter(col__isnull=False)`
+
+Render a `"col" IS NOT NULL` restriction. ScyllaDB and Cassandra only accept
+it in materialized view definitions — a plain `SELECT` is rejected by the
+server. `is_null()` / `col__isnull=True` render `IS NULL`, which is not valid
+CQL.
+
 ## Terminal Methods
 
 Terminal methods execute the query. In async mode, `await` the call.
@@ -291,6 +328,22 @@ Return the number of matching rows:
 total = BugReport.find(project="coodie").count()           # sync
 total = await BugReport.find(project="coodie").count()      # async
 ```
+
+### `sum()` / `avg()` / `min()` / `max()` / `aggregate()`
+
+Run a CQL aggregate over the matching rows and return the scalar result:
+
+```python
+qs = BugReport.find(project="coodie")
+qs.min("created_at")                                     # sync
+await qs.max("created_at")                               # async
+
+# Several aggregates at once, each as "func(column)"
+qs.aggregate(first="min(created_at)", last="max(created_at)")
+# {"first": datetime(...), "last": datetime(...)}
+```
+
+`sum()` and `avg()` work on numeric columns. Each aggregate is its own query.
 
 ### `create(**kwargs)`
 
