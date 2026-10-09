@@ -14,24 +14,33 @@ from coodie.drivers import (
     init_coodie,
     init_coodie_async,
 )
+from coodie.drivers.python_rs import _dict_row_factory as _real_dict_row_factory
 from coodie.exceptions import ConfigurationError
 
 # ------------------------------------------------------------------
 # Helpers
 # ------------------------------------------------------------------
 
+_ROW_FACTORY = object()
+
+
+@pytest.fixture(autouse=True)
+def _stub_dict_row_factory():
+    """Avoid importing ``scylla.results``: unit CI runs without python-rs installed."""
+    with patch("coodie.drivers.python_rs._dict_row_factory", return_value=_ROW_FACTORY):
+        yield
+
 
 def _mock_scylla_modules() -> dict[str, MagicMock]:
     """Return a dict suitable for ``patch.dict("sys.modules", ...)``.
 
     Mocks the ``scylla`` package and its sub-modules so that
-    ``import scylla`` and ``from scylla.session import SessionBuilder``
+    ``import scylla`` and ``from scylla import SessionBuilder``
     succeed without the real package installed.
     """
     scylla_mod = MagicMock()
     return {
         "scylla": scylla_mod,
-        "scylla.session": scylla_mod.session,
     }
 
 
@@ -129,6 +138,7 @@ async def test_python_rs_driver_execute_async(python_rs_driver, mock_scylla_sess
     rows = await python_rs_driver.execute_async("SELECT * FROM test_ks.t", ["p1"])
     assert rows == [{"id": "1", "name": "Alice"}]
     mock_scylla_session.prepare.assert_awaited_once_with("SELECT * FROM test_ks.t")
+    assert mock_scylla_session.execute.await_args.kwargs == {"factory": _ROW_FACTORY}
 
 
 async def test_python_rs_driver_execute_async_ddl_bypasses_prepare(python_rs_driver, mock_scylla_session):
@@ -140,7 +150,9 @@ async def test_python_rs_driver_execute_async_ddl_bypasses_prepare(python_rs_dri
     await python_rs_driver.execute_async("CREATE TABLE test_ks.t (id uuid PRIMARY KEY)", [])
     # prepare should NOT have been called for DDL
     mock_scylla_session.prepare.assert_not_awaited()
-    mock_scylla_session.execute.assert_awaited_once_with("CREATE TABLE test_ks.t (id uuid PRIMARY KEY)", None)
+    mock_scylla_session.execute.assert_awaited_once_with(
+        "CREATE TABLE test_ks.t (id uuid PRIMARY KEY)", None, factory=_ROW_FACTORY
+    )
 
 
 async def test_python_rs_driver_execute_async_ddl_case_insensitive(python_rs_driver, mock_scylla_session):
@@ -209,7 +221,7 @@ async def test_python_rs_driver_execute_async_applies_consistency_and_timeout(py
 
     prepared.with_consistency.assert_called_once_with(scylla_mod.enums.Consistency.LocalQuorum)
     with_cl.with_request_timeout.assert_called_once_with(2.5)
-    mock_scylla_session.execute.assert_awaited_once_with(with_timeout, ["p1"])
+    mock_scylla_session.execute.assert_awaited_once_with(with_timeout, ["p1"], factory=_ROW_FACTORY)
     # cached prepared statement stays unmodified
     assert python_rs_driver._prepared["SELECT * FROM test_ks.t"] is prepared
 
@@ -221,7 +233,7 @@ async def test_python_rs_driver_execute_async_without_options_uses_cached_prepar
     await python_rs_driver.execute_async("SELECT * FROM test_ks.t", [])
     prepared.with_consistency.assert_not_called()
     prepared.with_request_timeout.assert_not_called()
-    mock_scylla_session.execute.assert_awaited_once_with(prepared, None)
+    mock_scylla_session.execute.assert_awaited_once_with(prepared, None, factory=_ROW_FACTORY)
 
 
 async def test_python_rs_driver_execute_async_ddl_applies_timeout(python_rs_driver, mock_scylla_session):
@@ -239,7 +251,7 @@ async def test_python_rs_driver_execute_async_ddl_applies_timeout(python_rs_driv
     statement_cls.assert_called_once_with("DROP TABLE test_ks.t")
     statement_cls.return_value.with_request_timeout.assert_called_once_with(10.0)
     mock_scylla_session.execute.assert_awaited_once_with(
-        statement_cls.return_value.with_request_timeout.return_value, None
+        statement_cls.return_value.with_request_timeout.return_value, None, factory=_ROW_FACTORY
     )
 
 
@@ -285,6 +297,19 @@ def test_python_rs_driver_rows_to_dicts_new_api():
         assert PythonRsDriver._rows_to_dicts(NewRequestResult()) == [{"id": "1"}, {"id": "2"}]
 
 
+def test_dict_row_factory_is_cached_driver_dict_factory():
+    """The autouse stub hides the real helper; exercise it against a mocked ``scylla.results``."""
+    scylla_results = MagicMock()
+    _real_dict_row_factory.cache_clear()
+    try:
+        with patch.dict("sys.modules", {"scylla": MagicMock(), "scylla.results": scylla_results}):
+            assert _real_dict_row_factory() is scylla_results.DictRowFactory.return_value
+            assert _real_dict_row_factory() is _real_dict_row_factory()
+    finally:
+        _real_dict_row_factory.cache_clear()
+    scylla_results.DictRowFactory.assert_called_once_with()
+
+
 def test_python_rs_driver_rows_to_dicts_tuple_rows():
     """scylladb-rs-driver >= 0.2.0 yields tuples; zip them with column names."""
     with patch.dict("sys.modules", _mock_scylla_modules()):
@@ -302,6 +327,19 @@ def test_python_rs_driver_rows_to_dicts_tuple_rows():
             {"id": "1", "name": "a"},
             {"id": "2", "name": "b"},
         ]
+
+
+def test_python_rs_driver_rows_to_dicts_first_page_api():
+    """Redesigned python-rs-driver results expose a ``first_page`` property."""
+    with patch.dict("sys.modules", _mock_scylla_modules()):
+        from coodie.drivers.python_rs import PythonRsDriver
+
+        class RedesignedRequestResult:
+            @property
+            def first_page(self):
+                return iter([{"id": "1"}])
+
+        assert PythonRsDriver._rows_to_dicts(RedesignedRequestResult()) == [{"id": "1"}]
 
 
 # ------------------------------------------------------------------
@@ -344,7 +382,7 @@ async def test_python_rs_driver_sync_table_async(python_rs_driver, mock_scylla_s
 
     call_count = 0
 
-    async def fake_execute(stmt, params):
+    async def fake_execute(stmt, params, **kwargs):
         nonlocal call_count
         call_count += 1
         # Call 1: CREATE TABLE (DDL via _execute_cql_async)
@@ -378,7 +416,7 @@ async def test_python_rs_driver_sync_table_async_cache_skips_second_call(python_
 
     call_count = 0
 
-    async def fake_execute(stmt, params):
+    async def fake_execute(stmt, params, **kwargs):
         nonlocal call_count
         call_count += 1
         if call_count == 1:
@@ -410,7 +448,7 @@ async def test_python_rs_driver_sync_table_async_skips_alter_on_new_table(python
 
     call_count = 0
 
-    async def fake_execute(stmt, params):
+    async def fake_execute(stmt, params, **kwargs):
         nonlocal call_count
         call_count += 1
         if call_count == 1:
@@ -463,13 +501,12 @@ async def test_init_coodie_async_python_rs_with_hosts():
     mock_scylla = MagicMock()
     mock_builder = MagicMock()
     mock_session = MagicMock()
-    mock_scylla.session.SessionBuilder = MagicMock(return_value=mock_builder)
+    mock_scylla.SessionBuilder = MagicMock(return_value=mock_builder)
     mock_builder.contact_points.return_value = mock_builder
     mock_builder.connect = AsyncMock(return_value=mock_session)
 
     modules = {
         "scylla": mock_scylla,
-        "scylla.session": mock_scylla.session,
     }
     with patch.dict("sys.modules", modules):
         driver = await init_coodie_async(
@@ -479,7 +516,7 @@ async def test_init_coodie_async_python_rs_with_hosts():
         )
     assert get_driver() is driver
     # connect() creates session on background loop via session_factory
-    mock_scylla.session.SessionBuilder.assert_called_once()
+    mock_scylla.SessionBuilder.assert_called_once()
     mock_builder.contact_points.assert_called_once_with(("127.0.0.1",))
     mock_builder.connect.assert_awaited_once()
     assert driver._bridge_to_bg_loop is True
@@ -576,19 +613,18 @@ def test_init_coodie_python_rs_with_hosts():
     mock_scylla = MagicMock()
     mock_builder = MagicMock()
     mock_session = MagicMock()
-    mock_scylla.session.SessionBuilder = MagicMock(return_value=mock_builder)
+    mock_scylla.SessionBuilder = MagicMock(return_value=mock_builder)
     mock_builder.contact_points.return_value = mock_builder
     mock_builder.connect = AsyncMock(return_value=mock_session)
 
     modules = {
         "scylla": mock_scylla,
-        "scylla.session": mock_scylla.session,
     }
     with patch.dict("sys.modules", modules):
         driver = init_coodie(hosts=["127.0.0.1"], keyspace="ks", driver_type="python-rs")
     assert get_driver() is driver
     assert driver._bridge_to_bg_loop is True
-    mock_scylla.session.SessionBuilder.assert_called_once()
+    mock_scylla.SessionBuilder.assert_called_once()
     mock_builder.contact_points.assert_called_once_with(("127.0.0.1",))
     mock_builder.connect.assert_awaited_once()
     _registry.clear()

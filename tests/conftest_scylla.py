@@ -242,7 +242,7 @@ async def create_python_rs_session(scylla_container: Any, keyspace: str) -> Any:
     then returns a new session.  Uses the container's internal IP since
     python-rs-driver does not need an address translator.
     """
-    from scylla.session import SessionBuilder  # type: ignore[import-untyped]
+    from scylla import SessionBuilder  # type: ignore[import-untyped]
 
     container_info = scylla_container.get_wrapped_container()
     container_info.reload()
