@@ -1542,3 +1542,23 @@ def test_cassandra_driver_logs_warning_on_missing_dict_factory(mock_cassandra_se
     with patch.dict("sys.modules", {"cassandra.query": None}), caplog.at_level(logging.WARNING, logger="coodie"):
         CassandraDriver(session=mock_cassandra_session, default_keyspace="ks")
     assert "dict_factory" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("table", "stored", "ref"),
+    [("MyTable", "mytable", "MyTable"), ('"MyTable"', "MyTable", '"MyTable"'), ("order", "order", '"order"')],
+)
+def test_cassandra_driver_sync_table_identifier_case(cassandra_driver, mock_cassandra_session, table, stored, ref):
+    """Schema lookups use the name as stored in system_schema; CQL quotes it when needed (#298)."""
+    from coodie.schema import ColumnDefinition
+
+    cols = [
+        ColumnDefinition(name="id", cql_type="uuid", primary_key=True),
+        ColumnDefinition(name="name", cql_type="text"),
+    ]
+    SysRow = namedtuple("SysRow", ["column_name"])
+    mock_cassandra_session.execute.side_effect = [None, [SysRow(column_name="id")], None]
+    cassandra_driver.sync_table(table, "test_ks", cols)
+    calls = mock_cassandra_session.execute.call_args_list
+    assert calls[1].args[1] == ("test_ks", stored)
+    assert calls[2].args[0] == f'ALTER TABLE test_ks.{ref} ADD "name" text'

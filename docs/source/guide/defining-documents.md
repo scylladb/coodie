@@ -59,6 +59,11 @@ class Product(Document):
         keyspace = "ecommerce"     # Keyspace (overrides the driver default)
 ```
 
+Table, keyspace and UDT names follow CQL rules: unquoted names are
+case-insensitive (`"MyTable"` is the table `mytable`), and reserved words such
+as `"order"` are quoted for you. To make a name case-sensitive, include the
+double quotes: `name = '"MyTable"'`.
+
 If you omit `Settings.name`, coodie uses the snake-cased class name:
 `BlogPost` → `blog_post`, `HTTPRequest` → `http_request`.
 

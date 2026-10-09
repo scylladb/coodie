@@ -9,6 +9,8 @@ from collections.abc import AsyncIterator
 from pathlib import Path
 from typing import Any
 
+from coodie.cql_builder import qualified_name, schema_name
+
 logger = logging.getLogger("coodie")
 
 # Cassandra/ScyllaDB murmur3 token range
@@ -57,7 +59,7 @@ class MigrationContext:
         """
         return await self._driver.execute_async(
             "SELECT column_name, kind, position, clustering_order FROM system_schema.columns WHERE keyspace_name = ? AND table_name = ?",
-            [keyspace, table],
+            [schema_name(keyspace), schema_name(table)],
         )
 
     async def _get_key_columns(self, keyspace: str, table: str) -> tuple[list[str], list[dict[str, Any]]]:
@@ -89,9 +91,9 @@ class MigrationContext:
             return False
         rows = await self._driver.execute_async(
             "SELECT index_name FROM system_schema.indexes WHERE keyspace_name = ? AND table_name = ?",
-            [keyspace, table],
+            [schema_name(keyspace), schema_name(table)],
         )
-        return any(r.get("index_name") == index_name for r in rows)
+        return any(r.get("index_name") == schema_name(index_name) for r in rows)
 
     async def scan_table(
         self,
@@ -149,13 +151,15 @@ class MigrationContext:
         pk_list = ", ".join(f'"{c}"' for c in pk_cols)
         token_expr = f"token({pk_list})"
         pk_token = f"token({', '.join('?' * len(pk_cols))})"
-        select = f"SELECT * FROM {keyspace}.{table} WHERE "
+        select = f"SELECT * FROM {qualified_name(keyspace, table)} WHERE "
         limit = f" LIMIT {page_size}"
         first_cql = f"{select}{token_expr} > ? AND {token_expr} <= ?{limit}"
         # Next partitions: strictly after the last seen partition's token.
         next_cql = f"{select}{token_expr} > {pk_token} AND {token_expr} <= ?{limit}"
         # Other partitions sharing that token (murmur3 collision), so they are not skipped.
-        same_token_cql = f"SELECT DISTINCT {pk_list} FROM {keyspace}.{table} WHERE {token_expr} = {pk_token}"
+        same_token_cql = (
+            f"SELECT DISTINCT {pk_list} FROM {qualified_name(keyspace, table)} WHERE {token_expr} = {pk_token}"
+        )
         # One partition, in storage order: after_cql[k] fixes the first k
         # clustering columns and slices on column k in its clustering order.
         pk_eq = " AND ".join(f'"{c}" = ?' for c in pk_cols)
