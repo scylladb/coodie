@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791555821199,
+  "lastUpdate": 1791555857440,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -18483,6 +18483,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000011263961895464593",
             "extra": "mean: 5.857105667074741 usec\nrounds: 7164"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "132905835055a70c6d7c22bf0a203c76c852e53d",
+          "message": "fix(types): support PEP 604 X | None annotations\n\nOn Python 3.10-3.13, `int | None` has origin `types.UnionType`, not\n`typing.Union`, so union unwrapping only recognised `Optional[X]`.\nFields annotated `X | None` (as the field-types guide recommends) raised\nInvalidQueryError during schema build, `list[X] | None` skipped\nNone-to-empty collection coercion, and UDTs inside `X | None` were not\ndiscovered for sync. Python 3.14 merged the two, which hid the bug there.\n\nAdd a shared `_UNION_ORIGINS = (Union, UnionType)` in coodie.types and use\nit at all three union checks.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-09T17:23:24+03:00",
+          "tree_id": "dc12ef257b524c74ac26eb21ffdfbc41f00ee141",
+          "url": "https://github.com/scylladb/coodie/commit/132905835055a70c6d7c22bf0a203c76c852e53d"
+        },
+        "date": 1791555855349,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 81638.29482898943,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000016759546724082633",
+            "extra": "mean: 12.249153440731886 usec\nrounds: 9678"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1543297.6683892037,
+            "unit": "iter/sec",
+            "range": "stddev: 2.915990345283189e-7",
+            "extra": "mean: 647.9631379497492 nsec\nrounds: 120395"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 132026.29307797528,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000026340939451883357",
+            "extra": "mean: 7.574248861243086 usec\nrounds: 19979"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 548889.1648007595,
+            "unit": "iter/sec",
+            "range": "stddev: 8.714942503740453e-7",
+            "extra": "mean: 1.8218614323767686 usec\nrounds: 59913"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 522944.31479777495,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022658294314048357",
+            "extra": "mean: 1.9122494913950918 usec\nrounds: 34406"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 788863.4940674654,
+            "unit": "iter/sec",
+            "range": "stddev: 3.913319176772904e-7",
+            "extra": "mean: 1.2676464401260248 usec\nrounds: 137476"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 800438.4688652474,
+            "unit": "iter/sec",
+            "range": "stddev: 4.050373347294346e-7",
+            "extra": "mean: 1.2493152676902992 usec\nrounds: 57697"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 690608.6210286627,
+            "unit": "iter/sec",
+            "range": "stddev: 4.346340167339795e-7",
+            "extra": "mean: 1.4479981418571033 usec\nrounds: 86648"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 165456.57039596426,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000010369704358642855",
+            "extra": "mean: 6.043882074956823 usec\nrounds: 7403"
           }
         ]
       }
