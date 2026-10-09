@@ -91,6 +91,10 @@ scylla = { git = "https://github.com/scylladb-zpp-2025-python-rs-driver/python-r
 [tool.ruff]
 line-length = 120
 
+[tool.ruff.lint]
+# ruff 0.16 expanded the default rule set; keep the pre-0.16 defaults
+select = ["E4", "E7", "E9", "F"]
+
 [tool.semantic_release]
 tag_format = "v{version}"
 
