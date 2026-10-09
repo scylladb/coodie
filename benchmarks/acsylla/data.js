@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791555802273,
+  "lastUpdate": 1791555821199,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -18396,6 +18396,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.628576931340177e-7",
             "extra": "mean: 3.123875109601716 usec\nrounds: 10257"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "1fab660a613b504ff46e000f1fa2a39dff0326a9",
+          "message": "chore: drop leftover rebase-squash references\n\nThe PR rebase/squash workflow was removed; clean up the last mentions in\nthe plan-phase-continuation doc and the fetch-depth convention test.\n\nSupersedes #247.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-09T17:22:54+03:00",
+          "tree_id": "deecea1a855891cde3468ae22887bacccf37873c",
+          "url": "https://github.com/scylladb/coodie/commit/1fab660a613b504ff46e000f1fa2a39dff0326a9"
+        },
+        "date": 1791555820120,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 83655.24487024648,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001481914019872225",
+            "extra": "mean: 11.95382311714048 usec\nrounds: 9560"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1530688.2875876466,
+            "unit": "iter/sec",
+            "range": "stddev: 3.4727114383921105e-7",
+            "extra": "mean: 653.3008765461925 nsec\nrounds: 170329"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 131926.86147927857,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003538560373212401",
+            "extra": "mean: 7.579957476340537 usec\nrounds: 19401"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 579935.4022612952,
+            "unit": "iter/sec",
+            "range": "stddev: 4.477941213540425e-7",
+            "extra": "mean: 1.7243299789955586 usec\nrounds: 48594"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 584671.6863697676,
+            "unit": "iter/sec",
+            "range": "stddev: 4.296565348242519e-7",
+            "extra": "mean: 1.710361598333947 usec\nrounds: 31358"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 799853.4047450294,
+            "unit": "iter/sec",
+            "range": "stddev: 4.5254956837712324e-7",
+            "extra": "mean: 1.2502290970665701 usec\nrounds: 122459"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 818055.1492404433,
+            "unit": "iter/sec",
+            "range": "stddev: 4.535812565812055e-7",
+            "extra": "mean: 1.2224114730265934 usec\nrounds: 69363"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 694152.7757041351,
+            "unit": "iter/sec",
+            "range": "stddev: 4.5568960158501237e-7",
+            "extra": "mean: 1.4406050584262513 usec\nrounds: 82359"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 170732.79138899973,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011263961895464593",
+            "extra": "mean: 5.857105667074741 usec\nrounds: 7164"
           }
         ]
       }
