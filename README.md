@@ -292,6 +292,7 @@ results = await ProductEmbedding.find().order_by_ann("embedding", query_vector).
 | 📖 **Full Documentation** | [scylladb.github.io/coodie](https://scylladb.github.io/coodie/) |
 | 🚀 **Quick Start Guide** | [Installation & Quickstart](https://scylladb.github.io/coodie/quickstart.html) |
 | 📊 **Benchmark History** | [Performance Trends](https://scylladb.github.io/coodie/benchmarks/) |
+| 🎮 **Demo Apps** | [demos/](demos/README.md) — FastAPI, Flask, Django & CLI examples |
 | 🔄 **Migrating from cqlengine** | [Migration Guide](https://scylladb.github.io/coodie/migration/from-cqlengine.html) |
 | 🤝 **Contributing** | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | 📋 **Changelog** | [CHANGELOG.md](CHANGELOG.md) |

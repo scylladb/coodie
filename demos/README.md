@@ -15,6 +15,8 @@ make run
 This single command starts ScyllaDB (via Docker Compose), creates the keyspace,
 seeds sample data, and launches the app.
 
+(`batch-importer` is a CLI demo with no app to launch — use `make seed` instead.)
+
 ## Prerequisites
 
 * Python ≥ 3.10
@@ -31,6 +33,12 @@ seeds sample data, and launches the app.
 | 🔮 Materialized Views | FastAPI + HTMX | `MaterializedView`, `sync_view()`, read-only queries, auto-updating views | [`materialized-views/`](materialized-views/) |
 | 📊 Realtime Counters | FastAPI + HTMX | `CounterDocument`, `increment()`, `decrement()`, live analytics dashboard | [`realtime-counters/`](realtime-counters/) |
 | 🔧 Schema Migrations | FastAPI | `coodie migrate` CLI, apply/rollback/dry-run, `_coodie_migrations` state tracking, migration file authoring | [`schema-migrations/`](schema-migrations/) |
+| 👻 TTL Sessions | FastAPI + HTMX | `__default_ttl__`, per-record `save(ttl=...)`, rows expiring with no cleanup job | [`ttl-sessions/`](ttl-sessions/) |
+| 🛡️ LWT User Registry | FastAPI + HTMX | LWT: `INSERT IF NOT EXISTS`, `delete(if_exists=True)`, optimistic locking via `if_conditions` | [`lwt-user-registry/`](lwt-user-registry/) |
+| 📦 Batch Importer | CLI (Rich) | `BatchQuery`, logged vs unlogged batches, CSV bulk import | [`batch-importer/`](batch-importer/) |
+| 📚 Collections & Tags | FastAPI + HTMX | CQL collections, `add__` / `remove__` / `append__` / `prepend__` mutations, tag cloud | [`collections-tags/`](collections-tags/) |
+| 📡 Time-Series IoT | FastAPI + HTMX | Composite partition key, `DESC` clustering, `per_partition_limit()`, `paged_all()`, live charts | [`timeseries-iot/`](timeseries-iot/) |
+| 📡 Vector Search | FastAPI + HTMX | `Vector(dimensions=384)` columns, async semantic similarity search | [`vector-search/`](vector-search/) |
 
 ## Shared Infrastructure
 

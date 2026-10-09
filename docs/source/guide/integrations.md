@@ -118,7 +118,7 @@ uvicorn app:app --reload
 ### Full Demo
 
 A complete FastAPI + HTMX demo lives in the repository under
-[`demo/`](https://github.com/scylladb/coodie/tree/master/demo).
+[`demos/fastapi-catalog/`](https://github.com/scylladb/coodie/tree/master/demos/fastapi-catalog).
 
 ---
 
