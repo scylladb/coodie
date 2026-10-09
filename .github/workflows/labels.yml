@@ -6,17 +6,60 @@ on:
       - master
     paths:
       - ".github/**"
+  schedule:
+    - cron: "0 6 * * 1"  # weekly, to catch labels created by hand in the UI
+  workflow_dispatch:
 
 jobs:
   labels:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
-      - name: Set up Python
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
-        with:
-          python-version: 3.14
-      - name: Install labels
-        run: pip install labels
-      - name: Sync config with Github
-        run: labels -u ${{ github.repository_owner }} -t ${{ secrets.GITHUB_TOKEN }} sync -f .github/labels.toml
+      - name: Create or update labels from .github/labels.toml
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+        # Creates/updates only; labels missing from the file are never deleted.
+        # Instead they're listed in a single tracking issue (assignee + watchers get emailed),
+        # which is closed automatically once the file and the repo agree.
+        run: |
+          python3 - <<'EOF'
+          import json, os, subprocess, tomllib
+
+          def gh(*args):
+              return subprocess.run(["gh", *args], check=True, capture_output=True, text=True).stdout
+
+          with open(".github/labels.toml", "rb") as f:
+              wanted = tomllib.load(f).values()
+          for label in wanted:
+              gh("label", "create", label["name"], "--force",
+                 "--color", label["color"], "--description", label.get("description", ""))
+
+          names = {label["name"] for label in wanted}
+          stale = sorted(l["name"] for l in json.loads(gh("label", "list", "--limit", "500", "--json", "name"))
+                         if l["name"] not in names)
+
+          title = "Labels missing from .github/labels.toml"
+          issues = json.loads(gh("issue", "list", "--state", "open", "--search", f'in:title "{title}"',
+                                 "--json", "number,title"))
+          issue = next((i["number"] for i in issues if i["title"] == title), None)
+
+          if not stale:
+              if issue:
+                  gh("issue", "close", str(issue), "--comment", "labels.toml and the repo labels match now.")
+              raise SystemExit(0)
+
+          body = ("These labels exist in the repo but not in `.github/labels.toml`. "
+                  "Either delete them (`gh label delete <name>`) or add them to the file:\n\n"
+                  + "\n".join(f"- `{n}`" for n in stale))
+          print(f"::warning::Labels not in labels.toml: {', '.join(stale)}")
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+              f.write(body + "\n")
+          if issue:
+              gh("issue", "edit", str(issue), "--body", body)
+          else:
+              gh("issue", "create", "--title", title, "--body", body, "--assignee", os.environ["ACTOR"])
+          EOF

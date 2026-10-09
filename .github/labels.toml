@@ -87,3 +87,38 @@ description = "Automatically closes as answered after a delay"
 color = "5f7972"
 name = "waiting"
 description = "Automatically closes if no answer after a delay"
+
+[P1]
+color = "D52F3C"
+name = "P1"
+description = "High priority / critical severity"
+
+[P2]
+color = "FBCA04"
+name = "P2"
+description = "Medium priority / severity"
+
+[P3]
+color = "1D76DB"
+name = "P3"
+description = "Low priority / severity"
+
+[plans]
+color = "89E6A1"
+name = "plans"
+description = ""
+
+[demo]
+color = "C2EC33"
+name = "demo"
+description = ""
+
+[testing]
+color = "82FB52"
+name = "testing"
+description = ""
+
+[benchmark]
+color = "1533A2"
+name = "benchmark"
+description = ""
