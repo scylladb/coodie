@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791557529240,
+  "lastUpdate": 1791557587905,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -19440,6 +19440,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 9.117078574589433e-7",
             "extra": "mean: 5.934691172309653 usec\nrounds: 7318"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "124086bcd68589a35b8cf681a7b6aad8959a786b",
+          "message": "fix(ci): sync labels with gh and report labels missing from labels.toml\n\nThe `labels` pip tool is unmaintained and crashes on today's GitHub label\nAPI (`archived_at`), and its `sync` deletes every label not in the file.\n\nCreate/update labels from .github/labels.toml with `gh label create\n--force` instead, which never deletes. Repo labels that aren't in the file\nare listed in one tracking issue assigned to the triggering user, so the\nassignee and watchers get an email; the issue closes itself once the\nfile and the repo agree. A weekly schedule catches labels created by\nhand in the UI. Also declare the existing P1-P3, plans, demo, testing\nand benchmark labels, and give the job explicit permissions.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-09T17:52:00+03:00",
+          "tree_id": "89db107e37ec6971fc4bd3ff346ff5effce17017",
+          "url": "https://github.com/scylladb/coodie/commit/124086bcd68589a35b8cf681a7b6aad8959a786b"
+        },
+        "date": 1791557585547,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 100959.88888961193,
+            "unit": "iter/sec",
+            "range": "stddev: 7.65703157793718e-7",
+            "extra": "mean: 9.90492373751902 usec\nrounds: 9546"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 2170047.664622245,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6628909038142814e-7",
+            "extra": "mean: 460.8193710685506 nsec\nrounds: 168096"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 185546.68093855333,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000026421045666852854",
+            "extra": "mean: 5.389479321007987 usec\nrounds: 22269"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 692799.7107061094,
+            "unit": "iter/sec",
+            "range": "stddev: 4.1436609988330195e-7",
+            "extra": "mean: 1.4434186165880303 usec\nrounds: 56799"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 699119.6473044772,
+            "unit": "iter/sec",
+            "range": "stddev: 2.989872162889752e-7",
+            "extra": "mean: 1.4303703291068932 usec\nrounds: 23309"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 925841.1145904365,
+            "unit": "iter/sec",
+            "range": "stddev: 3.0662310032826603e-7",
+            "extra": "mean: 1.0800989330036064 usec\nrounds: 121183"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 1083224.5809774634,
+            "unit": "iter/sec",
+            "range": "stddev: 2.684711806022319e-7",
+            "extra": "mean: 923.1695971094338 nsec\nrounds: 73368"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 777792.1534633462,
+            "unit": "iter/sec",
+            "range": "stddev: 4.0508911259783823e-7",
+            "extra": "mean: 1.2856905222651176 usec\nrounds: 77466"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 222356.81027550338,
+            "unit": "iter/sec",
+            "range": "stddev: 6.649108987970265e-7",
+            "extra": "mean: 4.4972762415551175 usec\nrounds: 8898"
           }
         ]
       }
