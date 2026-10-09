@@ -199,6 +199,9 @@ class TestTypeSystemUDT:
     def test_optional_usertype(self):
         assert python_type_to_cql_type_str(Optional[Address]) == "frozen<address>"
 
+    def test_pep604_optional_usertype(self):
+        assert python_type_to_cql_type_str(Address | None) == "frozen<address>"
+
 
 # ---- Phase 4: Schema integration tests ----
 
@@ -292,6 +295,18 @@ class TestUDTDependencies:
 
         udts = extract_udt_classes(_ListDoc)
         assert Address in udts
+
+    def test_extract_udt_classes_pep604_optional(self):
+        from pydantic import BaseModel
+
+        class _OptDoc(BaseModel):
+            id: Annotated[UUID, PrimaryKey()]
+            addr: Address | None = None
+            phones: list[PhoneNumber] | None = None
+
+        udts = extract_udt_classes(_OptDoc)
+        assert Address in udts
+        assert PhoneNumber in udts
 
 
 # ---- sync_type tests with mock driver ----
