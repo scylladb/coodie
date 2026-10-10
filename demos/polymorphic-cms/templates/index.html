@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Story lore panel -->
+<div class="lore-panel">
+  <div class="lore-title">🎭 Mission Briefing — Dimension-11</div>
+  In Dimension-11, SCYLLA-9's fragment became <em>Morph-IX</em>, an AI that can take
+  the form of any content type. It publishes articles that turn into videos mid-sentence,
+  podcasts that become blog posts when you pause them, and memes that evolve into
+  peer-reviewed papers. All content is stored in a <strong>single table</strong> with a
+  <strong>discriminator column</strong> — because Morph-IX believes all content is one.
+  The <em>Coodie Corps</em> must classify and contain each form before the archive
+  collapses into a singularity of undifferentiated content.
+</div>
+
+<div class="grid">
+  <!-- LEFT: create form + content list -->
+  <div>
+    <div class="card" style="margin-bottom:1.25rem;">
+      <h2>🎭 Create Content</h2>
+      <form hx-post="/ui/content" hx-target="#content-list" hx-swap="innerHTML"
+            hx-on::after-request="if(event.detail.successful) this.reset()">
+        <label for="content_type">Content Type</label>
+        <select id="content_type" name="content_type" required onchange="showTypeFields(this.value)">
+          <option value="article">📰 Article</option>
+          <option value="video">🎬 Video</option>
+          <option value="podcast">🎙️ Podcast</option>
+        </select>
+
+        <label for="title">Title</label>
+        <input id="title" name="title" required placeholder="The Quantum Semantics of Distributed Consensus">
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+          <div><label for="author">Author</label><input id="author" name="author" required placeholder="Morph-IX"></div>
+          <div><label for="summary">Summary</label><input id="summary" name="summary" placeholder="Content that defies classification."></div>
+        </div>
+
+        <!-- Article-specific fields -->
+        <div id="fields-article" class="type-fields active">
+          <label for="body">Body Text</label>
+          <textarea id="body" name="body" placeholder="The full article text…"></textarea>
+          <label for="word_count">Word Count</label>
+          <input id="word_count" name="word_count" type="number" value="0" min="0">
+        </div>
+
+        <!-- Video-specific fields -->
+        <div id="fields-video" class="type-fields">
+          <label for="video_url">Video URL</label>
+          <input id="video_url" name="video_url" placeholder="https://dim-11.stream/v/abc123">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+            <div><label for="duration_seconds">Duration (seconds)</label><input id="duration_seconds" name="duration_seconds" type="number" value="0" min="0"></div>
+            <div><label for="resolution">Resolution</label>
+              <select id="resolution" name="resolution">
+                <option value="480p">480p</option>
+                <option value="720p">720p</option>
+                <option value="1080p" selected>1080p</option>
+                <option value="1440p">1440p</option>
+                <option value="4K">4K</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Podcast-specific fields -->
+        <div id="fields-podcast" class="type-fields">
+          <label for="audio_url">Audio URL</label>
+          <input id="audio_url" name="audio_url" placeholder="https://morph-ix.audio/ep/001">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+            <div><label for="pod_duration">Duration (seconds)</label><input id="pod_duration" name="duration_seconds" type="number" value="0" min="0"></div>
+            <div><label for="episode_number">Episode Number</label><input id="episode_number" name="episode_number" type="number" value="0" min="0"></div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" type="submit">🎭 Publish Content</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>📚 Content Archive</h2>
+      <!-- Type filter buttons -->
+      <div class="type-switcher">
+        <button class="type-btn active" data-type="all"
+                hx-get="/ui/content" hx-target="#content-list" hx-swap="innerHTML">🔮 All</button>
+        <button class="type-btn" data-type="article"
+                hx-get="/ui/content?content_type=article" hx-target="#content-list" hx-swap="innerHTML">📰 Articles</button>
+        <button class="type-btn" data-type="video"
+                hx-get="/ui/content?content_type=video" hx-target="#content-list" hx-swap="innerHTML">🎬 Videos</button>
+        <button class="type-btn" data-type="podcast"
+                hx-get="/ui/content?content_type=podcast" hx-target="#content-list" hx-swap="innerHTML">🎙️ Podcasts</button>
+      </div>
+      <div id="content-list" hx-get="/ui/content" hx-trigger="load" hx-swap="innerHTML">
+        <div class="empty">Scanning polymorphic frequencies…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: content detail -->
+  <div id="detail-panel">
+    <div class="card">
+      <div class="empty">Select a content item to view its full form — if it holds still long enough</div>
+    </div>
+  </div>
+</div>
+{% endblock %}
