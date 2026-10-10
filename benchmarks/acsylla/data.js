@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791663156877,
+  "lastUpdate": 1791670136489,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -20484,6 +20484,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 8.386451888288061e-7",
             "extra": "mean: 5.885283049587266 usec\nrounds: 7398"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "47d59aeda8faf24be2ee4079318a313ca53295bf",
+          "message": "feat(usertype): alter existing UDTs and auto-sync them from sync_table\n\nsync_type() only issued CREATE TYPE IF NOT EXISTS, so fields added to a\nUserType never reached the database, and Document.sync_table() never synced\nthe UDTs a table references.\n\n- sync_type()/sync_type_async() now read the existing fields from\n  system_schema.types (via the driver's regular execute API, no new driver\n  methods) and issue ALTER TYPE ... ADD for new fields. Removed fields and\n  type changes are only logged, matching sync_table() column handling.\n  CREATE TYPE runs only when the type is missing, so re-syncing an\n  up-to-date type costs one read and no DDL.\n  A dry_run flag returns the plan without executing DDL.\n- Dependencies are synced once each, in topological order, instead of\n  recursively re-syncing shared nested UDTs.\n- Document.sync_table() (sync and aio) syncs every referenced UDT in the\n  table's keyspace via extract_udt_classes() before the table itself.\n- Single UDT name derivation (H10): UserType.type_name() delegates to\n  types._udt_type_name(), so HTTPAddress is http_address both in CREATE\n  TYPE and in column types (previously frozen<httpaddress>). Required here,\n  since auto-sync would otherwise create a type the table never references.\n  Types created by sync_type() keep their names; only the column type name\n  changes, and the old one only worked if the type was created by hand\n  (the UDT guide shows the __type_name__ override for that case).\n\nPlan: docs/plans/udt-support.md\nPhase: 4\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-11T01:08:00+03:00",
+          "tree_id": "b85f8e4c83fd121333e13b0540d1b51690d539f0",
+          "url": "https://github.com/scylladb/coodie/commit/47d59aeda8faf24be2ee4079318a313ca53295bf"
+        },
+        "date": 1791670134296,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 86865.87907982983,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002117988173491354",
+            "extra": "mean: 12.289577243645214 usec\nrounds: 10318"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1721170.3692301393,
+            "unit": "iter/sec",
+            "range": "stddev: 2.738930240373476e-7",
+            "extra": "mean: 640.5079069551425 nsec\nrounds: 153093"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 148544.26612987634,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000030691061012270616",
+            "extra": "mean: 7.6142820639014 usec\nrounds: 20350"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 639795.2663857815,
+            "unit": "iter/sec",
+            "range": "stddev: 4.806773703038387e-7",
+            "extra": "mean: 1.7217203541939716 usec\nrounds: 55792"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 648088.141575553,
+            "unit": "iter/sec",
+            "range": "stddev: 4.812156015966498e-7",
+            "extra": "mean: 1.6910045579671924 usec\nrounds: 32032"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 868055.558689504,
+            "unit": "iter/sec",
+            "range": "stddev: 3.9356310790967144e-7",
+            "extra": "mean: 1.2606358832274775 usec\nrounds: 140985"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 933706.8162366512,
+            "unit": "iter/sec",
+            "range": "stddev: 4.236713898849663e-7",
+            "extra": "mean: 1.186348693415936 usec\nrounds: 74544"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 761614.6238685364,
+            "unit": "iter/sec",
+            "range": "stddev: 4.0567216836776956e-7",
+            "extra": "mean: 1.4340671241332767 usec\nrounds: 78407"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 176678.44524990028,
+            "unit": "iter/sec",
+            "range": "stddev: 9.764676299836243e-7",
+            "extra": "mean: 6.010630632986246 usec\nrounds: 7456"
           }
         ]
       }
