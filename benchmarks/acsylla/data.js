@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791659524029,
+  "lastUpdate": 1791661108388,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -20136,6 +20136,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000013068404048895476",
             "extra": "mean: 6.2856180870509535 usec\nrounds: 7287"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "f9e19001e1a0e8aa27dec52d799753c3affdc717",
+          "message": "fix(acsylla): map per-query consistency name to acsylla.Consistency\n\nacsylla's bind() expects an acsylla.Consistency member, but AcsyllaDriver\npassed coodie's string name through, raising AttributeError: 'str' object\nhas no attribute 'value'. Resolve it with getattr on the enum in\n_execute_async_impl, which every execute path routes through. coodie's\nnames match acsylla's member names exactly.\n\nCloses #294\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-10T22:37:39+03:00",
+          "tree_id": "78c8ad8901257ef7c1e3275cf80d5929e45dde3d",
+          "url": "https://github.com/scylladb/coodie/commit/f9e19001e1a0e8aa27dec52d799753c3affdc717"
+        },
+        "date": 1791661106769,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 77691.68011115197,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000013533867120736683",
+            "extra": "mean: 12.871391100943105 usec\nrounds: 8765"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1701607.800117389,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4050285599644866e-7",
+            "extra": "mean: 587.6794875593617 nsec\nrounds: 134572"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 141183.53298052162,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000297559999105802",
+            "extra": "mean: 7.082979005334601 usec\nrounds: 19243"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 530666.4809757768,
+            "unit": "iter/sec",
+            "range": "stddev: 4.7354685874534843e-7",
+            "extra": "mean: 1.8844227699500145 usec\nrounds: 52499"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 590975.8856000291,
+            "unit": "iter/sec",
+            "range": "stddev: 3.9041657887427596e-7",
+            "extra": "mean: 1.692116420257454 usec\nrounds: 29299"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 805761.1694039484,
+            "unit": "iter/sec",
+            "range": "stddev: 3.538572255456208e-7",
+            "extra": "mean: 1.2410625356142906 usec\nrounds: 133316"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 787494.4249275874,
+            "unit": "iter/sec",
+            "range": "stddev: 4.1721287020694306e-7",
+            "extra": "mean: 1.2698502596916201 usec\nrounds: 68158"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 677279.9989491154,
+            "unit": "iter/sec",
+            "range": "stddev: 4.1909274852638274e-7",
+            "extra": "mean: 1.4764942144336537 usec\nrounds: 76570"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 173935.9947425763,
+            "unit": "iter/sec",
+            "range": "stddev: 8.584695169998912e-7",
+            "extra": "mean: 5.749241273952474 usec\nrounds: 7535"
           }
         ]
       }
