@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791662198219,
+  "lastUpdate": 1791662265230,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -20310,6 +20310,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.593692731164879e-7",
             "extra": "mean: 3.109606801108737 usec\nrounds: 10557"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "ab49181f27dd42100371df1e1043aa19ba4c1349",
+          "message": "feat(batch): return LWTResult from conditional batch execute()\n\nBatchQuery.execute() / AsyncBatchQuery.execute() now return an LWTResult\nwhen the server reply carries an [applied] column (conditional batch), and\nNone otherwise as before. The result is also stored on batch.result, since\nthe context-manager form auto-executes on exit and would otherwise drop it.\n\n_parse_lwt_result now sets existing=None when applied: Scylla returns every\ncolumn as null on an applied batch LWT, which made existing a truthy dict of\nNones unlike single-statement insert().\n\nCloses #297\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-10T22:56:56+03:00",
+          "tree_id": "805bd926ff46004284f7ffc503404f7bb1288f2f",
+          "url": "https://github.com/scylladb/coodie/commit/ab49181f27dd42100371df1e1043aa19ba4c1349"
+        },
+        "date": 1791662262412,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 79614.24558674566,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000014801818942718914",
+            "extra": "mean: 12.560566172927249 usec\nrounds: 10193"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1424547.290473908,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6887414737329997e-7",
+            "extra": "mean: 701.9773977930402 nsec\nrounds: 162285"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 129928.4561270225,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000028235963234699823",
+            "extra": "mean: 7.696543388635095 usec\nrounds: 20374"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 582409.0449532063,
+            "unit": "iter/sec",
+            "range": "stddev: 5.481263028385816e-7",
+            "extra": "mean: 1.7170063010960708 usec\nrounds: 60783"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 576441.4003425438,
+            "unit": "iter/sec",
+            "range": "stddev: 5.085076953930754e-7",
+            "extra": "mean: 1.7347817131208154 usec\nrounds: 37382"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 809483.364997531,
+            "unit": "iter/sec",
+            "range": "stddev: 3.5325828851312103e-7",
+            "extra": "mean: 1.2353558371184687 usec\nrounds: 142776"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 842860.784463693,
+            "unit": "iter/sec",
+            "range": "stddev: 4.0171708693045954e-7",
+            "extra": "mean: 1.1864355519118066 usec\nrounds: 76069"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 695341.2322720931,
+            "unit": "iter/sec",
+            "range": "stddev: 4.094918842784342e-7",
+            "extra": "mean: 1.438142819076622 usec\nrounds: 90156"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 161169.52209188486,
+            "unit": "iter/sec",
+            "range": "stddev: 8.751570145937908e-7",
+            "extra": "mean: 6.204647051257537 usec\nrounds: 7647"
           }
         ]
       }
