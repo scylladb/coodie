@@ -56,6 +56,14 @@ jobs:
             --benchmark-sort=mean \
             --benchmark-json=benchmark-results-${{ matrix.driver.name }}.json
 
+      # github-action-benchmark charts stats.ops (1/mean); min is far less
+      # sensitive to scheduler/GC hiccups on shared runners (#315).
+      - name: Use min instead of mean for tracked ops
+        run: |
+          lscpu | grep -m1 'Model name'
+          f=benchmark-results-${{ matrix.driver.name }}.json
+          jq '.benchmarks |= map(.stats.ops = 1 / .stats.min)' "$f" > tmp.json && mv tmp.json "$f"
+
       - name: Upload benchmark results
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -87,6 +95,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: ${{ github.event_name == 'push' }}
           comment-on-alert: true
-          alert-threshold: "150%"
+          # Sub-µs benchmarks swing ~1.9x between runner SKUs; 150% fired on noise (#315)
+          alert-threshold: "200%"
           fail-on-alert: false
           summary-always: true
