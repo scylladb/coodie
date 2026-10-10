@@ -5,6 +5,7 @@ import logging
 import warnings
 from typing import Any
 
+from coodie.cql_builder import qualified_name, schema_name
 from coodie.drivers.base import AbstractDriver, _is_ddl
 
 logger = logging.getLogger("coodie")
@@ -133,7 +134,7 @@ class CassandraDriver(AbstractDriver):
         if not is_new_table:
             for col in cols:
                 if col.name not in existing:
-                    alter = f'ALTER TABLE {keyspace}.{table} ADD "{col.name}" {col.cql_type}'
+                    alter = f'ALTER TABLE {qualified_name(keyspace, table)} ADD "{col.name}" {col.cql_type}'
                     planned.append(alter)
                     if not dry_run:
                         self._session.execute(alter)
@@ -165,15 +166,15 @@ class CassandraDriver(AbstractDriver):
         model_indexes: dict[str, Any] = {}
         for col in cols:
             if col.index:
-                idx_name = col.index_name or f"{table}_{col.name}_idx"
-                model_indexes[idx_name] = col
+                idx_name = col.index_name or f"{schema_name(table)}_{col.name}_idx"
+                model_indexes[schema_name(idx_name)] = col
                 index_cql = build_create_index(table, keyspace, col)
                 planned.append(index_cql)
                 if not dry_run:
                     self._session.execute(index_cql)
             if getattr(col, "vector_index", False):
-                idx_name = f"{table}_{col.name}_idx"
-                model_indexes[idx_name] = col
+                idx_name = f"{schema_name(table)}_{col.name}_idx"
+                model_indexes[schema_name(idx_name)] = col
                 vec_idx_cql = build_create_vector_index(table, keyspace, col)
                 planned.append(vec_idx_cql)
                 if not dry_run:
@@ -234,18 +235,18 @@ class CassandraDriver(AbstractDriver):
         key_cols = pk_cols + ck_cols
         if key_cols:
             where_clause = " AND ".join(f'"{c.name}" = ?' for c in key_cols)
-            self._prepare(f"SELECT * FROM {keyspace}.{table} WHERE {where_clause}")
+            self._prepare(f"SELECT * FROM {qualified_name(keyspace, table)} WHERE {where_clause}")
         # Counter tables do not support INSERT — only UPDATE … SET col = col + ?.
         is_counter_table = any(getattr(c, "cql_type", None) == "counter" for c in cols)
         if not is_counter_table:
             all_col_names = ", ".join(f'"{c.name}"' for c in cols)
             placeholders = ", ".join("?" * len(cols))
-            self._prepare(f"INSERT INTO {keyspace}.{table} ({all_col_names}) VALUES ({placeholders})")
+            self._prepare(f"INSERT INTO {qualified_name(keyspace, table)} ({all_col_names}) VALUES ({placeholders})")
 
     def _get_existing_columns(self, table: str, keyspace: str) -> set[str]:
         rows = self._session.execute(
             "SELECT column_name FROM system_schema.columns WHERE keyspace_name = %s AND table_name = %s",
-            (keyspace, table),
+            (schema_name(keyspace), schema_name(table)),
         )
         return {r["column_name"] for r in self._rows_to_dicts(rows)}
 
@@ -253,7 +254,7 @@ class CassandraDriver(AbstractDriver):
         """Introspect current table options from ``system_schema.tables``."""
         rows = self._session.execute(
             "SELECT * FROM system_schema.tables WHERE keyspace_name = %s AND table_name = %s",
-            (keyspace, table),
+            (schema_name(keyspace), schema_name(table)),
         )
         dicts = self._rows_to_dicts(rows)
         if dicts:
@@ -264,7 +265,7 @@ class CassandraDriver(AbstractDriver):
         """Introspect existing index names from ``system_schema.indexes``."""
         rows = self._session.execute(
             "SELECT index_name FROM system_schema.indexes WHERE keyspace_name = %s AND table_name = %s",
-            (keyspace, table),
+            (schema_name(keyspace), schema_name(table)),
         )
         return {r["index_name"] for r in self._rows_to_dicts(rows)}
 
@@ -442,7 +443,7 @@ class CassandraDriver(AbstractDriver):
         if not is_new_table:
             for col in cols:
                 if col.name not in existing:
-                    alter = f'ALTER TABLE {keyspace}.{table} ADD "{col.name}" {col.cql_type}'
+                    alter = f'ALTER TABLE {qualified_name(keyspace, table)} ADD "{col.name}" {col.cql_type}'
                     planned.append(alter)
                     if not dry_run:
                         await self._execute_cql_async(alter)
@@ -474,15 +475,15 @@ class CassandraDriver(AbstractDriver):
         model_indexes: dict[str, Any] = {}
         for col in cols:
             if col.index:
-                idx_name = col.index_name or f"{table}_{col.name}_idx"
-                model_indexes[idx_name] = col
+                idx_name = col.index_name or f"{schema_name(table)}_{col.name}_idx"
+                model_indexes[schema_name(idx_name)] = col
                 index_cql = build_create_index(table, keyspace, col)
                 planned.append(index_cql)
                 if not dry_run:
                     await self._execute_cql_async(index_cql)
             if getattr(col, "vector_index", False):
-                idx_name = f"{table}_{col.name}_idx"
-                model_indexes[idx_name] = col
+                idx_name = f"{schema_name(table)}_{col.name}_idx"
+                model_indexes[schema_name(idx_name)] = col
                 vec_idx_cql = build_create_vector_index(table, keyspace, col)
                 planned.append(vec_idx_cql)
                 if not dry_run:
@@ -510,7 +511,7 @@ class CassandraDriver(AbstractDriver):
     async def _get_existing_columns_async(self, table: str, keyspace: str) -> set[str]:
         rows = await self._execute_bound_async(
             "SELECT column_name FROM system_schema.columns WHERE keyspace_name = %s AND table_name = %s",
-            (keyspace, table),
+            (schema_name(keyspace), schema_name(table)),
         )
         return {r["column_name"] for r in self._rows_to_dicts(rows)}
 
@@ -518,7 +519,7 @@ class CassandraDriver(AbstractDriver):
         """Introspect current table options from ``system_schema.tables``."""
         rows = await self._execute_bound_async(
             "SELECT * FROM system_schema.tables WHERE keyspace_name = %s AND table_name = %s",
-            (keyspace, table),
+            (schema_name(keyspace), schema_name(table)),
         )
         dicts = self._rows_to_dicts(rows)
         if dicts:
@@ -529,7 +530,7 @@ class CassandraDriver(AbstractDriver):
         """Introspect existing index names from ``system_schema.indexes``."""
         rows = await self._execute_bound_async(
             "SELECT index_name FROM system_schema.indexes WHERE keyspace_name = %s AND table_name = %s",
-            (keyspace, table),
+            (schema_name(keyspace), schema_name(table)),
         )
         return {r["index_name"] for r in self._rows_to_dicts(rows)}
 

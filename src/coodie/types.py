@@ -10,6 +10,7 @@ from types import UnionType
 from typing import Any, Union
 from uuid import UUID
 
+from coodie.cql_builder import quote_ident
 from coodie.exceptions import InvalidQueryError
 from coodie.fields import (
     Ascii,
@@ -156,7 +157,7 @@ def python_type_to_cql_type_str(annotation: Any) -> str:
 
     # UserType (BaseModel subclass) → frozen<type_name>
     if isinstance(annotation, type) and _is_user_type(annotation):
-        return f"frozen<{_udt_type_name(annotation)}>"
+        return f"frozen<{quote_ident(_udt_type_name(annotation))}>"
 
     raise InvalidQueryError(f"Cannot map Python type {annotation!r} to a CQL type")
 

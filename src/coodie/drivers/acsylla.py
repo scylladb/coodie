@@ -6,6 +6,7 @@ import warnings
 from collections.abc import Awaitable, Callable
 from typing import Any
 
+from coodie.cql_builder import qualified_name, schema_name
 from coodie.drivers.base import AbstractDriver, _is_ddl
 
 
@@ -286,13 +287,13 @@ class AcsyllaDriver(AbstractDriver):
     async def _get_existing_columns_async(self, table: str, keyspace: str) -> set[str]:
         """Introspect the existing column names via system_schema."""
         stmt = "SELECT column_name FROM system_schema.columns WHERE keyspace_name = ? AND table_name = ?"
-        rows = await self._execute_async_impl(stmt, [keyspace, table])
+        rows = await self._execute_async_impl(stmt, [schema_name(keyspace), schema_name(table)])
         return {row["column_name"] for row in rows}
 
     async def _get_current_table_options_async(self, table: str, keyspace: str) -> dict[str, Any]:
         """Introspect current table options from ``system_schema.tables``."""
         stmt = "SELECT * FROM system_schema.tables WHERE keyspace_name = ? AND table_name = ?"
-        rows = await self._execute_async_impl(stmt, [keyspace, table])
+        rows = await self._execute_async_impl(stmt, [schema_name(keyspace), schema_name(table)])
         if rows:
             return rows[0]
         return {}
@@ -300,7 +301,7 @@ class AcsyllaDriver(AbstractDriver):
     async def _get_existing_indexes_async(self, table: str, keyspace: str) -> set[str]:
         """Introspect existing index names from ``system_schema.indexes``."""
         stmt = "SELECT index_name FROM system_schema.indexes WHERE keyspace_name = ? AND table_name = ?"
-        rows = await self._execute_async_impl(stmt, [keyspace, table])
+        rows = await self._execute_async_impl(stmt, [schema_name(keyspace), schema_name(table)])
         return {row["index_name"] for row in rows}
 
     async def _sync_table_async_impl(
@@ -340,7 +341,7 @@ class AcsyllaDriver(AbstractDriver):
         if not is_new_table:
             for col in cols:
                 if col.name not in existing:
-                    alter = f'ALTER TABLE {keyspace}.{table} ADD "{col.name}" {col.cql_type}'
+                    alter = f'ALTER TABLE {qualified_name(keyspace, table)} ADD "{col.name}" {col.cql_type}'
                     planned.append(alter)
                     if not dry_run:
                         await self._session.execute(self._cql_to_statement(alter))
@@ -375,8 +376,8 @@ class AcsyllaDriver(AbstractDriver):
         model_indexes: dict[str, Any] = {}
         for col in cols:
             if col.index:
-                idx_name = col.index_name or f"{table}_{col.name}_idx"
-                model_indexes[idx_name] = col
+                idx_name = col.index_name or f"{schema_name(table)}_{col.name}_idx"
+                model_indexes[schema_name(idx_name)] = col
                 index_cql = build_create_index(table, keyspace, col)
                 planned.append(index_cql)
                 if not dry_run:

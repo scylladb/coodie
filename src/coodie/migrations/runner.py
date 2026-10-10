@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from coodie.cql_builder import quote_ident
 from coodie.migrations.base import Migration, MigrationContext
 
 logger = logging.getLogger("coodie")
@@ -131,19 +132,19 @@ class MigrationRunner:
 
     async def _ensure_state_table(self) -> None:
         """Create the ``_coodie_migrations`` tracking table if it does not exist."""
-        cql = _CREATE_STATE_TABLE.format(keyspace=self._keyspace)
+        cql = _CREATE_STATE_TABLE.format(keyspace=quote_ident(self._keyspace))
         await self._driver.execute_async(cql, [])
 
     async def _ensure_lock_table(self) -> None:
         """Create the ``_coodie_migrations_lock`` table if it does not exist."""
-        cql = _CREATE_LOCK_TABLE.format(keyspace=self._keyspace)
+        cql = _CREATE_LOCK_TABLE.format(keyspace=quote_ident(self._keyspace))
         await self._driver.execute_async(cql, [])
 
     async def get_applied(self) -> dict[str, dict[str, Any]]:
         """Return a dict of applied migration names → metadata."""
         await self._ensure_state_table()
         rows = await self._driver.execute_async(
-            f'SELECT migration_name, applied_at, description, checksum FROM {self._keyspace}."_coodie_migrations"',
+            f'SELECT migration_name, applied_at, description, checksum FROM {quote_ident(self._keyspace)}."_coodie_migrations"',
             [],
         )
         return {row["migration_name"]: row for row in rows}
@@ -151,7 +152,7 @@ class MigrationRunner:
     async def _record_applied(self, name: str, description: str, checksum: str) -> None:
         """Record a migration as applied in the state table."""
         await self._driver.execute_async(
-            f'INSERT INTO {self._keyspace}."_coodie_migrations" '
+            f'INSERT INTO {quote_ident(self._keyspace)}."_coodie_migrations" '
             f"(migration_name, applied_at, description, checksum) VALUES (?, ?, ?, ?)",
             [name, datetime.now(timezone.utc), description, checksum],
         )
@@ -159,7 +160,7 @@ class MigrationRunner:
     async def _remove_applied(self, name: str) -> None:
         """Remove a migration record from the state table (on rollback)."""
         await self._driver.execute_async(
-            f'DELETE FROM {self._keyspace}."_coodie_migrations" WHERE migration_name = ?',
+            f'DELETE FROM {quote_ident(self._keyspace)}."_coodie_migrations" WHERE migration_name = ?',
             [name],
         )
 
@@ -174,13 +175,13 @@ class MigrationRunner:
         process holds it.
         """
         await self._ensure_lock_table()
-        cql = _ACQUIRE_LOCK.format(keyspace=self._keyspace, ttl=self._lock_ttl)
+        cql = _ACQUIRE_LOCK.format(keyspace=quote_ident(self._keyspace), ttl=self._lock_ttl)
         rows = await self._driver.execute_async(cql, ["coodie_migration_lock", datetime.now(timezone.utc), owner])
         return not (rows and not rows[0].get("[applied]", True))
 
     async def _release_lock(self) -> None:
         """Release the distributed migration lock."""
-        cql = _RELEASE_LOCK.format(keyspace=self._keyspace)
+        cql = _RELEASE_LOCK.format(keyspace=quote_ident(self._keyspace))
         await self._driver.execute_async(cql, ["coodie_migration_lock"])
 
     # ------------------------------------------------------------------

@@ -27,6 +27,8 @@ from coodie.cql_builder import (
     build_where_clause,
     parse_filter_kwargs,
     parse_update_kwargs,
+    quote_ident,
+    schema_name,
 )
 from coodie.schema import ColumnDefinition
 
@@ -820,11 +822,19 @@ def test_build_drop_keyspace():
 # ------------------------------------------------------------------
 
 
-def test_build_drop_index():
+@pytest.mark.parametrize(
+    "stored, expected",
+    [
+        ("users_email_idx", "ks.users_email_idx"),
+        ("ByEmail", 'ks."ByEmail"'),
+        ("By-Email", 'ks."By-Email"'),
+        ("order", 'ks."order"'),
+    ],
+)
+def test_build_drop_index(stored, expected):
     from coodie.cql_builder import build_drop_index
 
-    cql = build_drop_index("users_email_idx", "ks")
-    assert cql == "DROP INDEX IF EXISTS ks.users_email_idx"
+    assert build_drop_index(stored, "ks") == f"DROP INDEX IF EXISTS {expected}"
 
 
 def test_build_alter_table_options_single():
@@ -1064,3 +1074,37 @@ def test_build_select_column_ttl_with_where():
 def test_build_select_column_ttl_allow_filtering():
     cql, _ = build_select_column_ttl("users", "ks", "name", allow_filtering=True)
     assert "ALLOW FILTERING" in cql
+
+
+# ---- identifier quoting (#298) ----
+
+
+@pytest.mark.parametrize(
+    ("name", "quoted", "stored"),
+    [
+        ("users", "users", "users"),
+        ("MyTable", "MyTable", "mytable"),
+        ('"MyTable"', '"MyTable"', "MyTable"),
+        ("order", '"order"', "order"),
+        ("Order", '"order"', "order"),
+        ("my-table", '"my-table"', "my-table"),
+        ('"a""b"', '"a""b"', 'a"b'),
+    ],
+)
+def test_quote_ident_and_schema_name(name, quoted, stored):
+    assert quote_ident(name) == quoted
+    assert schema_name(name) == stored
+    assert schema_name(quoted) == stored
+
+
+def test_identifier_quoting_in_generated_cql():
+    cols = [make_col(name="id", cql_type="uuid", primary_key=True)]
+    assert build_create_table("order", "ks", cols).startswith('CREATE TABLE IF NOT EXISTS ks."order" (')
+    assert build_create_table('"MyTable"', "ks", cols).startswith('CREATE TABLE IF NOT EXISTS ks."MyTable" (')
+    cql, _ = build_select("order", "select", where=[("id", "=", 1)])
+    assert cql.startswith('SELECT * FROM "select"."order" WHERE')
+    idx = make_col(name="email", cql_type="text", index=True)
+    assert (
+        build_create_index('"MyTable"', "ks", idx)
+        == 'CREATE INDEX IF NOT EXISTS MyTable_email_idx ON ks."MyTable" ("email")'
+    )

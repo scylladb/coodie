@@ -37,6 +37,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from coodie.cql_builder import build_drop_index, qualified_name, quote_ident, schema_name
+
 if TYPE_CHECKING:
     from coodie.schema import ColumnDefinition
 
@@ -164,7 +166,7 @@ async def introspect_table(
     # Check whether the table exists
     table_rows = await driver.execute_async(
         "SELECT table_name FROM system_schema.tables WHERE keyspace_name = ? AND table_name = ?",
-        [keyspace, table],
+        [schema_name(keyspace), schema_name(table)],
     )
     if not table_rows:
         return False, [], set()
@@ -174,7 +176,7 @@ async def introspect_table(
         "SELECT column_name, type, kind, position, clustering_order "
         "FROM system_schema.columns "
         "WHERE keyspace_name = ? AND table_name = ?",
-        [keyspace, table],
+        [schema_name(keyspace), schema_name(table)],
     )
 
     columns: list[DbColumnInfo] = []
@@ -192,7 +194,7 @@ async def introspect_table(
     # Fetch index names
     idx_rows = await driver.execute_async(
         "SELECT index_name FROM system_schema.indexes WHERE keyspace_name = ? AND table_name = ?",
-        [keyspace, table],
+        [schema_name(keyspace), schema_name(table)],
     )
     index_names = {row["index_name"] for row in idx_rows}
 
@@ -350,15 +352,16 @@ def diff_schema(
     model_indexes: dict[str, str] = {}  # index_name → column_name
     for col in model_columns:
         if col.index:
-            idx_name = col.index_name or f"{table}_{col.name}_idx"
+            idx_name = col.index_name or f"{schema_name(table)}_{col.name}_idx"
             model_indexes[idx_name] = col.name
+    model_index_names = {schema_name(n) for n in model_indexes}
 
     for idx_name, col_name in model_indexes.items():
-        if idx_name not in db_indexes:
+        if schema_name(idx_name) not in db_indexes:
             diff.index_changes.append(IndexChange(index_name=idx_name, change_type="add", column_name=col_name))
 
     for idx_name in db_indexes:
-        if idx_name not in model_indexes:
+        if idx_name not in model_index_names:
             diff.index_changes.append(IndexChange(index_name=idx_name, change_type="drop", column_name=""))
 
     return diff
@@ -396,16 +399,16 @@ def render_migration(diff: SchemaDiff, description: str) -> str:
     else:
         for change in diff.column_changes:
             if change.change_type == "add":
-                cql = f'ALTER TABLE {ks}.{tbl} ADD "{change.name}" {change.model_type}'
+                cql = f'ALTER TABLE {qualified_name(ks, tbl)} ADD "{change.name}" {change.model_type}'
                 upgrade_lines.append(f"await ctx.execute({cql!r})")
-                drop_cql = f'ALTER TABLE {ks}.{tbl} DROP "{change.name}"'
+                drop_cql = f'ALTER TABLE {qualified_name(ks, tbl)} DROP "{change.name}"'
                 downgrade_lines.append(f"await ctx.execute({drop_cql!r})")
 
             elif change.change_type == "drop":
-                cql = f'ALTER TABLE {ks}.{tbl} DROP "{change.name}"'
+                cql = f'ALTER TABLE {qualified_name(ks, tbl)} DROP "{change.name}"'
                 upgrade_lines.append(f'# Destructive: drops column "{change.name}" ({change.db_type})')
                 upgrade_lines.append(f"await ctx.execute({cql!r})")
-                add_cql = f'ALTER TABLE {ks}.{tbl} ADD "{change.name}" {change.db_type}'
+                add_cql = f'ALTER TABLE {qualified_name(ks, tbl)} ADD "{change.name}" {change.db_type}'
                 downgrade_lines.append(f"await ctx.execute({add_cql!r})")
 
             elif change.change_type == "type_change":
@@ -416,9 +419,9 @@ def render_migration(diff: SchemaDiff, description: str) -> str:
                     upgrade_lines.append("# Consider a data migration or create a new table.")
                 else:
                     # Safe widening — Cassandra 3.x+ allows some type alterations
-                    cql = f'ALTER TABLE {ks}.{tbl} ALTER "{change.name}" TYPE {change.model_type}'
+                    cql = f'ALTER TABLE {qualified_name(ks, tbl)} ALTER "{change.name}" TYPE {change.model_type}'
                     upgrade_lines.append(f"await ctx.execute({cql!r})")
-                    rev_cql = f'ALTER TABLE {ks}.{tbl} ALTER "{change.name}" TYPE {change.db_type}'
+                    rev_cql = f'ALTER TABLE {qualified_name(ks, tbl)} ALTER "{change.name}" TYPE {change.db_type}'
                     downgrade_lines.append(f"await ctx.execute({rev_cql!r})")
 
             elif change.change_type == "pk_change":
@@ -430,12 +433,12 @@ def render_migration(diff: SchemaDiff, description: str) -> str:
 
         for idx_change in diff.index_changes:
             if idx_change.change_type == "add":
-                cql = f'CREATE INDEX IF NOT EXISTS {idx_change.index_name} ON {ks}.{tbl} ("{idx_change.column_name}")'
+                cql = f'CREATE INDEX IF NOT EXISTS {quote_ident(idx_change.index_name)} ON {qualified_name(ks, tbl)} ("{idx_change.column_name}")'
                 upgrade_lines.append(f"await ctx.execute({cql!r})")
-                drop_idx_cql = f"DROP INDEX IF EXISTS {ks}.{idx_change.index_name}"
+                drop_idx_cql = f"DROP INDEX IF EXISTS {qualified_name(ks, idx_change.index_name)}"
                 downgrade_lines.append(f"await ctx.execute({drop_idx_cql!r})")
             else:
-                cql = f"DROP INDEX IF EXISTS {ks}.{idx_change.index_name}"
+                cql = build_drop_index(idx_change.index_name, ks)
                 upgrade_lines.append(f"# Destructive: drops index {idx_change.index_name!r}")
                 upgrade_lines.append(f"await ctx.execute({cql!r})")
                 # Can't easily reconstruct the index — leave a TODO

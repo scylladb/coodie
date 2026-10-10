@@ -1,8 +1,56 @@
 from __future__ import annotations
 
+import functools
+import re
 from typing import Any
 
 from coodie.schema import ColumnDefinition
+
+_UNQUOTED_IDENT_RE = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
+try:
+    # scylla-driver / cassandra-driver keep this list in step with the server; use theirs when installed.
+    from cassandra.metadata import cql_keywords_reserved as _RESERVED_KEYWORDS
+except ImportError:  # acsylla / python-rs expose none; fall back to the CQL reserved words
+    _RESERVED_KEYWORDS = frozenset(
+        "add allow alter and apply asc authorize batch begin by columnfamily create delete desc describe "  # noqa: SIM905
+        "drop entries execute from full grant if in index infinity insert into is keyspace limit materialized "
+        "mbean mbeans modify nan norecursive not null of on or order primary rename replace revoke schema "
+        "select set table to token truncate unlogged unset update use using view where with".split()
+    )
+
+
+def _is_quoted(name: str) -> bool:
+    return len(name) > 1 and name[0] == name[-1] == '"'
+
+
+@functools.lru_cache(maxsize=1024)
+def quote_ident(name: str) -> str:
+    """Return a keyspace/table/type/index name ready to embed in CQL.
+
+    Follows CQL rules: unquoted names are case-insensitive (folded to
+    lowercase), so plain names are returned unchanged and only reserved
+    words or names with other characters get quoted.  Wrap a name in
+    double quotes (e.g. ``Settings.name = '"MyTable"'``) to make it
+    case-sensitive; already-quoted names are returned as-is.
+    """
+    if _is_quoted(name):
+        return name
+    if _UNQUOTED_IDENT_RE.fullmatch(name) and name.lower() not in _RESERVED_KEYWORDS:
+        return name
+    return '"' + name.lower().replace('"', '""') + '"'
+
+
+def schema_name(name: str) -> str:
+    """Return *name* as stored in ``system_schema`` (lowercased unless quoted)."""
+    if _is_quoted(name):
+        return name[1:-1].replace('""', '"')
+    return name.lower()
+
+
+@functools.lru_cache(maxsize=1024)
+def qualified_name(keyspace: str, name: str) -> str:
+    """Return ``keyspace.name`` with both parts passed through :func:`quote_ident`."""
+    return f"{quote_ident(keyspace)}.{quote_ident(name)}"
 
 
 def build_create_keyspace(
@@ -14,16 +62,16 @@ def build_create_keyspace(
     if dc_replication_map is not None:
         strategy = "NetworkTopologyStrategy"
         dc_parts = ", ".join(f"'{dc}': '{rf}'" for dc, rf in dc_replication_map.items())
-        return f"CREATE KEYSPACE IF NOT EXISTS {keyspace} WITH replication = {{'class': '{strategy}', {dc_parts}}}"
+        return f"CREATE KEYSPACE IF NOT EXISTS {quote_ident(keyspace)} WITH replication = {{'class': '{strategy}', {dc_parts}}}"
     return (
-        f"CREATE KEYSPACE IF NOT EXISTS {keyspace} "
+        f"CREATE KEYSPACE IF NOT EXISTS {quote_ident(keyspace)} "
         f"WITH replication = {{'class': '{strategy}', "
         f"'replication_factor': '{replication_factor}'}}"
     )
 
 
 def build_drop_keyspace(keyspace: str) -> str:
-    return f"DROP KEYSPACE IF EXISTS {keyspace}"
+    return f"DROP KEYSPACE IF EXISTS {quote_ident(keyspace)}"
 
 
 def build_create_table(
@@ -80,7 +128,7 @@ def build_create_table(
     if with_parts:
         with_clause = " WITH " + " AND ".join(with_parts)
 
-    return f"CREATE TABLE IF NOT EXISTS {keyspace}.{table} ({col_defs_str}, {primary_key}){with_clause}"
+    return f"CREATE TABLE IF NOT EXISTS {qualified_name(keyspace, table)} ({col_defs_str}, {primary_key}){with_clause}"
 
 
 def build_create_index(
@@ -88,8 +136,8 @@ def build_create_index(
     keyspace: str,
     col: ColumnDefinition,
 ) -> str:
-    index_name = col.index_name or f"{table}_{col.name}_idx"
-    return f'CREATE INDEX IF NOT EXISTS {index_name} ON {keyspace}.{table} ("{col.name}")'
+    index_name = col.index_name or f"{schema_name(table)}_{col.name}_idx"
+    return f'CREATE INDEX IF NOT EXISTS {quote_ident(index_name)} ON {qualified_name(keyspace, table)} ("{col.name}")'
 
 
 def build_create_custom_index(
@@ -99,8 +147,8 @@ def build_create_custom_index(
     index_class: str = "org.apache.cassandra.index.sai.StorageAttachedIndex",
     options: dict[str, str] | None = None,
 ) -> str:
-    index_name = col.vector_index_name or f"{table}_{col.name}_idx"
-    cql = f"CREATE CUSTOM INDEX IF NOT EXISTS {index_name} ON {keyspace}.{table} (\"{col.name}\") USING '{index_class}'"
+    index_name = col.vector_index_name or f"{schema_name(table)}_{col.name}_idx"
+    cql = f"CREATE CUSTOM INDEX IF NOT EXISTS {quote_ident(index_name)} ON {qualified_name(keyspace, table)} (\"{col.name}\") USING '{index_class}'"
     if options:
         opts_str = ", ".join(f"'{k}': '{v}'" for k, v in options.items())
         cql += f" WITH OPTIONS = {{{opts_str}}}"
@@ -117,7 +165,10 @@ def build_create_vector_index(
 
 
 def build_drop_index(index_name: str, keyspace: str) -> str:
-    return f"DROP INDEX IF EXISTS {keyspace}.{index_name}"
+    """*index_name* is as stored in ``system_schema``, so its case is kept."""
+    if index_name != index_name.lower():
+        index_name = '"' + index_name.replace('"', '""') + '"'
+    return f"DROP INDEX IF EXISTS {qualified_name(keyspace, index_name)}"
 
 
 def build_alter_table_options(
@@ -131,15 +182,15 @@ def build_alter_table_options(
             parts.append(f"{k} = '{v}'")
         else:
             parts.append(f"{k} = {v}")
-    return f"ALTER TABLE {keyspace}.{table} WITH " + " AND ".join(parts)
+    return f"ALTER TABLE {qualified_name(keyspace, table)} WITH " + " AND ".join(parts)
 
 
 def build_truncate(table: str, keyspace: str) -> str:
-    return f"TRUNCATE TABLE {keyspace}.{table}"
+    return f"TRUNCATE TABLE {qualified_name(keyspace, table)}"
 
 
 def build_drop_table(table: str, keyspace: str) -> str:
-    return f"DROP TABLE IF EXISTS {keyspace}.{table}"
+    return f"DROP TABLE IF EXISTS {qualified_name(keyspace, table)}"
 
 
 def build_create_materialized_view(
@@ -165,8 +216,8 @@ def build_create_materialized_view(
         key_str = f"PRIMARY KEY ({pk_str})"
 
     cql = (
-        f"CREATE MATERIALIZED VIEW IF NOT EXISTS {keyspace}.{view_name} "
-        f"AS SELECT {cols_str} FROM {keyspace}.{base_table}"
+        f"CREATE MATERIALIZED VIEW IF NOT EXISTS {qualified_name(keyspace, view_name)} "
+        f"AS SELECT {cols_str} FROM {qualified_name(keyspace, base_table)}"
     )
 
     if where_clause:
@@ -186,7 +237,7 @@ def build_create_materialized_view(
 
 
 def build_drop_materialized_view(view_name: str, keyspace: str) -> str:
-    return f"DROP MATERIALIZED VIEW IF EXISTS {keyspace}.{view_name}"
+    return f"DROP MATERIALIZED VIEW IF EXISTS {qualified_name(keyspace, view_name)}"
 
 
 def parse_filter_kwargs(
@@ -343,7 +394,7 @@ def build_select(
         cols_str += f", TOKEN({token_cols})"
 
     keyword = "SELECT DISTINCT" if distinct else "SELECT"
-    cql = f"{keyword} {cols_str} FROM {keyspace}.{table}"
+    cql = f"{keyword} {cols_str} FROM {qualified_name(keyspace, table)}"
 
     if where:
         clause, _wp = build_where_clause(where)
@@ -399,7 +450,7 @@ def build_count(
     if cached_cql is not None:
         return cached_cql, params
 
-    cql = f"SELECT COUNT(*) FROM {keyspace}.{table}"
+    cql = f"SELECT COUNT(*) FROM {qualified_name(keyspace, table)}"
 
     if where:
         clause, _wp = build_where_clause(where)
@@ -436,7 +487,7 @@ def build_aggregate(
     if cached_cql is not None:
         return cached_cql, params
 
-    cql = f'SELECT {func.upper()}("{column}") FROM {keyspace}.{table}'
+    cql = f'SELECT {func.upper()}("{column}") FROM {qualified_name(keyspace, table)}'
 
     if where:
         clause, _wp = build_where_clause(where)
@@ -476,7 +527,7 @@ def build_insert(
     vals = list(data.values())
     cols_str = ", ".join(f'"{c}"' for c in cols)
     placeholders = ", ".join("?" * len(cols))
-    cql = f"INSERT INTO {keyspace}.{table} ({cols_str}) VALUES ({placeholders})"
+    cql = f"INSERT INTO {qualified_name(keyspace, table)} ({cols_str}) VALUES ({placeholders})"
     if if_not_exists:
         cql += " IF NOT EXISTS"
     cql += _build_using_clause(ttl=ttl, timestamp=timestamp)
@@ -500,7 +551,7 @@ def build_insert_from_columns(
     if base_cql is None:
         cols_str = ", ".join(f'"{c}"' for c in columns)
         placeholders = ", ".join("?" * len(columns))
-        base_cql = f"INSERT INTO {keyspace}.{table} ({cols_str}) VALUES ({placeholders})"
+        base_cql = f"INSERT INTO {qualified_name(keyspace, table)} ({cols_str}) VALUES ({placeholders})"
         if if_not_exists:
             base_cql += " IF NOT EXISTS"
         _insert_cql_cache[cache_key] = base_cql
@@ -521,7 +572,7 @@ def build_insert_json(
     The *json_string* is bound as a positional parameter so the driver
     handles escaping.
     """
-    cql = f"INSERT INTO {keyspace}.{table} JSON ?"
+    cql = f"INSERT INTO {qualified_name(keyspace, table)} JSON ?"
     if if_not_exists:
         cql += " IF NOT EXISTS"
     cql += _build_using_clause(ttl=ttl, timestamp=timestamp)
@@ -540,7 +591,7 @@ def build_select_json(
     Returns rows where each row is a dict with a single ``"[json]"`` key
     containing the JSON string representation of the row.
     """
-    cql = f"SELECT JSON * FROM {keyspace}.{table}"
+    cql = f"SELECT JSON * FROM {qualified_name(keyspace, table)}"
     params: list[Any] = []
 
     if where:
@@ -566,7 +617,7 @@ def build_select_writetime(
     allow_filtering: bool = False,
 ) -> tuple[str, list[Any]]:
     """Build a ``SELECT WRITETIME("col") FROM …`` CQL statement."""
-    cql = f'SELECT WRITETIME("{column}") FROM {keyspace}.{table}'
+    cql = f'SELECT WRITETIME("{column}") FROM {qualified_name(keyspace, table)}'
     params: list[Any] = []
 
     if where:
@@ -589,7 +640,7 @@ def build_select_column_ttl(
     allow_filtering: bool = False,
 ) -> tuple[str, list[Any]]:
     """Build a ``SELECT TTL("col") FROM …`` CQL statement."""
-    cql = f'SELECT TTL("{column}") FROM {keyspace}.{table}'
+    cql = f'SELECT TTL("{column}") FROM {qualified_name(keyspace, table)}'
     params: list[Any] = []
 
     if where:
@@ -724,7 +775,7 @@ def build_update(
             elif op in ("put", "setindex"):
                 set_parts.append(f'"{col}"[?] = ?')
 
-    cql = f"UPDATE {keyspace}.{table}"
+    cql = f"UPDATE {qualified_name(keyspace, table)}"
     cql += _build_using_clause(ttl=ttl, timestamp=timestamp)
     cql += " SET " + ", ".join(set_parts)
 
@@ -786,7 +837,7 @@ def build_delete(
         return cached_cql, params
 
     cols_str = ", ".join(delete_parts) if delete_parts else ""
-    cql = f"DELETE {cols_str} FROM {keyspace}.{table}".replace("DELETE  FROM", "DELETE FROM")
+    cql = f"DELETE {cols_str} FROM {qualified_name(keyspace, table)}".replace("DELETE  FROM", "DELETE FROM")
     cql += _build_using_clause(timestamp=timestamp)
 
     clause, where_params = build_where_clause(where)
@@ -814,7 +865,7 @@ def build_counter_update(
     set_parts = [f'"{k}" = "{k}" + ?' for k in deltas]
     params: list[Any] = list(deltas.values())
 
-    cql = f"UPDATE {keyspace}.{table} SET " + ", ".join(set_parts)
+    cql = f"UPDATE {qualified_name(keyspace, table)} SET " + ", ".join(set_parts)
 
     clause, where_params = build_where_clause(where)
     cql += " " + clause
@@ -830,11 +881,11 @@ def build_create_type(
 ) -> str:
     """Build a ``CREATE TYPE IF NOT EXISTS`` CQL statement."""
     field_defs = ", ".join(f'"{name}" {cql_type}' for name, cql_type in fields)
-    return f"CREATE TYPE IF NOT EXISTS {keyspace}.{type_name} ({field_defs})"
+    return f"CREATE TYPE IF NOT EXISTS {qualified_name(keyspace, type_name)} ({field_defs})"
 
 
 def build_drop_type(type_name: str, keyspace: str) -> str:
-    return f"DROP TYPE IF EXISTS {keyspace}.{type_name}"
+    return f"DROP TYPE IF EXISTS {qualified_name(keyspace, type_name)}"
 
 
 def build_alter_type_add(
@@ -843,7 +894,7 @@ def build_alter_type_add(
     field_name: str,
     cql_type: str,
 ) -> str:
-    return f'ALTER TYPE {keyspace}.{type_name} ADD "{field_name}" {cql_type}'
+    return f'ALTER TYPE {qualified_name(keyspace, type_name)} ADD "{field_name}" {cql_type}'
 
 
 def build_batch(
