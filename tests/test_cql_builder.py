@@ -822,11 +822,19 @@ def test_build_drop_keyspace():
 # ------------------------------------------------------------------
 
 
-def test_build_drop_index():
+@pytest.mark.parametrize(
+    "stored, expected",
+    [
+        ("users_email_idx", "ks.users_email_idx"),
+        ("ByEmail", 'ks."ByEmail"'),
+        ("By-Email", 'ks."By-Email"'),
+        ("order", 'ks."order"'),
+    ],
+)
+def test_build_drop_index(stored, expected):
     from coodie.cql_builder import build_drop_index
 
-    cql = build_drop_index("users_email_idx", "ks")
-    assert cql == "DROP INDEX IF EXISTS ks.users_email_idx"
+    assert build_drop_index(stored, "ks") == f"DROP INDEX IF EXISTS {expected}"
 
 
 def test_build_alter_table_options_single():

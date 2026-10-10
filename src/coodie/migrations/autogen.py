@@ -37,7 +37,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from coodie.cql_builder import qualified_name, quote_ident, schema_name
+from coodie.cql_builder import build_drop_index, qualified_name, quote_ident, schema_name
 
 if TYPE_CHECKING:
     from coodie.schema import ColumnDefinition
@@ -438,7 +438,7 @@ def render_migration(diff: SchemaDiff, description: str) -> str:
                 drop_idx_cql = f"DROP INDEX IF EXISTS {qualified_name(ks, idx_change.index_name)}"
                 downgrade_lines.append(f"await ctx.execute({drop_idx_cql!r})")
             else:
-                cql = f"DROP INDEX IF EXISTS {qualified_name(ks, idx_change.index_name)}"
+                cql = build_drop_index(idx_change.index_name, ks)
                 upgrade_lines.append(f"# Destructive: drops index {idx_change.index_name!r}")
                 upgrade_lines.append(f"await ctx.execute({cql!r})")
                 # Can't easily reconstruct the index — leave a TODO
