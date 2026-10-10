@@ -38,8 +38,8 @@ ignored, or worked around when using `driver_type="python-rs"`.
 |---|---------|--------|------------------|---------------|
 | 1 | Synchronous API | All sync variant tests skipped | async-only; `loop.run_until_complete()` fails inside running loop | `variant == "sync"` (68 tests) |
 | 2 | Pagination (`fetch_size` / `paging_state`) | `fetch_size` and `paging_state` silently ignored; all rows returned in one response | `Session.execute()` calls `execute_unpaged` internally | `test_fetch_size_limits_page`, `test_full_table_scan_spanning_multiple_pages`, `test_fetch_size_limits_rows_per_page` |
-| 3 | ~~Per-query consistency level~~ | ✅ Fixed in Phase 1 — mapped to `scylla.enums.Consistency` via `with_consistency()` | — | — |
-| 4 | ~~Per-query timeout~~ | ✅ Fixed in Phase 1 — forwarded via `with_request_timeout()` (seconds) | — | — |
+| 3 | ~~Per-query consistency level~~ | ✅ Fixed in Phase 1 — mapped to `scylla.Consistency` and assigned to a copy's `consistency` attribute | — | — |
+| 4 | ~~Per-query timeout~~ | ✅ Fixed in Phase 1 — assigned to a copy's `request_timeout` attribute (seconds) | — | — |
 | 5 | Session close | `close_async()` is a no-op | `Session` has no `close()` method | — (no dedicated test) |
 | 6 | Non-row result handling | `_rows_to_dicts()` catches `RuntimeError` for INSERT/UPDATE/DELETE | `iter_rows()` raises `RuntimeError: Result does not have rows` | — (workaround in driver) |
 | 7 | SSL/TLS | Not supported | Not exposed to Python | — (not tested) |

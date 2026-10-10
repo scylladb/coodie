@@ -178,18 +178,22 @@ class PythonRsDriver(AbstractDriver):
     def _apply_options(statement: Any, consistency: str | None, timeout: float | None) -> Any:
         """Return *statement* with per-query consistency and timeout applied.
 
-        python-rs-driver statements are immutable: ``with_*`` returns a new
-        instance, so the cached prepared statement is left untouched.
-        *consistency* uses coodie/cassandra-driver names (``"LOCAL_QUORUM"``),
-        mapped to ``scylla.enums.Consistency`` members (``LocalQuorum``).
-        *timeout* is in seconds, which is what ``with_request_timeout`` expects.
+        python-rs-driver statements are configured in place by assigning
+        attributes, so a copy is changed and the cached prepared statement is
+        left untouched.  *consistency* uses coodie/cassandra-driver names
+        (``"LOCAL_QUORUM"``), mapped to ``scylla.Consistency`` members
+        (``LocalQuorum``).  *timeout* is in seconds, which is what
+        ``request_timeout`` expects.
         """
+        if consistency is None and timeout is None:
+            return statement
+        statement = statement.copy()
         if consistency is not None:
-            from scylla.enums import Consistency  # type: ignore[import-untyped]
+            from scylla import Consistency  # type: ignore[import-untyped]
 
-            statement = statement.with_consistency(getattr(Consistency, consistency.title().replace("_", "")))
+            statement.consistency = getattr(Consistency, consistency.title().replace("_", ""))
         if timeout is not None:
-            statement = statement.with_request_timeout(timeout)
+            statement.request_timeout = timeout
         return statement
 
     @staticmethod
