@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791659472520,
+  "lastUpdate": 1791659524029,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -20049,6 +20049,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000014644717545527696",
             "extra": "mean: 4.9987695863827835 usec\nrounds: 8871"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "404dfb69a90f707f553c408febbded64ae4b618d",
+          "message": "build: add python version classifiers for pypi badge\n\nshields.io pyversions badge reads only trove classifiers, not requires-python.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-10T22:11:12+03:00",
+          "tree_id": "f85d35266f7a543284dcaa57f5c756b3347e96e0",
+          "url": "https://github.com/scylladb/coodie/commit/404dfb69a90f707f553c408febbded64ae4b618d"
+        },
+        "date": 1791659522026,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 82275.60517966867,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000014972464061601496",
+            "extra": "mean: 12.15427097517251 usec\nrounds: 10429"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1529747.7503707695,
+            "unit": "iter/sec",
+            "range": "stddev: 2.754242732838907e-7",
+            "extra": "mean: 653.7025465522843 nsec\nrounds: 163908"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 130630.40834809895,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003179204065019368",
+            "extra": "mean: 7.655185439941655 usec\nrounds: 20934"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 586102.746296649,
+            "unit": "iter/sec",
+            "range": "stddev: 5.000272484664487e-7",
+            "extra": "mean: 1.7061854876446219 usec\nrounds: 53637"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 592498.5488527984,
+            "unit": "iter/sec",
+            "range": "stddev: 4.6048105972512943e-7",
+            "extra": "mean: 1.6877678467503592 usec\nrounds: 34348"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 811075.4386100117,
+            "unit": "iter/sec",
+            "range": "stddev: 3.9669163286650145e-7",
+            "extra": "mean: 1.2329309363796783 usec\nrounds: 141985"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 837093.4986102857,
+            "unit": "iter/sec",
+            "range": "stddev: 3.773932300956608e-7",
+            "extra": "mean: 1.1946096841752638 usec\nrounds: 75959"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 690314.3695652827,
+            "unit": "iter/sec",
+            "range": "stddev: 4.0908356603067067e-7",
+            "extra": "mean: 1.4486153614761608 usec\nrounds: 89679"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 159093.34390839096,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000013068404048895476",
+            "extra": "mean: 6.2856180870509535 usec\nrounds: 7287"
           }
         ]
       }
