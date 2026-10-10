@@ -44,7 +44,7 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y bats
       - name: Run unit tests
-        run: uv run pytest -m "not integration" --cov-report=xml
+        run: uv run pytest -m "not integration" --cov-report=xml --junitxml=junit.xml -o junit_family=legacy
       - name: Run plan parser tests (Linux only)
         if: runner.os == 'Linux'
         run: uv run pytest .github/scripts/test_parse_plan.py --no-cov
@@ -54,3 +54,9 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           # fail loudly on master; PR uploads only warn so a Codecov hiccup doesn't redden the matrix
           fail_ci_if_error: ${{ github.event_name != 'pull_request' }}
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          report_type: test_results
