@@ -1,0 +1,50 @@
+name: Instruction Counts
+
+# Instruction-count benchmarks for the in-memory benchmarks (no database).
+# Wall time swings ~1.9x between runner VMs; CPU instruction counts don't (#315).
+# Runs the PR's benchmarks against the base commit's src/ and the PR's src/ in
+# the same job, under stock Valgrind (pytest-codspeed drives callgrind; no
+# CodSpeed account involved).
+
+on:
+  pull_request:
+
+concurrency:
+  group: instruction-counts-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  instruction-counts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q && sudo apt-get install -yq valgrind
+          uv sync --all-groups --extra scylla
+          git worktree add base "${{ github.event.pull_request.base.sha }}"
+
+      - name: Count instructions (base and PR)
+        run: |
+          for side in base head; do
+            src=src; [ "$side" = base ] && src=base/src
+            mkdir -p "callgrind-$side"
+            PYTHONHASHSEED=0 CODSPEED_ENV=1 valgrind -q --tool=callgrind --instr-atstart=no \
+              --callgrind-out-file="callgrind-$side/cg.%p" \
+              .venv/bin/python -m pytest benchmarks/ -m in_memory --codspeed --no-cov -q \
+                -p no:cacheprovider -o pythonpath="$src"
+          done
+
+      - name: Compare
+        shell: bash # pipefail, so the script's exit code survives tee
+        run: |
+          python .github/scripts/compare-instructions.py callgrind-base callgrind-head \
+            | tee -a "$GITHUB_STEP_SUMMARY"
