@@ -60,6 +60,7 @@ __all__ = [
     "AsyncBatchQuery",
     "BatchQuery",
     "BigInt",
+    "BlockingCallWarning",
     "ClusteringKey",
     "ConfigurationError",
     "CoodieError",

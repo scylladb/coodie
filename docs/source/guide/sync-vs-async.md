@@ -152,7 +152,7 @@ Both APIs share these modules — no separate sync/async versions needed:
 | CounterDocument | `CounterDocument` | `CounterDocument` |
 | MaterializedView | `MaterializedView` | `MaterializedView` |
 | QuerySet | `QuerySet` | `QuerySet` |
-| Batch | `BatchQuery` | `AsyncBatchQuery` |
+| Batch | `BatchQuery` | `AsyncBatchQuery` (or `BatchQuery` with `async with`) |
 | Init | `init_coodie()` | `init_coodie()` (async) |
 | Raw CQL | `execute_raw()` | `execute_raw()` (async) |
 | Create keyspace | `create_keyspace()` | `create_keyspace()` (async) |
@@ -168,10 +168,88 @@ Both APIs share these modules — no separate sync/async versions needed:
 | **High-concurrency I/O** | `coodie.aio` — concurrent queries without threads |
 | **Jupyter notebooks** | Either — notebooks support `await` natively |
 
+## Using Both Modes on One Model
+
+Every model supports both modes, whichever base class it uses. The base
+class only picks what the un-suffixed names (`save()`, `get()`, `all()`, ...)
+do. Each I/O method also exists as an explicit `*_sync` and `*_async` twin:
+
+```python
+from coodie.aio import Document   # default mode: async
+
+class User(Document):
+    id: Annotated[UUID, PrimaryKey()] = Field(default_factory=uuid4)
+    name: str
+
+user = User(name="Alice")
+await user.save()             # default mode
+await user.save_async()       # always async
+user.save_sync()              # always sync: same object, same table
+
+users = User.find(name="Alice").all_sync()
+n = await User.find().count_async()
+
+for u in User.find(): ...         # `for` is always sync
+async for u in User.find(): ...   # `async for` is always async
+```
+
+`BatchQuery` works with both `with` and `async with`, so one batch can hold
+writes from either mode.
+
+To set an application-wide default, define an abstract base once:
+
+```python
+from coodie.sync import Document
+
+class Model(Document):
+    class Settings:
+        __abstract__ = True
+
+class User(Model): ...    # user.save() is sync; await user.save_async() also works
+```
+
+### Overriding methods
+
+Override the explicit twins. The un-suffixed alias calls them, so the
+override applies in both modes:
+
+```python
+class User(Document):
+    def save_sync(self, **kw):
+        self.touch()
+        return super().save_sync(**kw)
+
+    async def save_async(self, **kw):
+        self.touch()
+        return await super().save_async(**kw)
+```
+
+Models that override only the un-suffixed `save()` keep working as before.
+If such a model then calls `save_sync()` / `save_async()` directly, which
+skips that override, coodie emits a `UserWarning`.
+
+### Blocking calls inside an event loop
+
+On an async-default model, a `*_sync` call made while an event loop is
+running blocks the loop, and coodie emits
+{class}`~coodie.exceptions.BlockingCallWarning`. Use the `*_async` twin there.
+To silence it, or to turn it into an error in tests, use the standard
+`warnings` filters:
+
+```python
+import warnings
+from coodie.exceptions import BlockingCallWarning
+
+warnings.simplefilter("error", BlockingCallWarning)
+```
+
+Sync-default models don't emit this warning, so existing `coodie.sync` code
+is unaffected.
+
 ```{note}
-You can use both APIs in the same application by registering drivers
-with different names. However, don't mix sync and async calls on the
-same driver — pick one per driver instance.
+`AcsyllaDriver(session=...)` built from a session you created yourself is
+async-only. Use `init_coodie(hosts=...)` or `init_coodie_async(hosts=...)`
+for an Acsylla driver that supports both modes.
 ```
 
 ## What's Next?
