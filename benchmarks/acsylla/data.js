@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791661108388,
+  "lastUpdate": 1791662198219,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -20223,6 +20223,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 8.584695169998912e-7",
             "extra": "mean: 5.749241273952474 usec\nrounds: 7535"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "219caccb64db813400f6e1a8f3cd52f8629d3449",
+          "message": "fix(query): reject IS [NOT] NULL filters client-side\n\nQuerySet.filter(col__isnull=...), is_null() and is_not_null() rendered\nIS NULL / IS NOT NULL in SELECT/UPDATE/DELETE. ScyllaDB/Cassandra only\naccept IS NOT NULL in materialized view definitions, and IS NULL is not\nvalid CQL, so every such query failed on the server.\n\nbuild_where_clause() now raises InvalidQueryError for ISNULL triples, which\ncovers sync and async QuerySet reads, updates and deletes. Materialized\nview WHERE clauses are built separately and keep IS NOT NULL.\n\nCloses #296\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-10T22:55:43+03:00",
+          "tree_id": "31e99b1aa196807b5d0351fab889bd3326cebe15",
+          "url": "https://github.com/scylladb/coodie/commit/219caccb64db813400f6e1a8f3cd52f8629d3449"
+        },
+        "date": 1791662196899,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 137831.9689046031,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00000252719927068449",
+            "extra": "mean: 7.2552108770362596 usec\nrounds: 14857"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 2735434.7772737946,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2580837447016958e-7",
+            "extra": "mean: 365.57259866258846 nsec\nrounds: 175809"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 264734.02564219054,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000021437932842116024",
+            "extra": "mean: 3.7773761705704616 usec\nrounds: 24667"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 993180.1279859131,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3101351799729646e-7",
+            "extra": "mean: 1.0068667020431803 usec\nrounds: 69731"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 1092687.8461325685,
+            "unit": "iter/sec",
+            "range": "stddev: 3.644848920991113e-7",
+            "extra": "mean: 915.1744512757 nsec\nrounds: 44104"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 1689068.0453698765,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0525422883025405e-7",
+            "extra": "mean: 592.0424595925722 nsec\nrounds: 193499"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 1416716.1212973308,
+            "unit": "iter/sec",
+            "range": "stddev: 2.211930577398767e-7",
+            "extra": "mean: 705.8577120476818 nsec\nrounds: 82319"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 1247547.03701718,
+            "unit": "iter/sec",
+            "range": "stddev: 2.39753199038172e-7",
+            "extra": "mean: 801.572983084428 nsec\nrounds: 88130"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 321584.0663981851,
+            "unit": "iter/sec",
+            "range": "stddev: 4.593692731164879e-7",
+            "extra": "mean: 3.109606801108737 usec\nrounds: 10557"
           }
         ]
       }
