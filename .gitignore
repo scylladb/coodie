@@ -148,3 +148,4 @@ src/coodie/_version.py
 
 # Git worktrees
 .worktrees/
+junit.xml

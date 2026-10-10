@@ -53,7 +53,7 @@ jobs:
           uv sync --all-groups
           uv pip install -e ".[${{ matrix.driver-type }}]"
       - name: Run integration tests
-        run: uv run pytest -m integration -v --timeout=120 --driver-type=${{ matrix.driver-type }} --cov-report=xml
+        run: uv run pytest -m integration -v --timeout=120 --driver-type=${{ matrix.driver-type }} --cov-report=xml --junitxml=junit.xml -o junit_family=legacy
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
@@ -61,3 +61,10 @@ jobs:
           flags: integration
           # fail loudly on master; PR uploads only warn so a Codecov hiccup doesn't redden the matrix
           fail_ci_if_error: ${{ github.event_name != 'pull_request' }}
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          report_type: test_results
+          flags: integration
