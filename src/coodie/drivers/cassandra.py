@@ -172,7 +172,7 @@ class CassandraDriver(AbstractDriver):
                 if not dry_run:
                     self._session.execute(index_cql)
             if getattr(col, "vector_index", False):
-                idx_name = f"{table}_{col.name}_idx"
+                idx_name = col.vector_index_name or f"{table}_{col.name}_idx"
                 model_indexes[idx_name] = col
                 vec_idx_cql = build_create_vector_index(table, keyspace, col)
                 planned.append(vec_idx_cql)
@@ -481,7 +481,7 @@ class CassandraDriver(AbstractDriver):
                 if not dry_run:
                     await self._execute_cql_async(index_cql)
             if getattr(col, "vector_index", False):
-                idx_name = f"{table}_{col.name}_idx"
+                idx_name = col.vector_index_name or f"{table}_{col.name}_idx"
                 model_indexes[idx_name] = col
                 vec_idx_cql = build_create_vector_index(table, keyspace, col)
                 planned.append(vec_idx_cql)

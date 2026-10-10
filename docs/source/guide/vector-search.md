@@ -30,6 +30,10 @@ class ProductEmbedding(Document):
         keyspace = "my_ks"
 ```
 
+To override the generated index name (`<table>_<column>_idx`), pass
+`index_name`, just like `Indexed(index_name=...)`:
+`VectorIndex(similarity_function="COSINE", index_name="product_ann_idx")`.
+
 For **sync** usage replace `coodie.aio` with `coodie.sync`.
 
 ## Syncing the Table
