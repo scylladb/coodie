@@ -1,0 +1,13 @@
+[project]
+name = "coodie-argus-tracker-demo"
+version = "0.1.0"
+description = "Argus-inspired test tracker demo showcasing composite keys, batch ingestion, TimeUUID, and partition-scoped queries"
+requires-python = ">=3.10"
+dependencies = [
+    "coodie[scylla]",
+    "click>=8.0",
+    "rich>=13.0",
+]
+
+[tool.uv.sources]
+coodie = { path = "../..", editable = true }
