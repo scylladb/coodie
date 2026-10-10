@@ -7,12 +7,16 @@ from typing import Any
 from coodie.schema import ColumnDefinition
 
 _UNQUOTED_IDENT_RE = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
-_RESERVED_KEYWORDS = frozenset(
-    "add allow alter and apply asc authorize batch begin by columnfamily create delete desc describe "
-    "drop entries execute from full grant if in index infinity insert into is keyspace limit materialized "
-    "mbean mbeans modify nan norecursive not null of on or order primary rename replace revoke schema "
-    "select set table to token truncate unlogged unset update use using view where with".split()
-)
+try:
+    # scylla-driver / cassandra-driver keep this list in step with the server; use theirs when installed.
+    from cassandra.metadata import cql_keywords_reserved as _RESERVED_KEYWORDS
+except ImportError:  # acsylla / python-rs expose none; fall back to the CQL reserved words
+    _RESERVED_KEYWORDS = frozenset(
+        "add allow alter and apply asc authorize batch begin by columnfamily create delete desc describe "  # noqa: SIM905
+        "drop entries execute from full grant if in index infinity insert into is keyspace limit materialized "
+        "mbean mbeans modify nan norecursive not null of on or order primary rename replace revoke schema "
+        "select set table to token truncate unlogged unset update use using view where with".split()
+    )
 
 
 def _is_quoted(name: str) -> bool:
@@ -161,6 +165,9 @@ def build_create_vector_index(
 
 
 def build_drop_index(index_name: str, keyspace: str) -> str:
+    """*index_name* is as stored in ``system_schema``, so its case is kept."""
+    if index_name != index_name.lower():
+        index_name = '"' + index_name.replace('"', '""') + '"'
     return f"DROP INDEX IF EXISTS {qualified_name(keyspace, index_name)}"
 
 
