@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791658150450,
+  "lastUpdate": 1791658574133,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -19875,6 +19875,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 7.903650813463825e-7",
             "extra": "mean: 4.513665218304555 usec\nrounds: 8516"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "cb5c6d517132ab77f7c142dd991d02dd02cded70",
+          "message": "ci: upload test results to Codecov\n\nEmit JUnit XML from pytest in unit and integration runs and upload it\nwith codecov-action report_type: test_results, so Codecov Test Analytics\ncan track failures and flaky tests.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-10T21:55:22+03:00",
+          "tree_id": "37513945c2445a8d885772588a4af6b717017953",
+          "url": "https://github.com/scylladb/coodie/commit/cb5c6d517132ab77f7c142dd991d02dd02cded70"
+        },
+        "date": 1791658572509,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 89630.98572883898,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000014471305938595699",
+            "extra": "mean: 11.156855989794696 usec\nrounds: 9041"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1860321.851439012,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2561059821073197e-7",
+            "extra": "mean: 537.5413932951825 nsec\nrounds: 136073"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 114234.43441491961,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000037069572463375105",
+            "extra": "mean: 8.75392787754193 usec\nrounds: 17900"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 660921.2445643502,
+            "unit": "iter/sec",
+            "range": "stddev: 4.452102462278893e-7",
+            "extra": "mean: 1.5130395765370734 usec\nrounds: 48286"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 664711.144814672,
+            "unit": "iter/sec",
+            "range": "stddev: 7.744043617755706e-7",
+            "extra": "mean: 1.5044128683577436 usec\nrounds: 27183"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 981249.6966716908,
+            "unit": "iter/sec",
+            "range": "stddev: 3.077095823625254e-7",
+            "extra": "mean: 1.0191085952861014 usec\nrounds: 88153"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 1036241.4775835861,
+            "unit": "iter/sec",
+            "range": "stddev: 3.714917690822471e-7",
+            "extra": "mean: 965.0260307393814 nsec\nrounds: 59468"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 861674.1871235196,
+            "unit": "iter/sec",
+            "range": "stddev: 4.518826386896246e-7",
+            "extra": "mean: 1.1605314571836554 usec\nrounds: 69682"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 189501.9667559704,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011913296743350437",
+            "extra": "mean: 5.276990086798105 usec\nrounds: 7162"
           }
         ]
       }
