@@ -72,6 +72,7 @@ dev = [
     "pytest-timeout>=2.0",
     "testcontainers>=4.0",
     "pre-commit>=4.5.1,<5",
+    "pytest-codspeed>=5.0",
 ]
 docs = [
     "Sphinx>=9.1,<10; python_version >= '3.12'",
@@ -115,6 +116,7 @@ asyncio_default_fixture_loop_scope = "session"
 markers = [
     "integration: marks tests as integration tests (deselect with '-m not integration')",
     "benchmark: marks tests as benchmark tests (enable with --benchmark-enable)",
+    "in_memory: benchmarks that need no database (set automatically in benchmarks/conftest.py)",
     "ssl: marks tests that require an SSL-enabled ScyllaDB container",
 ]
 python_files = ["test_*.py", "bench_*.py"]

@@ -22,7 +22,9 @@ hand-written CQL and hydrating plain Python ``dataclasses``.
 from __future__ import annotations
 
 import asyncio
+import gc
 import logging
+import os
 from typing import Any
 from uuid import uuid4
 
@@ -49,6 +51,20 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         choices=["scylla", "cassandra", "acsylla", "python-rs"],
         help="Coodie driver backend for benchmarks (default: scylla)",
     )
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    # Instruction counts measure a single call; GC runs triggered by earlier
+    # allocations would land in it at random (CODSPEED_ENV is set by CI).
+    if os.environ.get("CODSPEED_ENV"):
+        gc.disable()
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    # Benchmarks that never touch the database run under CodSpeed instruction counting.
+    for item in items:
+        if "scylla_container" not in item.fixturenames:
+            item.add_marker(pytest.mark.in_memory)
 
 
 @pytest.fixture(scope="session")
