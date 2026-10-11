@@ -1600,3 +1600,56 @@ def test_cassandra_driver_sync_table_identifier_case(cassandra_driver, mock_cass
     calls = mock_cassandra_session.execute.call_args_list
     assert calls[1].args[1] == ("test_ks", stored)
     assert calls[2].args[0] == f'ALTER TABLE test_ks.{ref} ADD "name" text'
+
+
+async def test_acsylla_driver_sync_table_vector_index(acsylla_driver):
+    """AcsyllaDriver creates vector indexes and keeps them when dropping removed indexes."""
+    from coodie.schema import ColumnDefinition
+
+    cols = [
+        ColumnDefinition(name="id", cql_type="uuid", primary_key=True),
+        ColumnDefinition(name="name", cql_type="text", index=True),
+        ColumnDefinition(name="emb", cql_type="vector<float, 3>", vector_index=True),
+    ]
+    acsylla_driver._get_existing_columns_async = AsyncMock(return_value={"id", "name", "emb"})
+    acsylla_driver._get_existing_indexes_async = AsyncMock(return_value={"myitems_emb_idx", "myitems_old_idx"})
+
+    planned = await acsylla_driver.sync_table_async("MyItems", "ks", cols, dry_run=True, drop_removed_indexes=True)
+    assert any("USING 'vector_index'" in s for s in planned)
+    drops = [s for s in planned if s.startswith("DROP INDEX")]
+    assert drops == ["DROP INDEX IF EXISTS ks.myitems_old_idx"]
+
+
+@pytest.mark.parametrize(
+    ("error", "expect"),
+    [(None, None), (Exception("Non-supported custom class"), UserWarning), (Exception("boom"), Exception)],
+)
+async def test_acsylla_driver_sync_table_vector_index_execute(acsylla_driver, error, expect):
+    """Vector index CREATE runs on a real sync; missing vector search warns, other errors propagate."""
+    from coodie.schema import ColumnDefinition
+
+    cols = [
+        ColumnDefinition(name="id", cql_type="uuid", primary_key=True),
+        ColumnDefinition(name="emb", cql_type="vector<float, 3>", vector_index=True),
+    ]
+    executed = []
+
+    async def execute(cql):
+        executed.append(cql)
+        if error is not None and "vector_index" in cql:
+            raise error
+
+    acsylla_driver._cql_to_statement = lambda cql: cql
+    acsylla_driver._session.execute = execute
+    acsylla_driver._get_existing_columns_async = AsyncMock(return_value={"id", "emb"})
+
+    if expect is None:
+        await acsylla_driver.sync_table_async("items", "ks", cols)
+    else:
+        with (
+            pytest.raises(expect)
+            if expect is Exception
+            else pytest.warns(expect, match="Vector index creation skipped")
+        ):
+            await acsylla_driver.sync_table_async("items", "ks", cols)
+    assert any("USING 'vector_index'" in cql for cql in executed)

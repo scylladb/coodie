@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import warnings
 from typing import Any
 
 from coodie.cql_builder import qualified_name, schema_name
@@ -223,22 +222,7 @@ class CassandraDriver(AbstractDriver):
                 raise exc
         except ImportError:
             pass
-        _msg = str(exc)
-        # Known patterns indicating vector index creation is not supported in this configuration:
-        # - "Non-supported custom class": index class not available (older ScyllaDB/Cassandra)
-        # - "use tablets": keyspace must be tablets-enabled for vector indexes (newer ScyllaDB).
-        #   Full message: "Vector index requires the base table's keyspace to use tablets."
-        if (
-            "Non-supported custom class" in _msg
-            or "use tablets" in _msg
-            or "not supported on base tables with tablets" in _msg
-        ):
-            warnings.warn(
-                f"Vector index creation skipped: vector search not supported by this database. {exc}",
-                stacklevel=3,
-            )
-        else:
-            raise exc
+        super()._warn_if_sai_unsupported(exc)
 
     def _warm_prepared_cache(self, table: str, keyspace: str, cols: list[Any]) -> None:
         """Pre-prepare SELECT-by-PK and INSERT queries to eliminate cold-start latency."""

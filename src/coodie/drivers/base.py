@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -13,6 +14,25 @@ def _is_ddl(cql: str) -> bool:
 
 class AbstractDriver(ABC):
     """Abstract base class for coodie execution backends."""
+
+    def _warn_if_sai_unsupported(self, exc: Exception) -> None:
+        """Warn when vector index creation is not supported by the database; re-raise anything else."""
+        msg = str(exc)
+        # Known patterns indicating vector index creation is not supported in this configuration:
+        # - "Non-supported custom class": index class not available (older ScyllaDB/Cassandra)
+        # - "use tablets": keyspace must be tablets-enabled for vector indexes (newer ScyllaDB).
+        #   Full message: "Vector index requires the base table's keyspace to use tablets."
+        if (
+            "Non-supported custom class" in msg
+            or "use tablets" in msg
+            or "not supported on base tables with tablets" in msg
+        ):
+            warnings.warn(
+                f"Vector index creation skipped: vector search not supported by this database. {exc}",
+                stacklevel=3,
+            )
+        else:
+            raise exc
 
     # Set to ``True`` in driver subclasses whose rows may contain raw
     # types that require Pydantic coercion (e.g. UUID strings instead of
