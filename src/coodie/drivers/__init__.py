@@ -17,16 +17,35 @@ def _python_rs_contact_points(hosts: list[str], port: str | int | None) -> tuple
     return tuple((host, int(port)) for host in hosts)
 
 
+# SessionBuilder methods that take more than one argument; pass a tuple for these.
+_PYTHON_RS_MULTI_ARG = frozenset({"user", "use_keyspace"})
+# Builder methods that are not connection options.
+_PYTHON_RS_NOT_OPTIONS = frozenset({"connect", "contact_points", "get_config"})
+
+
 def _build_python_rs_session_builder(session_builder_cls: Any, hosts: list[str], kwargs: dict[str, Any]) -> Any:
     """Build a python-rs SessionBuilder via fluent API.
 
-    Extracts optional ``port`` from ``kwargs``, forwards remaining kwargs to
-    ``SessionBuilder(...)``, then applies normalized contact points.
+    ``SessionBuilder()`` takes no arguments, so each kwarg calls the builder
+    method of the same name (``tcp_nodelay=False`` -> ``.tcp_nodelay(False)``,
+    ``user=("u", "p")`` -> ``.user("u", "p")``).  ``port`` is applied to every
+    contact point instead.
     """
     builder_kwargs = dict(kwargs)
     port = builder_kwargs.pop("port", None)
-    builder = session_builder_cls(**builder_kwargs)
-    builder = builder.contact_points(_python_rs_contact_points(hosts, port))
+    builder = session_builder_cls().contact_points(_python_rs_contact_points(hosts, port))
+    for name, value in builder_kwargs.items():
+        method = None if name.startswith("_") or name in _PYTHON_RS_NOT_OPTIONS else getattr(builder, name, None)
+        if not callable(method):
+            raise ConfigurationError(
+                f"Unknown python-rs connection option {name!r}: it must name a scylla.SessionBuilder method."
+            )
+        if name in _PYTHON_RS_MULTI_ARG:
+            if not isinstance(value, tuple):
+                raise ConfigurationError(f"python-rs option {name!r} takes a tuple of arguments, got {value!r}.")
+            builder = method(*value)
+        else:
+            builder = method(value)
     return builder
 
 
@@ -91,16 +110,18 @@ def init_coodie(
             connects on first use.  scylla/cassandra only.  *compression*
             and *speculative_execution_policy* are not applied in lazy mode;
             pass them via ``**kwargs`` instead.
-        compression: Forwarded to ``Cluster(compression=...)``.
-            scylla/cassandra only, non-lazy.
+        compression: Forwarded to ``Cluster(compression=...)`` for
+            scylla/cassandra (non-lazy), and to ``.compression(...)`` for
+            python-rs (a ``scylla.session.Compression`` value).
         speculative_execution_policy: Forwarded to
             ``Cluster(speculative_execution_policy=...)``.  scylla/cassandra
             only, non-lazy.
         **kwargs: Extra connection options, used only when coodie creates the
             session: ``Cluster(hosts, **kwargs)`` for scylla/cassandra,
             ``acsylla.create_cluster(hosts, **kwargs)`` for acsylla, and
-            ``SessionBuilder(**kwargs)`` for python-rs (where ``port`` is
-            popped and applied to every contact point instead).
+            one ``SessionBuilder`` method call per kwarg for python-rs
+            (``tcp_nodelay=False`` calls ``.tcp_nodelay(False)``; ``port`` is
+            applied to every contact point instead).
 
     Returns:
         The registered driver.
@@ -133,6 +154,9 @@ def init_coodie(
                     "python-rs-driver is required for PythonRsDriver. "
                     "Build from source: https://github.com/scylladb-zpp-2025-python-rs-driver/python-rs-driver"
                 ) from exc
+
+            if compression is not None:
+                kwargs["compression"] = compression
 
             async def _make_session() -> Any:
                 builder = _build_python_rs_session_builder(SessionBuilder, hosts, kwargs)
