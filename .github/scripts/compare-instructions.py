@@ -6,13 +6,16 @@ its ``desc: Trigger: Client Request: <test uri>`` line.
 
 Each dir may hold several runs; the lowest count per benchmark wins.
 
-Usage: compare-instructions.py BASE_DIR HEAD_DIR [--fail-pct N]
+Usage: compare-instructions.py BASE_DIR HEAD_DIR [--fail-pct N] [--json OUT]
 Prints a Markdown table; exits 1 if any benchmark grew by more than N%.
+``--json`` also writes the HEAD counts for github-action-benchmark
+(``customSmallerIsBetter``), which keeps the gh-pages history.
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import re
 from pathlib import Path
 
@@ -29,6 +32,16 @@ def read_counts(out_dir: Path) -> dict[str, int]:
             name, n = trigger.group(1), int(totals.group(1))
             counts[name] = min(counts.get(name, n), n)  # several runs per side: keep the min
     return counts
+
+
+def overview(base: dict[str, int], head: dict[str, int], fail_pct: float) -> str:
+    """One line: how many benchmarks, and the biggest increase."""
+    pcts = {name: (head[name] - base[name]) / base[name] * 100 for name in base.keys() & head.keys()}
+    if not pcts:
+        return "No benchmark ran on both sides."
+    worst = max(pcts, key=pcts.get)
+    verdict = f"🔴 above +{fail_pct:g}%" if pcts[worst] > fail_pct else f"✅ within +{fail_pct:g}%"
+    return f"{verdict}: {len(pcts)} benchmarks, largest change {pcts[worst]:+.1f}% (`{worst.split('::')[-1]}`)"
 
 
 def compare(base: dict[str, int], head: dict[str, int], fail_pct: float) -> tuple[str, bool]:
@@ -54,13 +67,17 @@ def main() -> int:
     parser.add_argument("base_dir", type=Path)
     parser.add_argument("head_dir", type=Path)
     parser.add_argument("--fail-pct", type=float, default=5.0)
+    parser.add_argument("--json", type=Path, help="write HEAD counts as customSmallerIsBetter JSON")
     args = parser.parse_args()
     base, head = read_counts(args.base_dir), read_counts(args.head_dir)
     if not base or not head:
         print(f"No callgrind results found (base: {len(base)}, PR: {len(head)})")
         return 1
+    if args.json:
+        entries = [{"name": name, "unit": "instructions", "value": n} for name, n in sorted(head.items())]
+        args.json.write_text(json.dumps(entries, indent=2))
     table, failed = compare(base, head, args.fail_pct)
-    print(f"### Instruction counts (CPU instructions per call, fail above +{args.fail_pct:g}%)\n\n{table}")
+    print(f"### Instruction counts (CPU instructions per call)\n\n{overview(base, head, args.fail_pct)}\n\n{table}")
     return 1 if failed else 0
 
 

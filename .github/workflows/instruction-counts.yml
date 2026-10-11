@@ -4,9 +4,18 @@ name: Instruction Counts
 # Wall time swings ~1.9x between runner VMs; CPU instruction counts don't (#315).
 # Runs the PR's benchmarks against the base commit's src/ and the PR's src/ in
 # the same job, under stock Valgrind (pytest-codspeed drives callgrind; no
-# CodSpeed account involved).
+# CodSpeed account involved). On master pushes the base is the previous commit,
+# and the counts go to the gh-pages chart next to the wall-time benchmarks.
 
 on:
+  push:
+    branches:
+      - master
+    paths:
+      - "src/**"
+      - "benchmarks/**"
+      - ".github/workflows/instruction-counts.yml"
+      - ".github/scripts/compare-instructions.py"
   pull_request:
     paths:
       - "src/**"
@@ -21,6 +30,11 @@ concurrency:
 jobs:
   instruction-counts:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # push to gh-pages
+      pull-requests: write # overview comment
+    env:
+      BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -35,7 +49,7 @@ jobs:
         run: |
           sudo apt-get update -q && sudo apt-get install -yq valgrind
           uv sync --all-groups --extra scylla
-          git worktree add base "${{ github.event.pull_request.base.sha }}"
+          git worktree add base "$BASE_SHA"
 
       - name: Count instructions (base and PR)
         run: |
@@ -54,5 +68,45 @@ jobs:
       - name: Compare
         shell: bash # pipefail, so the script's exit code survives tee
         run: |
-          python .github/scripts/compare-instructions.py callgrind-base callgrind-head \
-            | tee -a "$GITHUB_STEP_SUMMARY"
+          python .github/scripts/compare-instructions.py callgrind-base callgrind-head --json instruction-counts.json \
+            | tee report.md | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Post overview on the PR
+        # Fork PRs get a read-only token
+        if: >-
+          github.event_name == 'pull_request' && !cancelled()
+          && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          [ -s report.md ] || exit 0
+          marker="<!-- instruction-counts -->"
+          # Heading and overview line stay visible; the table folds away.
+          { echo "$marker"; head -n 3 report.md
+            printf '\n<details><summary>Per benchmark (<a href="%s">run</a>)</summary>\n\n' "$RUN_URL"
+            tail -n +4 report.md; printf '\n</details>\n'; } > comment.md
+          id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate \
+            --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | head -n 1)
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -F body=@comment.md >/dev/null
+          else
+            gh pr comment "$PR" --body-file comment.md
+          fi
+
+      - name: Store instruction counts on gh-pages
+        if: github.event_name == 'push' && !cancelled()
+        uses: benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc # v1.22.2
+        with:
+          name: "coodie instruction counts"
+          tool: customSmallerIsBetter
+          output-file-path: instruction-counts.json
+          gh-pages-branch: gh-pages
+          benchmark-data-dir-path: benchmarks/instructions
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          # Same +5% limit as the Compare step (CI noise is ~1%); master has no PR to comment on.
+          alert-threshold: "105%"
+          comment-on-alert: true
+          fail-on-alert: false
