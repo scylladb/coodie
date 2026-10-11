@@ -1,6 +1,8 @@
 name: Integration Tests
 
 on:
+  # Dispatched by ci.yml release-pr job so tests run on the release PR
+  workflow_dispatch:
   push:
     branches:
       - master
