@@ -61,18 +61,43 @@ def test_python_rs_contact_points_with_integer_port():
 
 def test_build_python_rs_session_builder_sets_contact_points_and_forwards_kwargs():
     builder = MagicMock()
-    builder.contact_points.return_value = builder
+    for method in ("contact_points", "tcp_nodelay", "user"):
+        getattr(builder, method).return_value = builder
     session_builder_cls = MagicMock(return_value=builder)
 
     result = _build_python_rs_session_builder(
         session_builder_cls,
         ["127.0.0.1"],
-        {"port": "9042", "compression": "lz4"},
+        {"port": "9042", "tcp_nodelay": False, "user": ("u", "p")},
     )
 
     assert result is builder
-    session_builder_cls.assert_called_once_with(compression="lz4")
+    session_builder_cls.assert_called_once_with()
     builder.contact_points.assert_called_once_with((("127.0.0.1", 9042),))
+    builder.tcp_nodelay.assert_called_once_with(False)
+    builder.user.assert_called_once_with("u", "p")
+
+
+@pytest.mark.parametrize("option", ["no_such_option", "connect", "_private"])
+def test_build_python_rs_session_builder_rejects_unknown_kwargs(option):
+    class FakeBuilder:
+        def contact_points(self, points):
+            return self
+
+        def connect(self):
+            return self
+
+        def _private(self, value):
+            return self
+
+    with pytest.raises(ConfigurationError, match=option):
+        _build_python_rs_session_builder(FakeBuilder, ["127.0.0.1"], {option: 1})
+
+
+@pytest.mark.parametrize("option", ["user", "use_keyspace"])
+def test_build_python_rs_session_builder_rejects_non_tuple_multi_arg(option):
+    with pytest.raises(ConfigurationError, match="tuple"):
+        _build_python_rs_session_builder(MagicMock(), ["127.0.0.1"], {option: "ab"})
 
 
 # ------------------------------------------------------------------
@@ -611,16 +636,18 @@ def test_init_coodie_python_rs_with_hosts():
     mock_session = MagicMock()
     mock_scylla.SessionBuilder = MagicMock(return_value=mock_builder)
     mock_builder.contact_points.return_value = mock_builder
+    mock_builder.compression.return_value = mock_builder
     mock_builder.connect = AsyncMock(return_value=mock_session)
 
     modules = {
         "scylla": mock_scylla,
     }
     with patch.dict("sys.modules", modules):
-        driver = init_coodie(hosts=["127.0.0.1"], keyspace="ks", driver_type="python-rs")
+        driver = init_coodie(hosts=["127.0.0.1"], keyspace="ks", driver_type="python-rs", compression="lz4")
     assert get_driver() is driver
     assert driver._bridge_to_bg_loop is True
     mock_scylla.SessionBuilder.assert_called_once()
     mock_builder.contact_points.assert_called_once_with(("127.0.0.1",))
+    mock_builder.compression.assert_called_once_with("lz4")
     mock_builder.connect.assert_awaited_once()
     _registry.clear()

@@ -125,9 +125,12 @@ driver = await init_coodie(
 )
 ```
 
-Extra keyword arguments are forwarded to `SessionBuilder(**kwargs)`,
-except `port`, which coodie applies to each host when building the
-contact points.
+Each extra keyword argument calls the `SessionBuilder` method of the same
+name, e.g. `tcp_nodelay=False` calls `.tcp_nodelay(False)` and
+`user=("cassandra", "cassandra")` calls `.user("cassandra", "cassandra")`.
+`port` is the exception: coodie applies it to each host when building the
+contact points. An argument that isn't a `SessionBuilder` method raises
+`ConfigurationError`.
 
 Install: python-rs-driver is **not published on PyPI** and is built from
 source, so you need a Rust toolchain (`cargo`). Its Python package is
