@@ -13,6 +13,7 @@ import random
 
 import click
 from faker import Faker
+from models import Article, Content, Podcast, Video
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import (
@@ -27,8 +28,6 @@ from rich.table import Table
 from rich.text import Text
 
 from coodie.aio import init_coodie
-
-from models import Article, Content, Podcast, Video
 
 fake = Faker()
 console = Console()

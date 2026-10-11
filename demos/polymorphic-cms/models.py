@@ -8,7 +8,7 @@ correct subclass automatically.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Annotated, Optional
+from typing import Annotated
 from uuid import UUID, uuid4
 
 from pydantic import Field
@@ -27,7 +27,7 @@ class Content(Document):
     content_type: Annotated[str, Discriminator()] = ""
     title: str
     author: Annotated[str, Indexed()]
-    summary: Optional[str] = None
+    summary: str | None = None
     published: bool = False
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
@@ -41,7 +41,7 @@ class Content(Document):
 class Article(Content):
     """A written article with body text and word count."""
 
-    body: Optional[str] = None
+    body: str | None = None
     word_count: int = 0
 
     class Settings:
@@ -51,7 +51,7 @@ class Article(Content):
 class Video(Content):
     """A video entry with URL, duration, and resolution."""
 
-    video_url: Optional[str] = None
+    video_url: str | None = None
     duration_seconds: int = 0
     resolution: str = "1080p"
 
@@ -62,7 +62,7 @@ class Video(Content):
 class Podcast(Content):
     """A podcast episode with audio URL, duration, and episode number."""
 
-    audio_url: Optional[str] = None
+    audio_url: str | None = None
     duration_seconds: int = 0
     episode_number: int = 0
 
