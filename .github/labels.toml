@@ -103,6 +103,11 @@ color = "1D76DB"
 name = "P3"
 description = "Low priority / severity"
 
+[P4]
+color = "C5DEF5"
+name = "P4"
+description = "Lowest priority / nice to have"
+
 [plans]
 color = "89E6A1"
 name = "plans"
