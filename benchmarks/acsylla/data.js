@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791752997140,
+  "lastUpdate": 1791753109215,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -21354,6 +21354,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000010726961074558599",
             "extra": "mean: 6.137669685063658 usec\nrounds: 5522"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "6194ee248168fbdcab22502cb641398a3da7b8a3",
+          "message": "fix(drivers): support cassandra sessions that use execution profiles\n\nCassandraDriver always set session.row_factory = dict_factory, which\nthe driver rejects with ValueError on clusters configured with\nexecution profiles, so a tuned existing session couldn't be wrapped.\n\nWhen the setter refuses, run queries with a copy of the session's\ndefault profile that uses dict_factory, for every query including DDL\nand schema lookups. The caller's profile settings\nand cluster stay untouched. Only catching the ValueError is not enough:\nthe profile's named_tuple_factory renames \"[applied]\" to \"applied\", so\nfailed LWTs would be reported as applied.\n\nCloses #329\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-12T00:09:34+03:00",
+          "tree_id": "5794cdc30a930f8e81152675149286a731c38f6c",
+          "url": "https://github.com/scylladb/coodie/commit/6194ee248168fbdcab22502cb641398a3da7b8a3"
+        },
+        "date": 1791753107218,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 85389.80446404386,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000015197403712523231",
+            "extra": "mean: 12.243616069714559 usec\nrounds: 10218"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1692047.3695555115,
+            "unit": "iter/sec",
+            "range": "stddev: 3.29472554821619e-7",
+            "extra": "mean: 655.3656468555729 nsec\nrounds: 162285"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 149633.3982824412,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000030477999254459278",
+            "extra": "mean: 7.590884835519888 usec\nrounds: 19572"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 628140.7020084017,
+            "unit": "iter/sec",
+            "range": "stddev: 5.041848951259803e-7",
+            "extra": "mean: 1.7171862925928845 usec\nrounds: 59165"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 631711.9395441692,
+            "unit": "iter/sec",
+            "range": "stddev: 4.873250003834912e-7",
+            "extra": "mean: 1.697391619401813 usec\nrounds: 31597"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 875656.7409321619,
+            "unit": "iter/sec",
+            "range": "stddev: 4.235170507392323e-7",
+            "extra": "mean: 1.2363161945825147 usec\nrounds: 117842"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 916590.2829231897,
+            "unit": "iter/sec",
+            "range": "stddev: 3.864633167041426e-7",
+            "extra": "mean: 1.200953819151665 usec\nrounds: 62775"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 750750.7527102911,
+            "unit": "iter/sec",
+            "range": "stddev: 4.3687577951734694e-7",
+            "extra": "mean: 1.4366897867177497 usec\nrounds: 84948"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 176647.23537753444,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000010591820962273595",
+            "extra": "mean: 6.077133622385623 usec\nrounds: 5074"
           }
         ]
       }
