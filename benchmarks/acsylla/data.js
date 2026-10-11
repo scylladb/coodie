@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791708927265,
+  "lastUpdate": 1791714645657,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -20919,6 +20919,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 6.41568829908316e-7",
             "extra": "mean: 5.394915872826311 usec\nrounds: 7453"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "5eb24e6e732d904c8ad12dd7be38472433e0b8fc",
+          "message": "fix(schema): keep case of stored index names on drop, use driver keyword set\n\nbuild_drop_index gets names as stored in system_schema, so a stored\nmixed-case or non-identifier name (e.g. ByEmail) was folded by quote_ident\nand the IF EXISTS drop silently did nothing. Quote such names verbatim,\nand route autogen's rendered index drops through build_drop_index.\n\nquote_ident now uses cassandra.metadata.cql_keywords_reserved when\nscylla-driver/cassandra-driver is installed; the local list remains as a\nfallback for acsylla and python-rs. Also fixes the ruff SIM905 lint failure.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-11T13:29:54+03:00",
+          "tree_id": "ed40b324ad8425b3b1c6d8a754ad26072e3a1f72",
+          "url": "https://github.com/scylladb/coodie/commit/5eb24e6e732d904c8ad12dd7be38472433e0b8fc"
+        },
+        "date": 1791714643750,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 86117.80920414664,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000015636059854004547",
+            "extra": "mean: 12.212211600355698 usec\nrounds: 10241"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1663893.5206816765,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6307975808923663e-7",
+            "extra": "mean: 664.667132711256 nsec\nrounds: 153776"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 146778.21813766702,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003287829316720183",
+            "extra": "mean: 7.937809541119414 usec\nrounds: 19243"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 631711.9395441692,
+            "unit": "iter/sec",
+            "range": "stddev: 5.328348318384953e-7",
+            "extra": "mean: 1.7410720963364912 usec\nrounds: 54663"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 635727.9118521546,
+            "unit": "iter/sec",
+            "range": "stddev: 4.86326633622748e-7",
+            "extra": "mean: 1.6907930679095053 usec\nrounds: 32054"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 891265.596779258,
+            "unit": "iter/sec",
+            "range": "stddev: 3.8026166626538e-7",
+            "extra": "mean: 1.2169126925924867 usec\nrounds: 135063"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 907441.0173143919,
+            "unit": "iter/sec",
+            "range": "stddev: 3.8871540543833045e-7",
+            "extra": "mean: 1.2141975708900699 usec\nrounds: 28405"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 762195.1249323034,
+            "unit": "iter/sec",
+            "range": "stddev: 4.168596429876579e-7",
+            "extra": "mean: 1.4210502144151014 usec\nrounds: 84876"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 175438.59640929796,
+            "unit": "iter/sec",
+            "range": "stddev: 9.924099486672408e-7",
+            "extra": "mean: 6.099859100398028 usec\nrounds: 6714"
           }
         ]
       }
