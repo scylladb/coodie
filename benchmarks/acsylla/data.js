@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791719217836,
+  "lastUpdate": 1791730583949,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -21093,6 +21093,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.807717616745315e-7",
             "extra": "mean: 4.50847537508225 usec\nrounds: 8467"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "5ffc26003f2132f2c5bf847490cf89b885c70400",
+          "message": "fix(drivers): map python-rs init_coodie kwargs to SessionBuilder methods\n\nscylladb-rs-driver's SessionBuilder() takes no arguments; options are\nset with chained methods. Forwarding init_coodie(**kwargs) to the\nconstructor made any extra option fail with a TypeError.\n\nCall the builder method of the same name for each kwarg (a tuple is\nunpacked for the two-argument user/use_keyspace), and raise\nConfigurationError for anything that isn't a builder option.\n\nCloses #321\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-11T17:55:35+03:00",
+          "tree_id": "432c23c92a556fa267ba28db362ad4c6ed6db0a1",
+          "url": "https://github.com/scylladb/coodie/commit/5ffc26003f2132f2c5bf847490cf89b885c70400"
+        },
+        "date": 1791730582653,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 84731.40143542323,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000014434534431107902",
+            "extra": "mean: 12.377907861385552 usec\nrounds: 9464"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1663893.5206816765,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6421007860011863e-7",
+            "extra": "mean: 663.790671307172 nsec\nrounds: 152626"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 149209.19112125476,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002787748708838163",
+            "extra": "mean: 7.716708345984702 usec\nrounds: 19722"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 631711.9395441692,
+            "unit": "iter/sec",
+            "range": "stddev: 5.100909317266924e-7",
+            "extra": "mean: 1.7294939443154407 usec\nrounds: 56393"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 628140.7020084017,
+            "unit": "iter/sec",
+            "range": "stddev: 5.096780810223307e-7",
+            "extra": "mean: 1.7265649311904847 usec\nrounds: 31749"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 884173.2942440258,
+            "unit": "iter/sec",
+            "range": "stddev: 3.852293840594076e-7",
+            "extra": "mean: 1.216513687348052 usec\nrounds: 146157"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 915750.9234018788,
+            "unit": "iter/sec",
+            "range": "stddev: 3.7323362434603597e-7",
+            "extra": "mean: 1.2196692011239163 usec\nrounds: 66944"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 762195.1249323034,
+            "unit": "iter/sec",
+            "range": "stddev: 3.844483255753528e-7",
+            "extra": "mean: 1.4167850457930014 usec\nrounds: 80887"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 174489.61781676474,
+            "unit": "iter/sec",
+            "range": "stddev: 9.293650291701518e-7",
+            "extra": "mean: 6.04898592386439 usec\nrounds: 6820"
           }
         ]
       }
