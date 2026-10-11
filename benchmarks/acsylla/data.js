@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791753109215,
+  "lastUpdate": 1791753159390,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -21441,6 +21441,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000010591820962273595",
             "extra": "mean: 6.077133622385623 usec\nrounds: 5074"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "994e06c6f2372ecde475327c9dc98d63ac42a433",
+          "message": "fix(drivers): create and keep vector indexes in acsylla and python-rs sync_table\n\nOnly CassandraDriver created vector indexes. AcsyllaDriver and\nPythonRsDriver skipped them, and with drop_removed_indexes=True they\ndropped existing ones because they were missing from model_indexes.\n\nMirror the cassandra vector-index branch in both drivers and move the\n\"vector search not supported\" message check to AbstractDriver so all\nthree share it.\n\nCloses #318\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-12T00:10:04+03:00",
+          "tree_id": "0018deed34c6ccedd3fe4456ed8e431e6e514661",
+          "url": "https://github.com/scylladb/coodie/commit/994e06c6f2372ecde475327c9dc98d63ac42a433"
+        },
+        "date": 1791753157777,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 138869.6013958347,
+            "unit": "iter/sec",
+            "range": "stddev: 6.120776899125772e-7",
+            "extra": "mean: 7.517154903235845 usec\nrounds: 10116"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 2941176.4730967414,
+            "unit": "iter/sec",
+            "range": "stddev: 1.482157788006567e-7",
+            "extra": "mean: 382.25097185509287 nsec\nrounds: 160257"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 282885.4310227766,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002652183271747657",
+            "extra": "mean: 3.9941017955563867 usec\nrounds: 21386"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 979431.9404602761,
+            "unit": "iter/sec",
+            "range": "stddev: 2.5923170531868473e-7",
+            "extra": "mean: 1.0931634031692712 usec\nrounds: 56994"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 1097694.8570302043,
+            "unit": "iter/sec",
+            "range": "stddev: 2.942226182230911e-7",
+            "extra": "mean: 962.6111280080255 nsec\nrounds: 39576"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 1512859.3008789232,
+            "unit": "iter/sec",
+            "range": "stddev: 2.0809731758987798e-7",
+            "extra": "mean: 709.7875878125653 nsec\nrounds: 196194"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 1426533.5428714226,
+            "unit": "iter/sec",
+            "range": "stddev: 2.769652634075616e-7",
+            "extra": "mean: 760.4561169595157 nsec\nrounds: 70517"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 1349527.6765922424,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2997115613976896e-7",
+            "extra": "mean: 812.1538830362565 nsec\nrounds: 91693"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 316957.2120336329,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000058067452561259475",
+            "extra": "mean: 3.835358747790988 usec\nrounds: 9391"
           }
         ]
       }
