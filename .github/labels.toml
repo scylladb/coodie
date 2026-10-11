@@ -122,3 +122,8 @@ description = ""
 color = "1533A2"
 name = "benchmark"
 description = ""
+
+[conflict]
+color = "A60368"
+name = "conflict"
+description = "Pull request has merge conflicts with the base branch"
