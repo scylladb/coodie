@@ -380,6 +380,7 @@ class PythonRsDriver(AbstractDriver):
             build_alter_table_options,
             build_create_index,
             build_create_table,
+            build_create_vector_index,
             build_drop_index,
         )
 
@@ -430,7 +431,7 @@ class PythonRsDriver(AbstractDriver):
                 if not dry_run:
                     await self._execute_cql_async(alter_cql)
 
-        # 5. Create secondary indexes
+        # 5. Create secondary indexes and vector indexes
         model_indexes: dict[str, Any] = {}
         for col in cols:
             if col.index:
@@ -440,6 +441,16 @@ class PythonRsDriver(AbstractDriver):
                 planned.append(index_cql)
                 if not dry_run:
                     await self._execute_cql_async(index_cql)
+            if getattr(col, "vector_index", False):
+                idx_name = col.vector_index_name or f"{schema_name(table)}_{col.name}_idx"
+                model_indexes[schema_name(idx_name)] = col
+                vec_idx_cql = build_create_vector_index(table, keyspace, col)
+                planned.append(vec_idx_cql)
+                if not dry_run:
+                    try:
+                        await self._execute_cql_async(vec_idx_cql)
+                    except Exception as _exc:  # noqa: BLE001 - any failure is inspected for missing SAI support
+                        self._warn_if_sai_unsupported(_exc)
 
         # 6. Drop removed indexes
         if drop_removed_indexes:

@@ -624,3 +624,55 @@ def test_init_coodie_python_rs_with_hosts():
     mock_builder.contact_points.assert_called_once_with(("127.0.0.1",))
     mock_builder.connect.assert_awaited_once()
     _registry.clear()
+
+
+async def test_python_rs_driver_sync_table_vector_index(python_rs_driver):
+    """PythonRsDriver creates vector indexes and keeps them when dropping removed indexes."""
+    from coodie.schema import ColumnDefinition
+
+    cols = [
+        ColumnDefinition(name="id", cql_type="uuid", primary_key=True),
+        ColumnDefinition(name="name", cql_type="text", index=True),
+        ColumnDefinition(name="emb", cql_type="vector<float, 3>", vector_index=True),
+    ]
+    python_rs_driver._get_existing_columns_async = AsyncMock(return_value={"id", "name", "emb"})
+    python_rs_driver._get_existing_indexes_async = AsyncMock(return_value={"myitems_emb_idx", "myitems_old_idx"})
+
+    planned = await python_rs_driver.sync_table_async("MyItems", "ks", cols, dry_run=True, drop_removed_indexes=True)
+    assert any("USING 'vector_index'" in s for s in planned)
+    drops = [s for s in planned if s.startswith("DROP INDEX")]
+    assert drops == ["DROP INDEX IF EXISTS ks.myitems_old_idx"]
+
+
+@pytest.mark.parametrize(
+    ("error", "expect"),
+    [(None, None), (Exception("Non-supported custom class"), UserWarning), (Exception("boom"), Exception)],
+)
+async def test_python_rs_driver_sync_table_vector_index_execute(python_rs_driver, error, expect):
+    """Vector index CREATE runs on a real sync; missing vector search warns, other errors propagate."""
+    from coodie.schema import ColumnDefinition
+
+    cols = [
+        ColumnDefinition(name="id", cql_type="uuid", primary_key=True),
+        ColumnDefinition(name="emb", cql_type="vector<float, 3>", vector_index=True),
+    ]
+    executed = []
+
+    async def execute(cql):
+        executed.append(cql)
+        if error is not None and "vector_index" in cql:
+            raise error
+
+    python_rs_driver._execute_cql_async = execute
+    python_rs_driver._get_existing_columns_async = AsyncMock(return_value={"id", "emb"})
+
+    if expect is None:
+        await python_rs_driver.sync_table_async("items", "ks", cols)
+    else:
+        with (
+            pytest.raises(expect)
+            if expect is Exception
+            else pytest.warns(expect, match="Vector index creation skipped")
+        ):
+            await python_rs_driver.sync_table_async("items", "ks", cols)
+    assert any("USING 'vector_index'" in cql for cql in executed)
