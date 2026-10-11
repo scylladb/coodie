@@ -8,12 +8,15 @@ used from both sync and async code.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from coodie._modes import async_alias
 from coodie.aio.query import QuerySet
 from coodie.document import BaseCounterDocument, BaseDocument, BaseMaterializedView
 from coodie.query import _parse_lwt_result
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 __all__ = ["CounterDocument", "Document", "MaterializedView", "_parse_lwt_result"]
 
@@ -27,15 +30,28 @@ class Document(BaseDocument):
     sync_table = async_alias(BaseDocument.sync_table_async)
     drop_table = async_alias(BaseDocument.drop_table_async)
     truncate = async_alias(BaseDocument.truncate_async)
-    create = async_alias(BaseDocument.create_async)
     save = async_alias(BaseDocument.save_async)
     save_json = async_alias(BaseDocument.save_json_async)
     insert = async_alias(BaseDocument.insert_async)
     delete_columns = async_alias(BaseDocument.delete_columns_async)
     delete = async_alias(BaseDocument.delete_async)
     update = async_alias(BaseDocument.update_async)
-    find_one = async_alias(BaseDocument.find_one_async)
-    get = async_alias(BaseDocument.get_async)
+
+    # Aliases that return the model are stubbed for type checkers, so they
+    # return the subclass rather than BaseDocument.
+    if TYPE_CHECKING:
+
+        @classmethod
+        async def create(cls, **kwargs: Any) -> Self: ...
+        @classmethod
+        async def find_one(cls, **kwargs: Any) -> Self | None: ...
+        @classmethod
+        async def get(cls, **kwargs: Any) -> Self: ...
+
+    else:
+        create = async_alias(BaseDocument.create_async)
+        find_one = async_alias(BaseDocument.find_one_async)
+        get = async_alias(BaseDocument.get_async)
 
     @classmethod
     def find(cls, **kwargs: Any) -> QuerySet:

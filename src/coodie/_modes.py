@@ -42,7 +42,6 @@ def _user_stacklevel() -> int:
 _LIBRARY_MODULES = ("coodie.", "pydantic.", "builtins")
 
 
-@functools.lru_cache(maxsize=4096)
 def _is_user_defined(cls: type, name: str) -> bool:
     """True when the class that provides *name* on *cls* is the user's, not coodie's."""
     for klass in cls.__mro__:

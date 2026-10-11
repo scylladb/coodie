@@ -12,6 +12,7 @@ import asyncio
 import inspect
 import warnings
 from typing import Annotated
+from unittest import mock
 from uuid import UUID, uuid4
 
 import pytest
@@ -330,3 +331,18 @@ def test_sync_call_outside_loop_does_not_warn(registered_mock_driver):
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         AioProduct(name="a").save_sync()
+
+
+def test_patched_save_is_used_by_create_even_after_earlier_calls(registered_mock_driver):
+    SyncProduct = make_product(sync.Document)
+    SyncProduct.create(name="warm")  # an earlier call must not pin the lookup
+    with mock.patch.object(SyncProduct, "save") as patched:
+        SyncProduct.create(name="x")
+    assert patched.called
+
+
+def test_blocking_call_warning_is_exported():
+    import coodie
+
+    assert coodie.BlockingCallWarning is BlockingCallWarning
+    assert set(coodie.__all__) <= set(dir(coodie))
