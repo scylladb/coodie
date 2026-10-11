@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791730583949,
+  "lastUpdate": 1791730800358,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -21180,6 +21180,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 9.293650291701518e-7",
             "extra": "mean: 6.04898592386439 usec\nrounds: 6820"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "131fe8b645bb69bea13c1d37ab73580afdf82f19",
+          "message": "chore(labels): add P4 priority label\n\nLowest priority / nice to have, below P3. Used for demo PRs.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-11T17:59:09+03:00",
+          "tree_id": "96b1c8db7174c7a66deaa35333676e9c7ea01a3a",
+          "url": "https://github.com/scylladb/coodie/commit/131fe8b645bb69bea13c1d37ab73580afdf82f19"
+        },
+        "date": 1791730798021,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 97895.25204960938,
+            "unit": "iter/sec",
+            "range": "stddev: 7.78721460003455e-7",
+            "extra": "mean: 10.636358567890317 usec\nrounds: 11228"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1872659.170591557,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5969088352702945e-7",
+            "extra": "mean: 590.9350941155262 nsec\nrounds: 165948"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 167168.1714465933,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000030652976380059435",
+            "extra": "mean: 6.804379718058538 usec\nrounds: 17592"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 645577.7905319469,
+            "unit": "iter/sec",
+            "range": "stddev: 3.091751768713835e-7",
+            "extra": "mean: 1.6720899127406745 usec\nrounds: 58123"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 711743.7763426286,
+            "unit": "iter/sec",
+            "range": "stddev: 3.2553812863093576e-7",
+            "extra": "mean: 1.5795034017323566 usec\nrounds: 36011"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 937207.1232430582,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2805266520082102e-7",
+            "extra": "mean: 1.150575842311761 usec\nrounds: 45443"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 1011122.3456833947,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9811492145681178e-7",
+            "extra": "mean: 1.0758711670965475 usec\nrounds: 92065"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 835421.8858780516,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1786815833478847e-7",
+            "extra": "mean: 1.2928853007650967 usec\nrounds: 96862"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 194061.71148916494,
+            "unit": "iter/sec",
+            "range": "stddev: 4.382603536273983e-7",
+            "extra": "mean: 5.417375999997437 usec\nrounds: 6875"
           }
         ]
       }
