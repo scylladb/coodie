@@ -398,6 +398,44 @@ def cassandra_driver(mock_cassandra_session):
     return CassandraDriver(session=mock_cassandra_session, default_keyspace="test_ks")
 
 
+def test_cassandra_driver_execution_profiles_use_dict_factory_profile():
+    """Sessions with execution profiles reject row_factory; queries use a dict_factory profile instead."""
+    from cassandra.cluster import EXEC_PROFILE_DEFAULT
+    from cassandra.query import dict_factory
+
+    from coodie.drivers.cassandra import CassandraDriver
+
+    class ProfileSession(MagicMock):
+        @property
+        def row_factory(self):
+            return None
+
+        @row_factory.setter
+        def row_factory(self, value):
+            raise ValueError("Cannot set Session.row_factory while using Configuration Profiles.")
+
+    session = ProfileSession()
+    profile = object()
+    session.execution_profile_clone_update.return_value = profile
+    session.execute.return_value = [{"[applied]": False, "name": "Alice"}]
+
+    driver = CassandraDriver(session=session, default_keyspace="ks")
+    rows = driver.execute("UPDATE ks.t SET name = ? WHERE id = 1 IF EXISTS", ["Bob"])
+
+    assert rows == [{"[applied]": False, "name": "Alice"}]
+    session.execution_profile_clone_update.assert_called_once_with(EXEC_PROFILE_DEFAULT, row_factory=dict_factory)
+    assert session.execute.call_args.kwargs["execution_profile"] is profile
+
+    # DDL and schema lookups (sync_table) use the same profile
+    from coodie.schema import ColumnDefinition
+
+    session.execute.reset_mock()
+    session.execute.return_value = []
+    driver.sync_table("t", "ks", [ColumnDefinition(name="id", cql_type="int", primary_key=True)])
+    assert session.execute.call_count > 1
+    assert all(c.kwargs.get("execution_profile") is profile for c in session.execute.call_args_list)
+
+
 def test_cassandra_driver_execute(cassandra_driver, mock_cassandra_session):
     mock_cassandra_session.execute.return_value = [Row(id="1", name="Alice")]
     rows = cassandra_driver.execute("SELECT * FROM test_ks.t", [])

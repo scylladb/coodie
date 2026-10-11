@@ -26,15 +26,27 @@ class CassandraDriver(AbstractDriver):
         self._prepared: dict[str, Any] = {}
         self._last_paging_state: bytes | None = None
         self._known_tables: dict[str, frozenset[str]] = {}
+        # Extra Session.execute() kwargs for queries; set below for sessions that use execution profiles.
+        self._query_kwargs: dict[str, Any] = {}
         try:
             from cassandra.query import dict_factory  # type: ignore[import-untyped]
-
-            session.row_factory = dict_factory
         except ImportError:
             logger.warning(
                 "Could not import cassandra.query.dict_factory; "
                 "session will use its default row_factory (rows may not be dicts)"
             )
+        else:
+            try:
+                session.row_factory = dict_factory
+            except ValueError:
+                # Clusters configured with execution profiles reject Session.row_factory.
+                # Run queries with a copy of the default profile that uses dict_factory: the
+                # caller's settings and cluster stay as they are, and column names survive
+                # (named tuples rename "[applied]" to "applied", which would hide failed LWTs).
+                from cassandra.cluster import EXEC_PROFILE_DEFAULT  # type: ignore[import-untyped]
+
+                profile = session.execution_profile_clone_update(EXEC_PROFILE_DEFAULT, row_factory=dict_factory)
+                self._query_kwargs = {"execution_profile": profile}
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -74,7 +86,7 @@ class CassandraDriver(AbstractDriver):
         paging_state: bytes | None = None,
     ) -> list[dict[str, Any]]:
         if not params and _is_ddl(stmt):
-            result = self._session.execute(stmt)
+            result = self._session.execute(stmt, **self._query_kwargs)
             self._last_paging_state = None
             return self._rows_to_dicts(result)
         prepared = self._prepare(stmt)
@@ -85,7 +97,7 @@ class CassandraDriver(AbstractDriver):
             bound.consistency_level = getattr(ConsistencyLevel, consistency)
         if fetch_size is not None:
             bound.fetch_size = fetch_size
-        execute_kwargs: dict[str, Any] = {}
+        execute_kwargs: dict[str, Any] = dict(self._query_kwargs)
         if timeout is not None:
             execute_kwargs["timeout"] = timeout
         if paging_state is not None:
@@ -124,7 +136,7 @@ class CassandraDriver(AbstractDriver):
         create_cql = build_create_table(table, keyspace, cols, table_options=table_options)
         planned.append(create_cql)
         if not dry_run:
-            self._session.execute(create_cql)
+            self._session.execute(create_cql, **self._query_kwargs)
 
         # 2. Introspect existing columns and add missing ones
         existing = self._get_existing_columns(table, keyspace)
@@ -137,7 +149,7 @@ class CassandraDriver(AbstractDriver):
                     alter = f'ALTER TABLE {qualified_name(keyspace, table)} ADD "{col.name}" {col.cql_type}'
                     planned.append(alter)
                     if not dry_run:
-                        self._session.execute(alter)
+                        self._session.execute(alter, **self._query_kwargs)
 
         # 3. Schema drift detection — warn on DB columns not in model
         drift_cols = existing - model_col_names
@@ -160,7 +172,7 @@ class CassandraDriver(AbstractDriver):
                 alter_cql = build_alter_table_options(table, keyspace, changed)
                 planned.append(alter_cql)
                 if not dry_run:
-                    self._session.execute(alter_cql)
+                    self._session.execute(alter_cql, **self._query_kwargs)
 
         # 5. Create secondary indexes and vector indexes
         model_indexes: dict[str, Any] = {}
@@ -171,7 +183,7 @@ class CassandraDriver(AbstractDriver):
                 index_cql = build_create_index(table, keyspace, col)
                 planned.append(index_cql)
                 if not dry_run:
-                    self._session.execute(index_cql)
+                    self._session.execute(index_cql, **self._query_kwargs)
             if getattr(col, "vector_index", False):
                 idx_name = f"{schema_name(table)}_{col.name}_idx"
                 model_indexes[schema_name(idx_name)] = col
@@ -179,7 +191,7 @@ class CassandraDriver(AbstractDriver):
                 planned.append(vec_idx_cql)
                 if not dry_run:
                     try:
-                        self._session.execute(vec_idx_cql)
+                        self._session.execute(vec_idx_cql, **self._query_kwargs)
                     except Exception as _exc:  # noqa: BLE001 - any failure is inspected for missing SAI support
                         self._warn_if_sai_unsupported(_exc)
 
@@ -191,7 +203,7 @@ class CassandraDriver(AbstractDriver):
                     drop_cql = build_drop_index(idx_name, keyspace)
                     planned.append(drop_cql)
                     if not dry_run:
-                        self._session.execute(drop_cql)
+                        self._session.execute(drop_cql, **self._query_kwargs)
 
         if not dry_run:
             self._known_tables[cache_key] = col_names
@@ -247,6 +259,7 @@ class CassandraDriver(AbstractDriver):
         rows = self._session.execute(
             "SELECT column_name FROM system_schema.columns WHERE keyspace_name = %s AND table_name = %s",
             (schema_name(keyspace), schema_name(table)),
+            **self._query_kwargs,
         )
         return {r["column_name"] for r in self._rows_to_dicts(rows)}
 
@@ -255,6 +268,7 @@ class CassandraDriver(AbstractDriver):
         rows = self._session.execute(
             "SELECT * FROM system_schema.tables WHERE keyspace_name = %s AND table_name = %s",
             (schema_name(keyspace), schema_name(table)),
+            **self._query_kwargs,
         )
         dicts = self._rows_to_dicts(rows)
         if dicts:
@@ -266,6 +280,7 @@ class CassandraDriver(AbstractDriver):
         rows = self._session.execute(
             "SELECT index_name FROM system_schema.indexes WHERE keyspace_name = %s AND table_name = %s",
             (schema_name(keyspace), schema_name(table)),
+            **self._query_kwargs,
         )
         return {r["index_name"] for r in self._rows_to_dicts(rows)}
 
@@ -286,7 +301,7 @@ class CassandraDriver(AbstractDriver):
             from cassandra import ConsistencyLevel  # type: ignore[import-untyped]
 
             bound.consistency_level = getattr(ConsistencyLevel, consistency)
-        execute_kwargs: dict[str, Any] = {}
+        execute_kwargs: dict[str, Any] = dict(self._query_kwargs)
         if timeout is not None:
             execute_kwargs["timeout"] = timeout
         result = self._session.execute(bound, **execute_kwargs)
@@ -312,7 +327,7 @@ class CassandraDriver(AbstractDriver):
             from cassandra import ConsistencyLevel  # type: ignore[import-untyped]
 
             bound.consistency_level = getattr(ConsistencyLevel, consistency)
-        execute_kwargs: dict[str, Any] = {}
+        execute_kwargs: dict[str, Any] = dict(self._query_kwargs)
         if timeout is not None:
             execute_kwargs["timeout"] = timeout
         future = self._session.execute_async(bound, **execute_kwargs)
@@ -387,7 +402,7 @@ class CassandraDriver(AbstractDriver):
             from cassandra import ConsistencyLevel  # type: ignore[import-untyped]
 
             bound.consistency_level = getattr(ConsistencyLevel, consistency)
-        execute_kwargs: dict[str, Any] = {}
+        execute_kwargs: dict[str, Any] = dict(self._query_kwargs)
         if timeout is not None:
             execute_kwargs["timeout"] = timeout
         future = self._session.execute_async(bound, **execute_kwargs)
@@ -397,12 +412,12 @@ class CassandraDriver(AbstractDriver):
 
     async def _execute_cql_async(self, cql: str) -> Any:
         """Execute a raw CQL string asynchronously via the callback bridge."""
-        future = self._session.execute_async(cql)
+        future = self._session.execute_async(cql, **self._query_kwargs)
         return await self._wrap_future(future)
 
     async def _execute_bound_async(self, cql: str, params: tuple[Any, ...]) -> Any:
         """Execute a parameterised CQL string asynchronously via the callback bridge."""
-        future = self._session.execute_async(cql, params)
+        future = self._session.execute_async(cql, params, **self._query_kwargs)
         return await self._wrap_future(future)
 
     async def sync_table_async(
