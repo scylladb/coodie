@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791708004238,
+  "lastUpdate": 1791708172165,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -20745,6 +20745,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.943185961560034e-7",
             "extra": "mean: 3.313228429535024 usec\nrounds: 9863"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fruch@scylladb.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "committer": {
+            "email": "israel.fruchter@gmail.com",
+            "name": "Israel Fruchter",
+            "username": "fruch"
+          },
+          "distinct": true,
+          "id": "03cea3d0db244d7dad69fe9eac1e956d774380e6",
+          "message": "docs(guide): document Phase 1 query features and mark plan phase done\n\nDocument distinct(), group_by(), cast(), is_not_null()/__isnull and the\naggregate methods in querying.md, truncate() in crud.md, and mark\nPhase 1 of the CQL gap analysis plan complete.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-11T11:42:05+03:00",
+          "tree_id": "9ec0f041ed8b5f56dd50d22f19dd53fe78363468",
+          "url": "https://github.com/scylladb/coodie/commit/03cea3d0db244d7dad69fe9eac1e956d774380e6"
+        },
+        "date": 1791708170805,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 85748.5851065405,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000015129543370432101",
+            "extra": "mean: 12.197375258932592 usec\nrounds: 10622"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 1663893.5206816765,
+            "unit": "iter/sec",
+            "range": "stddev: 2.8182908271968015e-7",
+            "extra": "mean: 654.5643424856721 nsec\nrounds: 157431"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 145306.59704872596,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000031268025507867",
+            "extra": "mean: 7.661459993367571 usec\nrounds: 17972"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 639795.2663857815,
+            "unit": "iter/sec",
+            "range": "stddev: 4.792861292013633e-7",
+            "extra": "mean: 1.7135451561445356 usec\nrounds: 62151"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 648088.141575553,
+            "unit": "iter/sec",
+            "range": "stddev: 4.7462620699039376e-7",
+            "extra": "mean: 1.6575550809526574 usec\nrounds: 35584"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 883392.2195955658,
+            "unit": "iter/sec",
+            "range": "stddev: 3.608119107508224e-7",
+            "extra": "mean: 1.2206677487477404 usec\nrounds: 147864"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 924214.4080369239,
+            "unit": "iter/sec",
+            "range": "stddev: 4.05640819213073e-7",
+            "extra": "mean: 1.2125207138993668 usec\nrounds: 87405"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 768049.1544695785,
+            "unit": "iter/sec",
+            "range": "stddev: 3.914875038355421e-7",
+            "extra": "mean: 1.3907221202569378 usec\nrounds: 88254"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 176056.33799695305,
+            "unit": "iter/sec",
+            "range": "stddev: 8.722538364729664e-7",
+            "extra": "mean: 6.006201501210866 usec\nrounds: 7727"
           }
         ]
       }
