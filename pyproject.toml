@@ -108,6 +108,10 @@ tag_format = "v{version}"
 match = "(main|master)"
 prerelease = false
 
+[tool.semantic_release.changelog]
+insertion_flag = "<!--next-version-placeholder-->"
+exclude_commit_patterns = ['''chore\(release\): .*''']
+
 [tool.pytest.ini_options]
 addopts = "-v -Wdefault --cov=coodie --cov-report=term-missing:skip-covered -m 'not integration' --benchmark-disable"
 asyncio_mode = "auto"
