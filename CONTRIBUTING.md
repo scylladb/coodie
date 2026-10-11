@@ -204,7 +204,7 @@ for manual testing:
 
 ## Making a new release
 
-Releases happen automatically when commits are merged to `master`. The
+Releases are cut by merging a release PR. The
 [CI workflow](.github/workflows/ci.yml) uses
 [python-semantic-release](https://python-semantic-release.readthedocs.io/)
 to analyse [Conventional Commits](https://www.conventionalcommits.org)
@@ -216,14 +216,20 @@ and determine whether a version bump is needed:
 | `feat:` | Minor (`0.x.0`) |
 | `feat!:` / `BREAKING CHANGE:` | Major (`x.0.0`) |
 
-When a new version is detected the CI will:
+On every push to `master` with releasable commits, CI opens (or updates) a
+`chore(release): vX.Y.Z` PR from the `release/next` branch containing the
+`CHANGELOG.md` entry. Nothing is released until that PR is merged
+(rebase or squash), at which point CI will:
 
-1. Update `CHANGELOG.md` and push a version tag (e.g. `v1.0.0`).
+1. Push a version tag (e.g. `v1.0.0`).
 2. Create a GitHub Release with auto-generated release notes.
 3. Build the package with `uv build` (version derived from the tag via `hatch-vcs`).
 4. Publish to PyPI using [Trusted Publishing](#setting-up-trusted-publishing-on-pypi) (OIDC).
 
-No manual tagging or PyPI token management is required.
+No manual tagging or PyPI token management is required. The release PR is
+opened with the `GH_PAT` secret (fine-grained PAT, Contents + Pull
+requests read/write) so CI runs on it; without it `GITHUB_TOKEN` is used and
+CI won't trigger on the release PR.
 
 ### Setting up Trusted Publishing on PyPI
 
@@ -256,8 +262,7 @@ rotate a PyPI API token.
 2. Optionally add protection rules (e.g. require a reviewer before the
    publish job runs).
 
-Once this is done, every merge to `master` that includes a `feat:` or `fix:`
-commit will trigger an automatic release and PyPI publish — no stored
+Once this is done, merging the release PR will trigger the release and PyPI publish — no stored
 credentials needed.
 
 [gh-issues]: https://github.com/scylladb/coodie/issues
