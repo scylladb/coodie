@@ -227,9 +227,8 @@ On every push to `master` with releasable commits, CI opens (or updates) a
 4. Publish to PyPI using [Trusted Publishing](#setting-up-trusted-publishing-on-pypi) (OIDC).
 
 No manual tagging or PyPI token management is required. The release PR is
-opened with the `GH_PAT` secret (fine-grained PAT, Contents + Pull
-requests read/write) so CI runs on it; without it `GITHUB_TOKEN` is used and
-CI won't trigger on the release PR.
+opened with `GITHUB_TOKEN`, so CI doesn't run on it (it only touches
+`CHANGELOG.md`).
 
 ### Setting up Trusted Publishing on PyPI
 
