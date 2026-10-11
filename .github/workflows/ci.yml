@@ -47,9 +47,9 @@ jobs:
   #      release job sees the chore(release) head commit, tags it, creates
   #      the GitHub Release, and the jobs below publish to PyPI.
   #
-  # The release PR is opened with GITHUB_TOKEN, so CI doesn't run on it.
-  # That's fine: it only touches CHANGELOG.md, and the release job runs on
-  # master after lint/commitlint once it's merged.
+  # The release PR is opened with GITHUB_TOKEN, so pull_request workflows
+  # don't run on it; the test workflows are dispatched on release/next instead
+  # and their checks show up on the PR.
   release-pr:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master' && !startsWith(github.event.head_commit.message, 'chore(release):')
@@ -60,6 +60,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      actions: write
 
     concurrency:
       group: release-pr
@@ -84,6 +85,7 @@ jobs:
 
       # No-op when there is nothing to release (no CHANGELOG.md diff)
       - name: Create/update release PR
+        id: cpr
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -95,6 +97,17 @@ jobs:
             It is updated automatically on every push to master; see CHANGELOG.md diff for contents.
           add-paths: CHANGELOG.md
           delete-branch: true
+
+      # PRs opened by GITHUB_TOKEN don't trigger workflows, but dispatches do.
+      # Run the full test suite on the release PR head before it's merged.
+      - name: Run tests on the release PR
+        if: steps.cpr.outputs.pull-request-operation == 'created' || steps.cpr.outputs.pull-request-operation == 'updated'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for wf in test-unit.yml test-integration.yml test-demos.yml; do
+            gh workflow run "$wf" --ref release/next
+          done
 
   release:
     runs-on: ubuntu-latest

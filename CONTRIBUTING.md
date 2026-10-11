@@ -227,8 +227,10 @@ On every push to `master` with releasable commits, CI opens (or updates) a
 4. Publish to PyPI using [Trusted Publishing](#setting-up-trusted-publishing-on-pypi) (OIDC).
 
 No manual tagging or PyPI token management is required. The release PR is
-opened with `GITHUB_TOKEN`, so CI doesn't run on it (it only touches
-`CHANGELOG.md`).
+opened with `GITHUB_TOKEN`; since that doesn't trigger `pull_request`
+workflows, CI dispatches the unit, integration and demo tests on
+`release/next`, and their checks show up on the PR. Wait for them before
+merging.
 
 ### Setting up Trusted Publishing on PyPI
 
