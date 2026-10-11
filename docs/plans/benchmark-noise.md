@@ -88,7 +88,7 @@ CodSpeed's hosted service needs an org admin to install its GitHub app, so this 
 ## 4. Trade-offs
 
 - Phase 1 leans on pytest-codspeed's callgrind client requests (one dump per benchmark, named by test URI). If a pytest-codspeed release changes that, the compare script finds no results and fails loudly.
-- No history for instruction counts; each PR is compared with its base only.
+- The PR verdict compares with the base commit only. Master pushes also store the counts on `gh-pages` (`benchmarks/instructions/`) for trends.
 - Instruction counts can't see two kinds of regression: GC pressure (GC is off while counting) and dependency bumps (both sides share the PR's venv). The wall-time chart still covers both.
 - Instruction counts don't capture cache or memory effects. That's acceptable for pure-Python model code, and Phase 2 keeps a wall-time signal on the database path.
 - Phase 2 roughly doubles the labeled PR benchmark job time.

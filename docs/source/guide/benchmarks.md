@@ -60,6 +60,12 @@ This provides:
 * **Historical trend charts** — viewable on the repository's GitHub Pages site:
   * [scylla driver benchmarks](https://scylladb.github.io/coodie/benchmarks/scylla/)
   * [acsylla driver benchmarks](https://scylladb.github.io/coodie/benchmarks/acsylla/)
+  * [instruction counts](https://scylladb.github.io/coodie/benchmarks/instructions/):
+    CPU instructions per call for the in-memory `test_coodie_*` benchmarks,
+    from the Instruction Counts workflow. These barely change between runner
+    VMs, so they show real trends better than the wall-time charts. A PR, or a
+    master push, fails when any count grows more than 5%, and PRs get a comment
+    with the overview.
   * [all benchmarks overview](https://scylladb.github.io/coodie/benchmarks/)
 * **Regression alerts** — when a benchmark regresses beyond 150% of its
   previous value, an alert comment is posted on the commit or pull request.
