@@ -1,0 +1,6 @@
+# Integration tests only run when source paths change, so PRs touching only
+# docs/CI/demos upload no integration coverage. Carry the last reported
+# coverage forward per flag instead of counting it as a drop.
+flag_management:
+  default_rules:
+    carryforward: true
