@@ -30,6 +30,7 @@ def main() -> None:
         capture_output=True,
         text=True,
         timeout=120,
+        check=False,
     )
     assert result.returncode == 0, (
         f"seed.py exited with {result.returncode}\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"

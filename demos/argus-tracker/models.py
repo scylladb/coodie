@@ -14,7 +14,7 @@ Demonstrates complex real-world patterns from scylladb/argus:
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Annotated, Dict, List, Optional
+from typing import Annotated
 from uuid import UUID, uuid1, uuid4
 
 from pydantic import Field, field_validator
@@ -36,9 +36,9 @@ class User(Document):
     full_name: str = ""
     email: Annotated[str, Indexed()] = ""
     registration_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    roles: List[str] = Field(default_factory=list)
-    picture_id: Optional[UUID] = None
-    api_token: Annotated[Optional[str], Indexed()] = None
+    roles: list[str] = Field(default_factory=list)
+    picture_id: UUID | None = None
+    api_token: Annotated[str | None, Indexed()] = None
 
     @field_validator("roles", mode="before")
     @classmethod
@@ -68,17 +68,17 @@ class TestRun(Document):
         default_factory=lambda: datetime.now(timezone.utc),
     )
     id: Annotated[UUID, Indexed()] = Field(default_factory=uuid4)
-    release_id: Annotated[Optional[UUID], Indexed()] = None
-    group_id: Optional[UUID] = None
-    test_id: Optional[UUID] = None
-    assignee: Annotated[Optional[UUID], Indexed()] = None
+    release_id: Annotated[UUID | None, Indexed()] = None
+    group_id: UUID | None = None
+    test_id: UUID | None = None
+    assignee: Annotated[UUID | None, Indexed()] = None
     status: Annotated[str, Indexed()] = "created"
     investigation_status: str = "not_investigated"
     heartbeat: int = 0
-    end_time: Optional[datetime] = None
-    build_job_url: Optional[str] = None
-    scylla_version: Optional[str] = None
-    tags: List[str] = Field(default_factory=list)
+    end_time: datetime | None = None
+    build_job_url: str | None = None
+    scylla_version: str | None = None
+    tags: list[str] = Field(default_factory=list)
 
     @field_validator("tags", mode="before")
     @classmethod
@@ -107,10 +107,10 @@ class Event(Document):
         default_factory=lambda: datetime.now(timezone.utc),
     )
     id: Annotated[UUID, Indexed()] = Field(default_factory=uuid4)
-    user_id: Optional[UUID] = None
+    user_id: UUID | None = None
     body: str = ""
     severity: Annotated[str, Indexed()] = "info"
-    metadata: Dict[str, str] = Field(default_factory=dict)
+    metadata: dict[str, str] = Field(default_factory=dict)
 
     @field_validator("metadata", mode="before")
     @classmethod
@@ -137,9 +137,9 @@ class Notification(Document):
     id: Annotated[UUID, TimeUUID(), ClusteringKey(order="DESC")] = Field(default_factory=uuid1)
     type: str = ""
     state: int = 0
-    sender: Optional[UUID] = None
+    sender: UUID | None = None
     source_type: str = ""
-    source_id: Optional[UUID] = None
+    source_id: UUID | None = None
     title: str = ""
     content: str = ""
 

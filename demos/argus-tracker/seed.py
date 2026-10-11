@@ -22,6 +22,7 @@ from datetime import datetime, timedelta, timezone
 from uuid import UUID, uuid1, uuid4
 
 import click
+from models import Event, Notification, TestRun, User
 from rich.align import Align
 from rich.columns import Columns
 from rich.console import Console
@@ -33,8 +34,6 @@ from rich.table import Table
 from rich.text import Text
 
 from coodie.sync import BatchQuery, init_coodie
-
-from models import Event, Notification, TestRun, User
 
 console = Console()
 
