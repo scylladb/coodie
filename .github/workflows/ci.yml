@@ -47,9 +47,9 @@ jobs:
   #      release job sees the chore(release) head commit, tags it, creates
   #      the GitHub Release, and the jobs below publish to PyPI.
   #
-  # GH_PAT (PAT with Contents + Pull requests read/write) lets CI
-  # run on the release PR; if it is missing or under-scoped the job retries
-  # with GITHUB_TOKEN, whose PRs don't trigger workflows.
+  # The release PR is opened with GITHUB_TOKEN, so CI doesn't run on it.
+  # That's fine: it only touches CHANGELOG.md, and the release job runs on
+  # master after lint/commitlint once it's merged.
   release-pr:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master' && !startsWith(github.event.head_commit.message, 'chore(release):')
@@ -82,30 +82,8 @@ jobs:
           push: "false"
           vcs_release: "false"
 
-      # No-op when there is nothing to release (no CHANGELOG.md diff).
-      # Try GH_PAT first, fall back to GITHUB_TOKEN if it is missing or under-scoped.
+      # No-op when there is nothing to release (no CHANGELOG.md diff)
       - name: Create/update release PR
-        id: cpr
-        continue-on-error: true
-        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
-        with:
-          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
-          branch: release/next
-          commit-message: "chore(release): ${{ steps.semrel.outputs.tag }}"
-          title: "chore(release): ${{ steps.semrel.outputs.tag }}"
-          body: |
-            Merging this PR releases `${{ steps.semrel.outputs.tag }}` to PyPI.
-            It is updated automatically on every push to master; see CHANGELOG.md diff for contents.
-          add-paths: CHANGELOG.md
-          delete-branch: true
-
-      - name: Warn about GH_PAT fallback
-        if: steps.cpr.outcome == 'failure'
-        run: echo "::warning::GH_PAT failed to create the release PR, retrying with GITHUB_TOKEN (CI will not run on it)"
-
-      - name: Create/update release PR (GITHUB_TOKEN fallback)
-        id: cpr-fallback
-        if: steps.cpr.outcome == 'failure'
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
