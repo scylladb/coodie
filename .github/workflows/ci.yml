@@ -50,12 +50,20 @@ jobs:
   # The release PR is opened with GITHUB_TOKEN, so pull_request workflows
   # don't run on it; the test workflows are dispatched on release/next instead
   # and their checks show up on the PR.
+  #
+  # release-pr also runs after a release, on the latest master: once the tag
+  # exists there is nothing to release, so create-pull-request deletes
+  # release/next and closes any stale release PR left by a racing run.
   release-pr:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master' && !startsWith(github.event.head_commit.message, 'chore(release):')
+    if: >-
+      always() && github.ref == 'refs/heads/master'
+      && needs.lint.result == 'success' && needs.commitlint.result == 'success'
+      && needs.release.result != 'failure'
     needs:
       - lint
       - commitlint
+      - release
 
     permissions:
       contents: write
@@ -69,6 +77,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: master
           fetch-depth: 0
 
       # Only computes the next version and writes CHANGELOG.md
