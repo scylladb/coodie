@@ -39,6 +39,7 @@ seeds sample data, and launches the app.
 | 📚 Collections & Tags | FastAPI + HTMX | CQL collections, `add__` / `remove__` / `append__` / `prepend__` mutations, tag cloud | [`collections-tags/`](collections-tags/) |
 | 📡 Time-Series IoT | FastAPI + HTMX | Composite partition key, `DESC` clustering, `per_partition_limit()`, `paged_all()`, live charts | [`timeseries-iot/`](timeseries-iot/) |
 | 📡 Vector Search | FastAPI + HTMX | `Vector(dimensions=384)` columns, async semantic similarity search | [`vector-search/`](vector-search/) |
+| 🐙 Argus Test Tracker | CLI | Composite PK + clustering, compound partition keys, TimeUUID notifications, batch ingestion, prepared-statement caching, partition-scoped queries | [`argus-tracker/`](argus-tracker/) |
 
 ## Shared Infrastructure
 
