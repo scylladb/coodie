@@ -130,6 +130,7 @@ class VectorIndex:
     """
 
     similarity_function: str = "COSINE"
+    index_name: str | None = None
 
     def __post_init__(self) -> None:
         if self.similarity_function not in _VALID_SIMILARITY_FUNCTIONS:
