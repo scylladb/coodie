@@ -20,3 +20,7 @@ class InvalidQueryError(CoodieError):
 
 class MigrationError(CoodieError):
     """Raised when a migration operation fails."""
+
+
+class BlockingCallWarning(UserWarning):
+    """Emitted when a blocking ``*_sync`` call runs inside an event loop on an async-default model."""
