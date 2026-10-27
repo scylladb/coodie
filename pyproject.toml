@@ -72,6 +72,7 @@ dev = [
     "pytest-timeout>=2.0",
     "testcontainers>=4.0",
     "pre-commit>=4.5.1,<5",
+    "pytest-codspeed>=5.0",
 ]
 docs = [
     "Sphinx>=9.1,<10; python_version >= '3.12'",
