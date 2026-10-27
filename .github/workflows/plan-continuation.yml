@@ -135,7 +135,7 @@ jobs:
           steps.dispatch.outputs.has_plan == 'true' ||
           steps.plan-ref.outputs.has_plan == 'true'
         with:
-          python-version: "3.14"
+          python-version: "3.15"
 
       # ── 6. Parse plan file and find next incomplete phase ──────────────────
       - name: Parse plan and find next phase
