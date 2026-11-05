@@ -1,9 +1,17 @@
 # Real-World Example: scylladb/argus
 
 [Argus](https://github.com/scylladb/argus) is ScyllaDB's test-run tracking
-system — a production application built on cqlengine with users, test runs,
-events, notifications, and comments. Below is a walkthrough of migrating its
-key models and operations to coodie.
+system — a production application with users, test runs, events,
+notifications, and comments. It ran on cqlengine from 2021 until 2026, when
+it moved to coodie: first the models
+([argus#1058](https://github.com/scylladb/argus/pull/1058)), then the
+service layer to `coodie.aio`
+([argus#1106](https://github.com/scylladb/argus/pull/1106)). Argus is
+coodie's first production user.
+
+Below is a walkthrough of migrating its key models and operations, showing
+the cqlengine version next to the coodie one. The models are simplified for
+readability; see the Argus repository for the real code.
 
 ## Models
 
