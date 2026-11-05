@@ -119,6 +119,7 @@ def build_schema(doc_cls: type) -> list[ColumnDefinition]:
                 is_static = True
             elif isinstance(meta, VectorIndex):
                 is_vector_index = True
+                vector_index_name = meta.index_name
                 vector_similarity_function = meta.similarity_function
                 if meta.similarity_function:
                     vector_index_options = {"similarity_function": meta.similarity_function}
