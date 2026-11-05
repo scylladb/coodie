@@ -91,7 +91,7 @@ class Document(BaseModel):
 
     @classmethod
     def _schema(cls) -> list[ColumnDefinition]:
-        if not hasattr(cls, "__schema__") or cls.__schema__ is None:
+        if "__schema__" not in cls.__dict__ or cls.__schema__ is None:
             cls.__schema__ = build_schema(cls)
         return cls.__schema__
 
