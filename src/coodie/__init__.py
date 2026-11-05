@@ -23,6 +23,7 @@ from coodie.aio import (
 )
 from coodie.batch import AsyncBatchQuery, BatchQuery
 from coodie.exceptions import (
+    BlockingCallWarning,
     ConfigurationError,
     CoodieError,
     DocumentNotFound,
@@ -60,6 +61,7 @@ __all__ = [
     "AsyncBatchQuery",
     "BatchQuery",
     "BigInt",
+    "BlockingCallWarning",
     "ClusteringKey",
     "ConfigurationError",
     "CoodieError",
