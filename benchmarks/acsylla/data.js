@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793861036748,
+  "lastUpdate": 1794381041747,
   "repoUrl": "https://github.com/scylladb/coodie",
   "entries": {
     "coodie benchmarks (acsylla)": [
@@ -22311,6 +22311,93 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000010969572888148253",
             "extra": "mean: 6.091414397768447 usec\nrounds: 7015"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "29139614+renovate[bot]@users.noreply.github.com",
+            "name": "renovate[bot]",
+            "username": "renovate[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "70d4ab143e11fe159cf58b76fce83ce0cb6fda9b",
+          "message": "chore(deps): update github-actions (non-major) (#350)\n\n| datasource  | package                       | from     | to       |\n| ----------- | ----------------------------- | -------- | -------- |\n| github-tags | anthropics/claude-code-action | v1.0.263 | v1.0.268 |\n| github-tags | astral-sh/setup-uv            | v10.3.2  | v10.3.3  |\n\nCo-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>",
+          "timestamp": "2026-11-11T07:09:54Z",
+          "tree_id": "be8813c05458228b7bf4a1606d84cd4033b95a0a",
+          "url": "https://github.com/scylladb/coodie/commit/70d4ab143e11fe159cf58b76fce83ce0cb6fda9b"
+        },
+        "date": 1794381040433,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "benchmarks/bench_argus.py::test_coodie_argus_model_instantiation",
+            "value": 149700.59883640628,
+            "unit": "iter/sec",
+            "range": "stddev: 5.446443797848211e-7",
+            "extra": "mean: 6.877667863043632 usec\nrounds: 19781"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_instantiation",
+            "value": 3448275.9991965475,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1614717205690994e-7",
+            "extra": "mean: 322.6620419887357 nsec\nrounds: 170678"
+          },
+          {
+            "name": "benchmarks/bench_raw_dc.py::test_raw_dc_model_serialization",
+            "value": 303490.13665616786,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000038980275462338814",
+            "extra": "mean: 3.5011524861374 usec\nrounds: 25622"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_instantiation",
+            "value": 1135073.7728477637,
+            "unit": "iter/sec",
+            "range": "stddev: 2.0762884147442868e-7",
+            "extra": "mean: 951.5936330436983 nsec\nrounds: 75358"
+          },
+          {
+            "name": "benchmarks/bench_serialization.py::test_coodie_model_serialization",
+            "value": 1189060.6391475352,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1296022038052598e-7",
+            "extra": "mean: 889.3869061299396 nsec\nrounds: 43150"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_serialization",
+            "value": 1639344.2603234753,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7637396127798714e-7",
+            "extra": "mean: 657.886403561434 nsec\nrounds: 195772"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_instantiation",
+            "value": 1663893.5206816765,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8028213443228597e-7",
+            "extra": "mean: 651.2056898613563 nsec\nrounds: 136594"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_nested_udt_serialization",
+            "value": 1406469.7640013546,
+            "unit": "iter/sec",
+            "range": "stddev: 1.854836096621623e-7",
+            "extra": "mean: 751.5344729496198 nsec\nrounds: 169234"
+          },
+          {
+            "name": "benchmarks/bench_udt.py::test_coodie_udt_ddl_generation",
+            "value": 337381.91591291525,
+            "unit": "iter/sec",
+            "range": "stddev: 4.3693017154866847e-7",
+            "extra": "mean: 3.1088459975139573 usec\nrounds: 9844"
           }
         ]
       }
