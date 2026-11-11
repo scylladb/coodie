@@ -90,6 +90,51 @@ def test_build_schema_vector_without_index():
     assert emb_col.vector_index_options is None
 
 
+def test_build_schema_vector_index_custom_name():
+    from coodie.sync.document import Document
+
+    class VecNamed(Document):
+        id: Annotated[UUID, PrimaryKey()] = Field(default_factory=uuid4)
+        embedding: Annotated[list[float], Vector(dimensions=4), VectorIndex(index_name="my_ann_idx")]
+
+        class Settings:
+            name = "vec_named"
+            keyspace = "test_ks"
+
+    emb_col = next(c for c in build_schema(VecNamed) if c.name == "embedding")
+    assert emb_col.vector_index_name == "my_ann_idx"
+    cql = build_create_vector_index("vec_named", "test_ks", emb_col)
+    assert "CREATE CUSTOM INDEX IF NOT EXISTS my_ann_idx ON test_ks.vec_named" in cql
+
+
+def test_sync_table_keeps_custom_named_vector_index():
+    """drop_removed_indexes must not drop a vector index that has a custom name."""
+    from collections import namedtuple
+    from unittest.mock import MagicMock
+
+    from coodie.drivers.cassandra import CassandraDriver
+
+    session = MagicMock()
+    driver = CassandraDriver(session=session, default_keyspace="ks")
+    cols = [
+        ColumnDefinition(name="id", cql_type="uuid", primary_key=True),
+        ColumnDefinition(
+            name="embedding", cql_type="vector<float, 4>", vector_index=True, vector_index_name="my_ann_idx"
+        ),
+    ]
+    SysRow = namedtuple("SysRow", ["column_name"])
+    IndexRow = namedtuple("IndexRow", ["index_name"])
+    session.execute.side_effect = [
+        None,  # CREATE TABLE
+        [SysRow(column_name="id"), SysRow(column_name="embedding")],  # system_schema.columns
+        None,  # CREATE CUSTOM INDEX
+        [IndexRow(index_name="my_ann_idx")],  # system_schema.indexes
+    ]
+    planned = driver.sync_table("t", "ks", cols, drop_removed_indexes=True)
+    assert any("CREATE CUSTOM INDEX IF NOT EXISTS my_ann_idx" in s for s in planned)
+    assert not any("DROP INDEX" in s for s in planned)
+
+
 # ------------------------------------------------------------------
 # build_create_vector_index tests
 # ------------------------------------------------------------------
